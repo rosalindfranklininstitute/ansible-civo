@@ -1,0 +1,57 @@
+---
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  # Allow manual trigger from the Actions UI
+  workflow_dispatch:
+
+# Grant write permission to push to gh-pages branch
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    name: Build and deploy docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install documentation dependencies
+        run: pip install -r dev-requirements.txt
+
+      - name: Install ansible-core (required by antsibull-docs)
+        run: pip install ansible-core>=2.14
+
+      - name: Install the collection locally for antsibull-docs
+        run: |
+          mkdir -p ~/.ansible/collections/ansible_collections/civo
+          ln -s "$GITHUB_WORKSPACE" ~/.ansible/collections/ansible_collections/civo/cloud
+
+      - name: Generate per-module RST with antsibull-docs
+        run: |
+          antsibull-docs collection \
+            --use-current \
+            --dest-dir docs/ \
+            civo.cloud
+
+      - name: Build Sphinx HTML
+        run: |
+          sphinx-build -b html docs/ docs/_build/html
+        env:
+          SPHINXOPTS: "-W --keep-going"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
+          publish_branch: gh-pages
+          force_orphan: true

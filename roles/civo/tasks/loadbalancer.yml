@@ -1,0 +1,22 @@
+---
+- name: Manage Civo load balancer
+  civo.cloud.civo_loadbalancer:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    name: "{{ civo_name }}"
+    network: "{{ civo_network | default(civo_network_default) }}"
+    firewall: "{{ civo_firewall | default(omit) }}"
+    backends: "{{ civo_loadbalancer_backends | default([]) }}"
+    algorithm: "{{ civo_loadbalancer_algorithm | default(omit) }}"
+    external_traffic_policy: "{{ civo_loadbalancer_external_traffic_policy | default(omit) }}"
+    session_affinity: "{{ civo_loadbalancer_session_affinity | default(omit) }}"
+    session_affinity_config_timeout: "{{ civo_loadbalancer_session_affinity_config_timeout | default(omit) }}"
+    state: "{{ civo_state }}"
+  register: civo_loadbalancer_result
+
+- name: Set load balancer facts
+  ansible.builtin.set_fact:
+    civo_loadbalancer_id: "{{ civo_loadbalancer_result.loadbalancer.id | default('') }}"
+    civo_loadbalancer_public_ip: "{{ civo_loadbalancer_result.loadbalancer.public_ip | default('') }}"
+    civo_loadbalancer_info: "{{ civo_loadbalancer_result.loadbalancer | default({}) }}"
+  when: civo_loadbalancer_result.loadbalancer is defined

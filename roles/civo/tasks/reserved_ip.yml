@@ -1,0 +1,16 @@
+---
+- name: Manage Civo reserved IP
+  civo.cloud.civo_reserved_ip:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    name: "{{ civo_name }}"
+    instance: "{{ civo_reserved_ip_instance | default(omit) }}"
+    state: "{{ civo_state }}"
+  register: civo_reserved_ip_result
+
+- name: Set reserved IP facts
+  ansible.builtin.set_fact:
+    civo_reserved_ip_id: "{{ civo_reserved_ip_result.reserved_ip.id | default('') }}"
+    civo_reserved_ip_address: "{{ civo_reserved_ip_result.reserved_ip.ip | default('') }}"
+    civo_reserved_ip_info: "{{ civo_reserved_ip_result.reserved_ip | default({}) }}"
+  when: civo_reserved_ip_result.reserved_ip is defined

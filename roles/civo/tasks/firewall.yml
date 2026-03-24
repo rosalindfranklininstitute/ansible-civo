@@ -1,0 +1,16 @@
+---
+- name: Manage Civo firewall
+  civo.cloud.civo_firewall:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    name: "{{ civo_name }}"
+    network: "{{ civo_network | default(civo_network_default) }}"
+    rules: "{{ civo_firewall_rules | default([]) }}"
+    state: "{{ civo_state }}"
+  register: civo_firewall_result
+
+- name: Set firewall facts
+  ansible.builtin.set_fact:
+    civo_firewall_id: "{{ civo_firewall_result.firewall.id | default('') }}"
+    civo_firewall_info: "{{ civo_firewall_result.firewall | default({}) }}"
+  when: civo_firewall_result.firewall is defined

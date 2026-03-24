@@ -1,0 +1,59 @@
+---
+# This role is used by including it with variables that describe the desired
+# resource.  Example:
+#
+#   - name: Ensure network exists
+#     ansible.builtin.include_role:
+#       name: civo
+#     vars:
+#       civo_resource: network
+#       civo_name: my-network
+#       civo_state: present
+#
+# Alternatively every module can be called directly without going through this
+# dispatcher task file.
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - civo_resource is defined
+      - civo_name is defined
+    fail_msg: >-
+      Both 'civo_resource' and 'civo_name' must be defined when using the
+      civo role dispatcher.
+
+- name: Dispatch to network tasks
+  ansible.builtin.include_tasks: network.yml
+  when: civo_resource == 'network'
+
+- name: Dispatch to firewall tasks
+  ansible.builtin.include_tasks: firewall.yml
+  when: civo_resource == 'firewall'
+
+- name: Dispatch to instance tasks
+  ansible.builtin.include_tasks: instance.yml
+  when: civo_resource == 'instance'
+
+- name: Dispatch to Kubernetes tasks
+  ansible.builtin.include_tasks: kubernetes.yml
+  when: civo_resource in ['kubernetes', 'k8s']
+
+- name: Dispatch to volume tasks
+  ansible.builtin.include_tasks: volume.yml
+  when: civo_resource == 'volume'
+
+- name: Dispatch to load balancer tasks
+  ansible.builtin.include_tasks: loadbalancer.yml
+  when: civo_resource in ['loadbalancer', 'load_balancer']
+
+- name: Dispatch to reserved IP tasks
+  ansible.builtin.include_tasks: reserved_ip.yml
+  when: civo_resource in ['reserved_ip', 'ip']
+
+- name: Dispatch to database tasks
+  ansible.builtin.include_tasks: database.yml
+  when: civo_resource in ['database', 'db']
+
+- name: Dispatch to object store tasks
+  ansible.builtin.include_tasks: objectstore.yml
+  when: civo_resource in ['objectstore', 'object_store']

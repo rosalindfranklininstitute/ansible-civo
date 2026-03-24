@@ -1,0 +1,17 @@
+---
+- name: Manage Civo object store
+  civo.cloud.civo_objectstore:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    name: "{{ civo_name }}"
+    max_size_gb: "{{ civo_objectstore_max_size_gb | default(omit) }}"
+    access_key_id: "{{ civo_objectstore_access_key_id | default(omit) }}"
+    state: "{{ civo_state }}"
+  register: civo_objectstore_result
+
+- name: Set object store facts
+  ansible.builtin.set_fact:
+    civo_objectstore_id: "{{ civo_objectstore_result.objectstore.id | default('') }}"
+    civo_objectstore_endpoint: "{{ civo_objectstore_result.objectstore.endpoint | default('') }}"
+    civo_objectstore_info: "{{ civo_objectstore_result.objectstore | default({}) }}"
+  when: civo_objectstore_result.objectstore is defined

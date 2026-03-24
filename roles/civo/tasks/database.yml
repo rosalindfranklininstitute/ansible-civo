@@ -1,0 +1,23 @@
+---
+- name: Manage Civo managed database
+  civo.cloud.civo_database:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    name: "{{ civo_name }}"
+    size: "{{ civo_database_size }}"
+    engine: "{{ civo_database_engine }}"
+    version: "{{ civo_database_version }}"
+    nodes: "{{ civo_database_nodes }}"
+    network: "{{ civo_network | default(civo_network_default) }}"
+    firewall: "{{ civo_firewall | default(omit) }}"
+    wait: "{{ civo_wait }}"
+    state: "{{ civo_state }}"
+  register: civo_database_result
+
+- name: Set database facts
+  ansible.builtin.set_fact:
+    civo_database_id: "{{ civo_database_result.database.id | default('') }}"
+    civo_database_endpoint: "{{ civo_database_result.database.endpoint | default('') }}"
+    civo_database_password: "{{ civo_database_result.database.password | default('') }}"
+    civo_database_info: "{{ civo_database_result.database | default({}) }}"
+  when: civo_database_result.database is defined

@@ -1,0 +1,24 @@
+---
+repos:
+  # Python linting and formatting via ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        args: [--fix]
+      - id: ruff-format
+        name: ruff (format)
+
+  # Ansible linting — run against the system Python so ansible-core is
+  # available (ansible-lint requires ansible.parsing which is part of
+  # ansible-core, not bundled in the pre-commit venv).
+  - repo: local
+    hooks:
+      - id: ansible-lint
+        name: ansible-lint
+        language: system
+        entry: ansible-lint
+        args: [--project-dir, .]
+        pass_filenames: false
+        always_run: true

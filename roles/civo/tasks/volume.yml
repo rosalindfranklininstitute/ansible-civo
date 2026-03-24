@@ -1,0 +1,17 @@
+---
+- name: Manage Civo volume
+  civo.cloud.civo_volume:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    name: "{{ civo_name }}"
+    size_gb: "{{ civo_volume_size_gb }}"
+    network: "{{ civo_network | default(civo_network_default) }}"
+    bootable: "{{ civo_volume_bootable }}"
+    state: "{{ civo_state }}"
+  register: civo_volume_result
+
+- name: Set volume facts
+  ansible.builtin.set_fact:
+    civo_volume_id: "{{ civo_volume_result.volume.id | default('') }}"
+    civo_volume_info: "{{ civo_volume_result.volume | default({}) }}"
+  when: civo_volume_result.volume is defined

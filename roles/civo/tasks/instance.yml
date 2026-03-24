@@ -1,0 +1,26 @@
+---
+- name: Manage Civo instance
+  civo.cloud.civo_instance:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    hostname: "{{ civo_name }}"
+    size: "{{ civo_instance_size }}"
+    diskimage: "{{ civo_instance_diskimage }}"
+    network: "{{ civo_network | default(civo_network_default) }}"
+    firewall: "{{ civo_firewall | default(omit) }}"
+    ssh_key: "{{ civo_ssh_key | default(omit) }}"
+    initial_user: "{{ civo_initial_user | default(omit) }}"
+    public_ip: "{{ civo_instance_public_ip }}"
+    tags: "{{ civo_tags | default(omit) }}"
+    script: "{{ civo_script | default(omit) }}"
+    wait: "{{ civo_wait }}"
+    state: "{{ civo_state }}"
+  register: civo_instance_result
+
+- name: Set instance facts
+  ansible.builtin.set_fact:
+    civo_instance_id: "{{ civo_instance_result.instance.id | default('') }}"
+    civo_instance_public_ip_addr: "{{ civo_instance_result.instance.public_ip | default('') }}"
+    civo_instance_private_ip: "{{ civo_instance_result.instance.private_ip | default('') }}"
+    civo_instance_info: "{{ civo_instance_result.instance | default({}) }}"
+  when: civo_instance_result.instance is defined

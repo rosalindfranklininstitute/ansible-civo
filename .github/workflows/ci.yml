@@ -1,0 +1,86 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Python linting and formatting (ruff)
+  # -----------------------------------------------------------------------
+  ruff:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff lint
+        run: ruff check plugins/
+
+      - name: Run ruff format check
+        run: ruff format --check plugins/
+
+  # -----------------------------------------------------------------------
+  # Ansible linting (ansible-lint)
+  # -----------------------------------------------------------------------
+  ansible-lint:
+    name: ansible-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install ansible-core>=2.14 ansible-lint
+
+      - name: Run ansible-lint
+        run: ansible-lint --project-dir .
+
+  # -----------------------------------------------------------------------
+  # ansible-test sanity
+  # -----------------------------------------------------------------------
+  sanity:
+    name: ansible-test sanity (Ansible ${{ matrix.ansible }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible:
+          - stable-2.14
+          - stable-2.15
+          - stable-2.16
+          - devel
+      fail-fast: false
+    steps:
+      - name: Check out the collection
+        uses: actions/checkout@v4
+        with:
+          # ansible-test requires the collection to live at the correct path
+          # inside an Ansible collection tree.
+          path: ansible_collections/civo/cloud
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ansible-core (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      - name: Run sanity tests
+        run: ansible-test sanity --docker -v --color
+        working-directory: ansible_collections/civo/cloud

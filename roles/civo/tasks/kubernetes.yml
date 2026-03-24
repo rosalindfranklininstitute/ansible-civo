@@ -1,0 +1,24 @@
+---
+- name: Manage Civo Kubernetes cluster
+  civo.cloud.civo_kubernetes:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    name: "{{ civo_name }}"
+    node_size: "{{ civo_kubernetes_node_size }}"
+    node_count: "{{ civo_kubernetes_node_count }}"
+    network: "{{ civo_network | default(civo_network_default) }}"
+    firewall: "{{ civo_firewall | default(omit) }}"
+    cni: "{{ civo_kubernetes_cni }}"
+    version: "{{ civo_kubernetes_version | default(omit) }}"
+    applications: "{{ civo_kubernetes_applications | default([]) }}"
+    wait: "{{ civo_wait }}"
+    state: "{{ civo_state }}"
+  register: civo_kubernetes_result
+
+- name: Set Kubernetes cluster facts
+  ansible.builtin.set_fact:
+    civo_kubernetes_id: "{{ civo_kubernetes_result.cluster.id | default('') }}"
+    civo_kubernetes_api_endpoint: "{{ civo_kubernetes_result.cluster.api_endpoint | default('') }}"
+    civo_kubernetes_kubeconfig: "{{ civo_kubernetes_result.cluster.kubeconfig | default('') }}"
+    civo_kubernetes_info: "{{ civo_kubernetes_result.cluster | default({}) }}"
+  when: civo_kubernetes_result.cluster is defined

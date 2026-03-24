@@ -1,0 +1,52 @@
+---
+# Civo API token - can also be set via CIVO_TOKEN environment variable
+civo_api_key: "{{ lookup('env', 'CIVO_TOKEN') }}"
+
+# Default region (LON1, NYC1, FRA1, PHX1)
+civo_region: "LON1"
+
+# Path to the civo binary
+civo_binary: "civo"
+
+# Default state for resources
+civo_state: present
+
+# Default wait behaviour - wait for resources to become active
+civo_wait: true
+
+# Timeout (seconds) when waiting for resources to become ready
+civo_timeout: 600
+
+# -----------------------------------------------------------------------
+# Network defaults
+# -----------------------------------------------------------------------
+civo_network_default: "default"
+
+# -----------------------------------------------------------------------
+# Instance defaults
+# -----------------------------------------------------------------------
+civo_instance_size: "g4s.small"
+civo_instance_diskimage: "ubuntu-noble"
+civo_instance_public_ip: "create"
+
+# -----------------------------------------------------------------------
+# Kubernetes defaults
+# -----------------------------------------------------------------------
+civo_kubernetes_node_size: "g4s.kube.medium"
+civo_kubernetes_node_count: 3
+civo_kubernetes_cni: "flannel"
+civo_kubernetes_version: ""    # empty = latest
+
+# -----------------------------------------------------------------------
+# Volume defaults
+# -----------------------------------------------------------------------
+civo_volume_size_gb: 10
+civo_volume_bootable: false
+
+# -----------------------------------------------------------------------
+# Database defaults
+# -----------------------------------------------------------------------
+civo_database_size: "g3.db.xsmall"
+civo_database_engine: "mysql"
+civo_database_version: "8.0"
+civo_database_nodes: 1

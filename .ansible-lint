@@ -1,0 +1,28 @@
+---
+# ansible-lint configuration for the civo.cloud collection
+# https://ansible.readthedocs.io/projects/lint/configuring/
+
+profile: production
+
+# Exclude paths that are not Ansible content
+exclude_paths:
+  - .git/
+  - .github/
+  - docs/
+  - __pycache__/
+  - "*.egg-info/"
+
+# Warn instead of failing for rules that are aspirational
+warn_list:
+  - no-changed-when           # modules handle changed internally
+  - command-instead-of-module # we intentionally shell out to civo CLI
+
+# Rules to skip entirely
+skip_list:
+  - role-name  # collection roles don't follow Galaxy role-name conventions
+
+# Tell ansible-lint this is an Ansible collection
+kinds:
+  - tasks: "roles/civo/tasks/*.yml"
+  - defaults: "roles/civo/defaults/*.yml"
+  - meta: "roles/civo/meta/*.yml"

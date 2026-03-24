@@ -1,0 +1,33 @@
+namespace: civo
+name: cloud
+version: 0.0.1
+readme: README.md
+authors:
+  - The Rosalind Franklin Institute
+description: >-
+  Manage Civo cloud resources (instances, Kubernetes, networks, firewalls,
+  volumes, load balancers, reserved IPs, databases and object stores) using
+  the Civo CLI. EXPERIMENTAL — not yet suitable for production use.
+license:
+  - Apache-2.0
+license_file: LICENSE
+tags:
+  - civo
+  - cloud
+  - kubernetes
+  - infrastructure
+  - iaas
+  - networking
+repository: https://github.com/rosalindfranklininstitute/ansible-civo
+documentation: https://rosalindfranklininstitute.github.io/ansible-civo
+homepage: https://www.rfi.ac.uk
+issues: https://github.com/rosalindfranklininstitute/ansible-civo/issues
+build_ignore:
+  - "*.tar.gz"
+  - .git
+  - .github
+  - .pre-commit-config.yaml
+  - docs/.sphinx
+  - "*.egg-info"
+  - __pycache__
+  - ".ruff_cache"

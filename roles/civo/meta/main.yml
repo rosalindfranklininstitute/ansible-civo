@@ -1,0 +1,37 @@
+---
+galaxy_info:
+  role_name: civo
+  author: The Rosalind Franklin Institute
+  description: >-
+    Dispatcher role for the civo.cloud collection — manages Civo cloud
+    resources (instances, Kubernetes, networks, firewalls, volumes, load
+    balancers, reserved IPs, databases, and object stores) via the
+    civo.cloud.civo_* modules.
+  company: The Rosalind Franklin Institute
+  license: Apache-2.0
+  min_ansible_version: "2.15"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+  galaxy_tags:
+    - civo
+    - cloud
+    - kubernetes
+    - infrastructure
+    - iaas
+
+collections:
+  - civo.cloud
+
+dependencies: []

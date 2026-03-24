@@ -1,0 +1,17 @@
+# Development and documentation dependencies
+
+# Ansible
+ansible-core>=2.14
+ansible-lint>=24.2
+
+# Python linting / formatting
+ruff>=0.4
+
+# Pre-commit
+pre-commit>=3.7
+
+# Documentation
+sphinx>=7.3
+sphinx-rtd-theme>=2.0
+sphinx-antsibull-ext>=1.0
+antsibull-docs>=2.5

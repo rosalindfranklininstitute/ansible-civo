@@ -1,0 +1,15 @@
+---
+- name: Manage Civo network
+  civo.cloud.civo_network:
+    api_key: "{{ civo_api_key }}"
+    region: "{{ civo_region }}"
+    name: "{{ civo_name }}"
+    cidr: "{{ civo_cidr | default(omit) }}"
+    state: "{{ civo_state }}"
+  register: civo_network_result
+
+- name: Set network facts
+  ansible.builtin.set_fact:
+    civo_network_id: "{{ civo_network_result.network.id | default('') }}"
+    civo_network_info: "{{ civo_network_result.network | default({}) }}"
+  when: civo_network_result.network is defined
