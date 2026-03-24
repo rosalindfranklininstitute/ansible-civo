@@ -1,0 +1,139 @@
+---
+# Integration tests for civo_sshkey and civo_sshkey_info.
+# Tests CREATE / READ / DELETE with idempotency checks.
+# Tags: [sshkey]
+#
+# Prerequisites: a temporary SSH key pair is generated in /tmp for the test.
+
+- name: "[sshkey] Generate a temporary SSH key pair for testing"
+  ansible.builtin.command:
+    cmd: >-
+      ssh-keygen -t ed25519 -C "ansible-test" -N ""
+      -f /tmp/ansible_test_sshkey
+    creates: /tmp/ansible_test_sshkey
+  tags: [sshkey]
+
+- name: "[sshkey_info] List all SSH keys before test"
+  civo.cloud.civo_sshkey_info:
+    region: "{{ region }}"
+  register: keys_before
+  tags: [sshkey]
+
+# =========================================================================
+# CREATE
+# =========================================================================
+- name: "[sshkey] Upload test SSH key"
+  civo.cloud.civo_sshkey:
+    region: "{{ region }}"
+    name: "{{ test_prefix }}-sshkey"
+    public_key_file: /tmp/ansible_test_sshkey.pub
+    state: present
+  register: sshkey_create
+  tags: [sshkey]
+
+- name: "[sshkey] Assert key was created"
+  ansible.builtin.assert:
+    that:
+      - sshkey_create.changed
+      - sshkey_create.sshkey is defined
+      - sshkey_create.sshkey.name == test_prefix ~ "-sshkey"
+      - sshkey_create.sshkey.id is defined
+    fail_msg: "Expected SSH key to be created: {{ sshkey_create }}"
+  tags: [sshkey]
+
+# =========================================================================
+# READ
+# =========================================================================
+- name: "[sshkey_info] List all SSH keys (should include new key)"
+  civo.cloud.civo_sshkey_info:
+    region: "{{ region }}"
+  register: keys_after
+  tags: [sshkey]
+
+- name: "[sshkey_info] Assert new key is present in list"
+  ansible.builtin.assert:
+    that:
+      - keys_after.sshkeys | length > keys_before.sshkeys | length
+      - keys_after.sshkeys | selectattr('name', 'equalto', test_prefix ~ '-sshkey') | list | length == 1
+    fail_msg: "Expected new key in list: {{ keys_after.sshkeys | map(attribute='name') | list }}"
+  tags: [sshkey]
+
+- name: "[sshkey_info] Look up key by name"
+  civo.cloud.civo_sshkey_info:
+    region: "{{ region }}"
+    name: "{{ test_prefix }}-sshkey"
+  register: key_lookup
+  tags: [sshkey]
+
+- name: "[sshkey_info] Assert single key returned by name"
+  ansible.builtin.assert:
+    that:
+      - key_lookup.sshkeys | length == 1
+      - key_lookup.sshkeys[0].name == test_prefix ~ "-sshkey"
+      - key_lookup.sshkeys[0].fingerprint is defined
+    fail_msg: "Expected exactly one key by name: {{ key_lookup }}"
+  tags: [sshkey]
+
+# =========================================================================
+# IDEMPOTENCY
+# =========================================================================
+- name: "[sshkey] Re-upload same key (idempotent)"
+  civo.cloud.civo_sshkey:
+    region: "{{ region }}"
+    name: "{{ test_prefix }}-sshkey"
+    public_key_file: /tmp/ansible_test_sshkey.pub
+    state: present
+  register: sshkey_idem
+  tags: [sshkey]
+
+- name: "[sshkey] Assert idempotent (no change)"
+  ansible.builtin.assert:
+    that:
+      - not sshkey_idem.changed
+    fail_msg: "Expected no change on re-upload: {{ sshkey_idem }}"
+  tags: [sshkey]
+
+# =========================================================================
+# DELETE
+# =========================================================================
+- name: "[sshkey] Delete test SSH key"
+  civo.cloud.civo_sshkey:
+    region: "{{ region }}"
+    name: "{{ test_prefix }}-sshkey"
+    state: absent
+  register: sshkey_delete
+  tags: [sshkey]
+
+- name: "[sshkey] Assert key deleted"
+  ansible.builtin.assert:
+    that:
+      - sshkey_delete.changed
+    fail_msg: "Expected SSH key deletion: {{ sshkey_delete }}"
+  tags: [sshkey]
+
+- name: "[sshkey] Delete non-existent key (idempotent)"
+  civo.cloud.civo_sshkey:
+    region: "{{ region }}"
+    name: "{{ test_prefix }}-sshkey"
+    state: absent
+  register: sshkey_delete_idem
+  tags: [sshkey]
+
+- name: "[sshkey] Assert no change on absent→absent"
+  ansible.builtin.assert:
+    that:
+      - not sshkey_delete_idem.changed
+    fail_msg: "Expected no change deleting non-existent key: {{ sshkey_delete_idem }}"
+  tags: [sshkey]
+
+# =========================================================================
+# CLEANUP temp files
+# =========================================================================
+- name: "[sshkey] Remove temporary key files"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/ansible_test_sshkey
+    - /tmp/ansible_test_sshkey.pub
+  tags: [sshkey]

@@ -30,7 +30,13 @@ civo.cloud
 * :ansplugin:`civo.cloud.civo_network_info#module` -- Gather information about Civo private networks
 * :ansplugin:`civo.cloud.civo_objectstore#module` -- Manage Civo S3\-compatible object stores
 * :ansplugin:`civo.cloud.civo_objectstore_info#module` -- Gather information about Civo object stores
+* :ansplugin:`civo.cloud.civo_quota_info#module` -- Return current Civo account quota and usage
+* :ansplugin:`civo.cloud.civo_region_info#module` -- List available Civo regions
 * :ansplugin:`civo.cloud.civo_reserved_ip#module` -- Manage Civo reserved (static) public IP addresses
 * :ansplugin:`civo.cloud.civo_reserved_ip_info#module` -- Gather information about Civo reserved IP addresses
+* :ansplugin:`civo.cloud.civo_size_info#module` -- List available Civo instance / Kubernetes / database sizes
+* :ansplugin:`civo.cloud.civo_sshkey#module` -- Manage Civo SSH keys
+* :ansplugin:`civo.cloud.civo_sshkey_info#module` -- List SSH keys stored in a Civo account
 * :ansplugin:`civo.cloud.civo_volume#module` -- Manage Civo block storage volumes
 * :ansplugin:`civo.cloud.civo_volume_info#module` -- Gather information about Civo block storage volumes
+* :ansplugin:`civo.cloud.civo_volumetype_info#module` -- List available Civo volume types

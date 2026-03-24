@@ -75,10 +75,16 @@ Modules
 * :ansplugin:`civo_network_info module <civo.cloud.civo_network_info#module>` -- Gather information about Civo private networks
 * :ansplugin:`civo_objectstore module <civo.cloud.civo_objectstore#module>` -- Manage Civo S3\-compatible object stores
 * :ansplugin:`civo_objectstore_info module <civo.cloud.civo_objectstore_info#module>` -- Gather information about Civo object stores
+* :ansplugin:`civo_quota_info module <civo.cloud.civo_quota_info#module>` -- Return current Civo account quota and usage
+* :ansplugin:`civo_region_info module <civo.cloud.civo_region_info#module>` -- List available Civo regions
 * :ansplugin:`civo_reserved_ip module <civo.cloud.civo_reserved_ip#module>` -- Manage Civo reserved (static) public IP addresses
 * :ansplugin:`civo_reserved_ip_info module <civo.cloud.civo_reserved_ip_info#module>` -- Gather information about Civo reserved IP addresses
+* :ansplugin:`civo_size_info module <civo.cloud.civo_size_info#module>` -- List available Civo instance / Kubernetes / database sizes
+* :ansplugin:`civo_sshkey module <civo.cloud.civo_sshkey#module>` -- Manage Civo SSH keys
+* :ansplugin:`civo_sshkey_info module <civo.cloud.civo_sshkey_info#module>` -- List SSH keys stored in a Civo account
 * :ansplugin:`civo_volume module <civo.cloud.civo_volume#module>` -- Manage Civo block storage volumes
 * :ansplugin:`civo_volume_info module <civo.cloud.civo_volume_info#module>` -- Gather information about Civo block storage volumes
+* :ansplugin:`civo_volumetype_info module <civo.cloud.civo_volumetype_info#module>` -- List available Civo volume types
 
 .. toctree::
     :maxdepth: 1
@@ -103,10 +109,16 @@ Modules
     civo_network_info_module
     civo_objectstore_module
     civo_objectstore_info_module
+    civo_quota_info_module
+    civo_region_info_module
     civo_reserved_ip_module
     civo_reserved_ip_info_module
+    civo_size_info_module
+    civo_sshkey_module
+    civo_sshkey_info_module
     civo_volume_module
     civo_volume_info_module
+    civo_volumetype_info_module
 
 
 

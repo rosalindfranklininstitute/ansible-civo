@@ -128,7 +128,14 @@
               tags: [kubernetes, kubernetes_pool]
           tags: [kubernetes_pool]
 
-        - name: Include catalog info tests (diskimage + kubernetes versions)
+        - name: Include SSH key tests
+          ansible.builtin.include_tasks:
+            file: tasks/sshkey.yml
+            apply:
+              tags: [sshkey]
+          tags: [always, sshkey]
+
+        - name: Include catalog info tests (diskimage + k8s versions + region + size + quota + volumetype)
           ansible.builtin.include_tasks:
             file: tasks/catalog.yml
             apply:

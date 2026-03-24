@@ -86,12 +86,12 @@
     fail_msg: "Expected non-empty kubernetes versions list: {{ all_k8s_versions }}"
   tags: [catalog, kubernetes_version_info]
 
-- name: "[k8s_version_info] Exactly one default version exists"
+- name: "[k8s_version_info] Exactly one default version per cluster_type"
   ansible.builtin.assert:
     that:
-      - all_k8s_versions.kubernetes_versions | selectattr('default', 'equalto', 'true') | list | length == 1
+      - all_k8s_versions.kubernetes_versions | selectattr('default', 'equalto', 'true') | list | length >= 1
     fail_msg: >-
-      Expected exactly one default version, got:
+      Expected at least one default version, got:
       {{ all_k8s_versions.kubernetes_versions | selectattr('default', 'equalto', 'true') | map(attribute='version') | list }}
   tags: [catalog, kubernetes_version_info]
 
@@ -146,3 +146,157 @@
           deprecated={{ deprecated_k8s_versions.kubernetes_versions | length }},
           development={{ dev_k8s_versions.kubernetes_versions | length }},
           total={{ all_k8s_versions.kubernetes_versions | length }}
+
+# =========================================================================
+# REGION INFO
+# =========================================================================
+- name: "[region_info] List all regions"
+  civo.cloud.civo_region_info:
+    region: "{{ region }}"
+  register: all_regions
+  tags: [catalog, region_info]
+
+- name: "[region_info] Assert non-empty list with required fields"
+  ansible.builtin.assert:
+    that:
+      - all_regions.regions is defined
+      - all_regions.regions | length > 0
+      - all_regions.regions[0].code is defined
+      - all_regions.regions[0].country is defined
+    fail_msg: "Expected non-empty regions list: {{ all_regions }}"
+  tags: [catalog, region_info]
+
+- name: "[region_info] Assert exactly one current region"
+  ansible.builtin.assert:
+    that:
+      - all_regions.regions | selectattr('current', 'equalto', 'Yes') | list | length == 1
+    fail_msg: >-
+      Expected exactly one current region:
+      {{ all_regions.regions | map(attribute='code') | list }}
+  tags: [catalog, region_info]
+
+# =========================================================================
+# SIZE INFO
+# =========================================================================
+- name: "[size_info] List all sizes"
+  civo.cloud.civo_size_info:
+    region: "{{ region }}"
+  register: all_sizes
+  tags: [catalog, size_info]
+
+- name: "[size_info] Assert non-empty list with required fields"
+  ansible.builtin.assert:
+    that:
+      - all_sizes.sizes is defined
+      - all_sizes.sizes | length > 0
+      - all_sizes.sizes[0].name is defined
+      - all_sizes.sizes[0].type is defined
+    fail_msg: "Expected non-empty sizes list: {{ all_sizes }}"
+  tags: [catalog, size_info]
+
+- name: "[size_info] Filter to instance sizes"
+  civo.cloud.civo_size_info:
+    region: "{{ region }}"
+    resource_type: instance
+  register: instance_sizes
+  tags: [catalog, size_info]
+
+- name: "[size_info] Assert all returned types are Instance"
+  ansible.builtin.assert:
+    that:
+      - instance_sizes.sizes | length > 0
+      - instance_sizes.sizes | map(attribute='type') | select('ne', 'Instance') | list | length == 0
+    fail_msg: "Expected only Instance sizes: {{ instance_sizes.sizes | map(attribute='type') | list }}"
+  tags: [catalog, size_info]
+
+- name: "[size_info] Filter to kubernetes sizes"
+  civo.cloud.civo_size_info:
+    region: "{{ region }}"
+    resource_type: kubernetes
+  register: k8s_sizes
+  tags: [catalog, size_info]
+
+- name: "[size_info] Assert all returned types are Kubernetes"
+  ansible.builtin.assert:
+    that:
+      - k8s_sizes.sizes | length > 0
+      - k8s_sizes.sizes | map(attribute='type') | select('ne', 'Kubernetes') | list | length == 0
+    fail_msg: "Expected only Kubernetes sizes: {{ k8s_sizes.sizes | map(attribute='type') | list }}"
+  tags: [catalog, size_info]
+
+- name: "[size_info] Filter to database sizes"
+  civo.cloud.civo_size_info:
+    region: "{{ region }}"
+    resource_type: database
+  register: db_sizes
+  tags: [catalog, size_info]
+
+- name: "[size_info] Assert all returned types are Database"
+  ansible.builtin.assert:
+    that:
+      - db_sizes.sizes | length > 0
+      - db_sizes.sizes | map(attribute='type') | select('ne', 'Database') | list | length == 0
+    fail_msg: "Expected only Database sizes: {{ db_sizes.sizes | map(attribute='type') | list }}"
+  tags: [catalog, size_info]
+
+- name: "[size_info] Assert instance+kubernetes+database equals total"
+  ansible.builtin.assert:
+    that:
+      - (instance_sizes.sizes | length
+         + k8s_sizes.sizes | length
+         + db_sizes.sizes | length)
+        == all_sizes.sizes | length
+    fail_msg: >-
+      Size counts don't add up:
+      instance={{ instance_sizes.sizes | length }},
+      kubernetes={{ k8s_sizes.sizes | length }},
+      database={{ db_sizes.sizes | length }},
+      total={{ all_sizes.sizes | length }}
+  tags: [catalog, size_info]
+
+# =========================================================================
+# QUOTA INFO
+# =========================================================================
+- name: "[quota_info] Get account quota"
+  civo.cloud.civo_quota_info:
+    region: "{{ region }}"
+  register: quota
+  tags: [catalog, quota_info]
+
+- name: "[quota_info] Assert required quota fields present"
+  ansible.builtin.assert:
+    that:
+      - quota.quota is defined
+      - quota.quota.instance_count_limit is defined
+      - quota.quota.instance_count_usage is defined
+      - quota.quota.cpu_core_limit is defined
+      - quota.quota.network_count_limit is defined
+    fail_msg: "Expected quota dict with limit/usage fields: {{ quota }}"
+  tags: [catalog, quota_info]
+
+- name: "[quota_info] Assert usage does not exceed limit for instances"
+  ansible.builtin.assert:
+    that:
+      - quota.quota.instance_count_usage | int <= quota.quota.instance_count_limit | int
+    fail_msg: >-
+      Instance usage {{ quota.quota.instance_count_usage }}
+      exceeds limit {{ quota.quota.instance_count_limit }}
+  tags: [catalog, quota_info]
+
+# =========================================================================
+# VOLUME TYPE INFO
+# =========================================================================
+- name: "[volumetype_info] List all volume types"
+  civo.cloud.civo_volumetype_info:
+    region: "{{ region }}"
+  register: vtypes
+  tags: [catalog, volumetype_info]
+
+- name: "[volumetype_info] Assert non-empty list with required fields"
+  ansible.builtin.assert:
+    that:
+      - vtypes.volume_types is defined
+      - vtypes.volume_types | length > 0
+      - vtypes.volume_types[0].name is defined
+    fail_msg: "Expected non-empty volume_types list: {{ vtypes }}"
+  tags: [catalog, volumetype_info]

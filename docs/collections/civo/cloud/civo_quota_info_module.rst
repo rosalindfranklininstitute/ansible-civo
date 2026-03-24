@@ -1,0 +1,1383 @@
+.. Document meta
+
+:orphan:
+
+.. |antsibull-internal-nbsp| unicode:: 0xA0
+    :trim:
+
+.. meta::
+  :antsibull-docs: 2.24.0
+
+.. Anchors
+
+.. _ansible_collections.civo.cloud.civo_quota_info_module:
+
+.. Anchors: short name for ansible.builtin
+
+.. Title
+
+civo.cloud.civo_quota_info module -- Return current Civo account quota and usage
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. Collection note
+
+.. note::
+    This module is part of the `civo.cloud collection <https://galaxy.ansible.com/ui/repo/published/civo/cloud/>`_ (version 0.0.1).
+
+    It is not included in ``ansible-core``.
+    To check whether it is installed, run :code:`ansible-galaxy collection list`.
+
+    To install it, use: :code:`ansible\-galaxy collection install civo.cloud`.
+
+    To use it in a playbook, specify: :code:`civo.cloud.civo_quota_info`.
+
+.. version_added
+
+.. rst-class:: ansible-version-added
+
+New in civo.cloud 0.0.1
+
+.. contents::
+   :local:
+   :depth: 1
+
+.. Deprecated
+
+
+Synopsis
+--------
+
+.. Description
+
+- Returns the quota limits and current usage for a Civo account in a given region.
+- Useful for capacity\-planning checks before provisioning resources.
+- Uses the :literal:`civo` CLI binary on the control node.
+
+
+.. Aliases
+
+
+.. Requirements
+
+
+
+
+
+
+.. Options
+
+Parameters
+----------
+
+.. tabularcolumns:: \X{1}{3}\X{2}{3}
+
+.. list-table::
+  :width: 100%
+  :widths: auto
+  :header-rows: 1
+  :class: longtable ansible-option-table
+
+  * - Parameter
+    - Comments
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-api_key"></div>
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__parameter-api_key:
+
+      .. rst-class:: ansible-option-title
+
+      **api_key**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-api_key" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Civo API token.
+
+      Falls back to the :literal:`CIVO\_TOKEN` environment variable when not set.
+
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-civo_binary"></div>
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__parameter-civo_binary:
+
+      .. rst-class:: ansible-option-title
+
+      **civo_binary**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-civo_binary" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Path to the :literal:`civo` CLI binary.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`"civo"`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-region"></div>
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__parameter-region:
+
+      .. rst-class:: ansible-option-title
+
+      **region**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-region" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Civo region identifier.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`"LON1"`
+
+      .. raw:: html
+
+        </div>
+
+
+.. Attributes
+
+
+.. Notes
+
+
+.. Seealso
+
+
+.. Examples
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    - name: Get account quota and usage
+      civo.cloud.civo_quota_info:
+        region: LON1
+      register: quota
+
+    - name: Show instance usage vs limit
+      ansible.builtin.debug:
+        msg: >-
+          Instances: {{ quota.quota.instance_count_usage }}
+          / {{ quota.quota.instance_count_limit }}
+
+    - name: Fail if near instance limit
+      ansible.builtin.fail:
+        msg: "Instance quota nearly exhausted!"
+      when: >-
+        quota.quota.instance_count_usage | int
+        >= (quota.quota.instance_count_limit | int * 0.9) | int
+
+
+
+.. Facts
+
+
+.. Return values
+
+Return Values
+-------------
+Common return values are documented :ref:`here <common_return_values>`, the following are the fields unique to this module:
+
+.. tabularcolumns:: \X{1}{3}\X{2}{3}
+
+.. list-table::
+  :width: 100%
+  :widths: auto
+  :header-rows: 1
+  :class: longtable ansible-option-table
+
+  * - Key
+    - Description
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota"></div>
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota:
+
+      .. rst-class:: ansible-option-title
+
+      **quota**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`dictionary`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Dict of quota limits and current usage for the account. All values are returned as strings by the Civo CLI; cast to :literal:`int` as needed.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` always
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/cpu_core_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/cpu_core_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **cpu_core_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/cpu_core_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum total vCPU cores across all instances.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"16"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/cpu_core_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/cpu_core_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **cpu_core_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/cpu_core_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Currently used vCPU cores.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"2"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/database_count_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/database_count_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **database_count_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/database_count_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum number of managed databases.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"4"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/database_count_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/database_count_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **database_count_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/database_count_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Current number of managed databases.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"0"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/disk_gb_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/disk_gb_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **disk_gb_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/disk_gb_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum total disk in gigabytes.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"400"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/disk_gb_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/disk_gb_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **disk_gb_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/disk_gb_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Currently used disk in gigabytes.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"25"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/disk_volume_count_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/disk_volume_count_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **disk_volume_count_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/disk_volume_count_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum number of volumes.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"16"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/disk_volume_count_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/disk_volume_count_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **disk_volume_count_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/disk_volume_count_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Current number of volumes.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"0"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/instance_count_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/instance_count_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **instance_count_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/instance_count_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum number of instances allowed.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"16"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/instance_count_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/instance_count_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **instance_count_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/instance_count_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Current number of instances.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"2"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/network_count_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/network_count_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **network_count_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/network_count_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum number of networks.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"10"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/network_count_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/network_count_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **network_count_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/network_count_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Current number of networks.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"2"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/objectstore_gb_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/objectstore_gb_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **objectstore_gb_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/objectstore_gb_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum object store capacity in gigabytes.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"1000"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/objectstore_gb_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/objectstore_gb_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **objectstore_gb_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/objectstore_gb_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Currently used object store capacity in gigabytes.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"0"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/public_ip_address_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/public_ip_address_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **public_ip_address_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/public_ip_address_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum number of reserved public IPs.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"16"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/public_ip_address_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/public_ip_address_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **public_ip_address_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/public_ip_address_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Current number of reserved public IPs.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"0"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/ram_mb_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/ram_mb_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **ram_mb_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/ram_mb_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum total RAM in megabytes.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"64512"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/ram_mb_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/ram_mb_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **ram_mb_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/ram_mb_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Currently used RAM in megabytes.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"2048"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/security_group_limit"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/security_group_limit:
+
+      .. rst-class:: ansible-option-title
+
+      **security_group_limit**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/security_group_limit" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Maximum number of security groups (firewalls).
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"16"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-quota/security_group_usage"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_quota_info_module__return-quota/security_group_usage:
+
+      .. rst-class:: ansible-option-title
+
+      **security_group_usage**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-quota/security_group_usage" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Current number of security groups.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"1"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+
+
+..  Status (Presently only deprecated)
+
+
+.. Authors
+
+Authors
+~~~~~~~
+
+- The Rosalind Franklin Institute
+
+
+.. Extra links
+
+Collection links
+~~~~~~~~~~~~~~~~
+
+.. ansible-links::
+
+  - title: "Issue Tracker"
+    url: "https://github.com/rosalindfranklininstitute/ansible-civo/issues"
+    external: true
+  - title: "Homepage"
+    url: "https://www.rfi.ac.uk"
+    external: true
+  - title: "Repository (Sources)"
+    url: "https://github.com/rosalindfranklininstitute/ansible-civo"
+    external: true
+
+
+.. Parsing errors

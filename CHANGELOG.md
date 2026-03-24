@@ -4,6 +4,23 @@
 
 ### Added
 
+- New module `civo_sshkey` — upload, rename, or remove SSH public keys stored
+  in a Civo account; idempotent create and delete.
+- New module `civo_sshkey_info` — list SSH keys in a Civo account, with
+  optional C(name) filter.
+- New module `civo_size_info` — list all available sizes (instance, Kubernetes,
+  database) in a region, with optional C(filter) by type.
+- New module `civo_region_info` — list all available Civo regions.
+- New module `civo_quota_info` — return current quota limits and usage for a
+  Civo account in a given region.
+- New module `civo_volumetype_info` — list available volume types
+  (e.g. C(standard), C(encrypted-standard)).
+- Integration tests for C(civo_sshkey) / C(civo_sshkey_info)
+  (C(tests/integration/tasks/sshkey.yml), tag C(sshkey)).
+- Integration tests for C(civo_region_info), C(civo_size_info),
+  C(civo_quota_info), and C(civo_volumetype_info) added to
+  C(tests/integration/tasks/catalog.yml) under sub-tags C(region_info),
+  C(size_info), C(quota_info), C(volumetype_info).
 - New module `civo_diskimage_info` — list available VM disk images (templates)
   in a region, with optional filters for C(name) (exact) and C(distribution)
   (substring).
