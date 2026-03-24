@@ -4,6 +4,16 @@
 
 ### Added
 
+- New module `civo_diskimage_info` — list available VM disk images (templates)
+  in a region, with optional filters for C(name) (exact) and C(distribution)
+  (substring).
+- New module `civo_kubernetes_version_info` — list available Kubernetes versions
+  in a region, with optional C(maturity) filter (C(stable), C(development),
+  C(deprecated)).  Version strings are directly usable in C(civo_kubernetes)
+  C(version) and C(upgrade_version) parameters.
+- Integration tests for both catalog info modules
+  (C(tests/integration/tasks/catalog.yml), tag C(catalog),
+  sub-tags C(diskimage_info) and C(kubernetes_version_info)).
 - `civo_kubernetes`: new `upgrade_version` parameter — calls `civo kubernetes upgrade`
   and waits for the cluster to return to `ACTIVE` status.
 - `civo_kubernetes`: new `pool_id` parameter — when a cluster has multiple pools,

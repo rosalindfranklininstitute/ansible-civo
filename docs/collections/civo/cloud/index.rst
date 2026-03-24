@@ -58,6 +58,7 @@ Modules
 
 * :ansplugin:`civo_database module <civo.cloud.civo_database#module>` -- Manage Civo managed databases
 * :ansplugin:`civo_database_info module <civo.cloud.civo_database_info#module>` -- Gather information about Civo managed databases
+* :ansplugin:`civo_diskimage_info module <civo.cloud.civo_diskimage_info#module>` -- List available Civo disk images (VM templates)
 * :ansplugin:`civo_firewall module <civo.cloud.civo_firewall#module>` -- Manage Civo firewalls and firewall rules
 * :ansplugin:`civo_firewall_info module <civo.cloud.civo_firewall_info#module>` -- Gather information about Civo firewalls
 * :ansplugin:`civo_instance module <civo.cloud.civo_instance#module>` -- Manage Civo compute instances
@@ -67,6 +68,7 @@ Modules
 * :ansplugin:`civo_kubernetes_node module <civo.cloud.civo_kubernetes_node#module>` -- Recycle or delete a node in a Civo Kubernetes cluster
 * :ansplugin:`civo_kubernetes_pool module <civo.cloud.civo_kubernetes_pool#module>` -- Manage node pools in a Civo Kubernetes cluster
 * :ansplugin:`civo_kubernetes_pool_info module <civo.cloud.civo_kubernetes_pool_info#module>` -- Query node pools in a Civo Kubernetes cluster
+* :ansplugin:`civo_kubernetes_version_info module <civo.cloud.civo_kubernetes_version_info#module>` -- List available Civo Kubernetes versions
 * :ansplugin:`civo_loadbalancer module <civo.cloud.civo_loadbalancer#module>` -- Manage Civo load balancers
 * :ansplugin:`civo_loadbalancer_info module <civo.cloud.civo_loadbalancer_info#module>` -- Gather information about Civo load balancers
 * :ansplugin:`civo_network module <civo.cloud.civo_network#module>` -- Manage Civo private networks
@@ -84,6 +86,7 @@ Modules
 
     civo_database_module
     civo_database_info_module
+    civo_diskimage_info_module
     civo_firewall_module
     civo_firewall_info_module
     civo_instance_module
@@ -93,6 +96,7 @@ Modules
     civo_kubernetes_node_module
     civo_kubernetes_pool_module
     civo_kubernetes_pool_info_module
+    civo_kubernetes_version_info_module
     civo_loadbalancer_module
     civo_loadbalancer_info_module
     civo_network_module

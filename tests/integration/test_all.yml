@@ -128,6 +128,13 @@
               tags: [kubernetes, kubernetes_pool]
           tags: [kubernetes_pool]
 
+        - name: Include catalog info tests (diskimage + kubernetes versions)
+          ansible.builtin.include_tasks:
+            file: tasks/catalog.yml
+            apply:
+              tags: [catalog]
+          tags: [always, catalog]
+
         - name: Include load balancer tests
           ansible.builtin.include_tasks:
             file: tasks/loadbalancer.yml

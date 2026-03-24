@@ -1,0 +1,148 @@
+---
+# Integration tests for catalog info modules: diskimage and kubernetes version.
+# These tests only read data from the Civo API — no resources are created.
+# Tags: [catalog]
+
+# =========================================================================
+# DISK IMAGE INFO
+# =========================================================================
+- name: "[diskimage_info] List all disk images"
+  civo.cloud.civo_diskimage_info:
+    region: "{{ region }}"
+  register: all_images
+  tags: [catalog, diskimage_info]
+
+- name: "[diskimage_info] Assert non-empty list returned"
+  ansible.builtin.assert:
+    that:
+      - all_images.diskimages is defined
+      - all_images.diskimages | length > 0
+      - all_images.diskimages[0].id is defined
+      - all_images.diskimages[0].name is defined
+    fail_msg: "Expected non-empty diskimage list: {{ all_images }}"
+  tags: [catalog, diskimage_info]
+
+- name: "[diskimage_info] Filter by name (debian-11)"
+  civo.cloud.civo_diskimage_info:
+    region: "{{ region }}"
+    name: debian-11
+  register: debian11
+  tags: [catalog, diskimage_info]
+
+- name: "[diskimage_info] Assert exactly one result for debian-11"
+  ansible.builtin.assert:
+    that:
+      - debian11.diskimages | length == 1
+      - debian11.diskimages[0].name == "debian-11"
+      - debian11.diskimages[0].distribution == "debian"
+    fail_msg: "Expected exactly one debian-11 image: {{ debian11 }}"
+  tags: [catalog, diskimage_info]
+
+- name: "[diskimage_info] Filter by non-existent name"
+  civo.cloud.civo_diskimage_info:
+    region: "{{ region }}"
+    name: "does-not-exist-image-xyz"
+  register: no_image
+  tags: [catalog, diskimage_info]
+
+- name: "[diskimage_info] Assert empty list for non-existent name"
+  ansible.builtin.assert:
+    that:
+      - no_image.diskimages | length == 0
+    fail_msg: "Expected empty list for non-existent image: {{ no_image }}"
+  tags: [catalog, diskimage_info]
+
+- name: "[diskimage_info] Filter by distribution (ubuntu)"
+  civo.cloud.civo_diskimage_info:
+    region: "{{ region }}"
+    distribution: ubuntu
+  register: ubuntu_images
+  tags: [catalog, diskimage_info]
+
+- name: "[diskimage_info] Assert ubuntu images all have distribution=ubuntu"
+  ansible.builtin.assert:
+    that:
+      - ubuntu_images.diskimages | length > 0
+      - ubuntu_images.diskimages | map(attribute='distribution') | select('ne', 'ubuntu') | list | length == 0
+    fail_msg: "Expected only ubuntu images: {{ ubuntu_images.diskimages | map(attribute='distribution') | list }}"
+  tags: [catalog, diskimage_info]
+
+# =========================================================================
+# KUBERNETES VERSION INFO
+# =========================================================================
+- name: "[k8s_version_info] List all Kubernetes versions"
+  civo.cloud.civo_kubernetes_version_info:
+    region: "{{ region }}"
+  register: all_k8s_versions
+  tags: [catalog, kubernetes_version_info]
+
+- name: "[k8s_version_info] Assert non-empty list with required fields"
+  ansible.builtin.assert:
+    that:
+      - all_k8s_versions.kubernetes_versions is defined
+      - all_k8s_versions.kubernetes_versions | length > 0
+      - all_k8s_versions.kubernetes_versions[0].version is defined
+      - all_k8s_versions.kubernetes_versions[0].type is defined
+    fail_msg: "Expected non-empty kubernetes versions list: {{ all_k8s_versions }}"
+  tags: [catalog, kubernetes_version_info]
+
+- name: "[k8s_version_info] Exactly one default version exists"
+  ansible.builtin.assert:
+    that:
+      - all_k8s_versions.kubernetes_versions | selectattr('default', 'equalto', 'true') | list | length == 1
+    fail_msg: >-
+      Expected exactly one default version, got:
+      {{ all_k8s_versions.kubernetes_versions | selectattr('default', 'equalto', 'true') | map(attribute='version') | list }}
+  tags: [catalog, kubernetes_version_info]
+
+- name: "[k8s_version_info] Filter to stable versions only"
+  civo.cloud.civo_kubernetes_version_info:
+    region: "{{ region }}"
+    maturity: stable
+  register: stable_k8s_versions
+  tags: [catalog, kubernetes_version_info]
+
+- name: "[k8s_version_info] Assert all returned versions are stable"
+  ansible.builtin.assert:
+    that:
+      - stable_k8s_versions.kubernetes_versions | length > 0
+      - stable_k8s_versions.kubernetes_versions | map(attribute='type') | select('ne', 'stable') | list | length == 0
+    fail_msg: "Expected only stable versions: {{ stable_k8s_versions.kubernetes_versions | map(attribute='type') | list }}"
+  tags: [catalog, kubernetes_version_info]
+
+- name: "[k8s_version_info] Filter to deprecated versions"
+  civo.cloud.civo_kubernetes_version_info:
+    region: "{{ region }}"
+    maturity: deprecated
+  register: deprecated_k8s_versions
+  tags: [catalog, kubernetes_version_info]
+
+- name: "[k8s_version_info] Assert deprecated versions returned (Civo always has some)"
+  ansible.builtin.assert:
+    that:
+      - deprecated_k8s_versions.kubernetes_versions | length > 0
+    fail_msg: "Expected at least one deprecated version: {{ deprecated_k8s_versions }}"
+  tags: [catalog, kubernetes_version_info]
+
+- name: "[k8s_version_info] Stable + deprecated + development should equal total"
+  tags: [catalog, kubernetes_version_info]
+  block:
+    - name: "[k8s_version_info] Get development versions"
+      civo.cloud.civo_kubernetes_version_info:
+        region: "{{ region }}"
+        maturity: development
+      register: dev_k8s_versions
+
+    - name: "[k8s_version_info] Assert total adds up"
+      ansible.builtin.assert:
+        that:
+          - (stable_k8s_versions.kubernetes_versions | length
+             + deprecated_k8s_versions.kubernetes_versions | length
+             + dev_k8s_versions.kubernetes_versions | length)
+            == all_k8s_versions.kubernetes_versions | length
+        fail_msg: >-
+          Version counts don't add up:
+          stable={{ stable_k8s_versions.kubernetes_versions | length }},
+          deprecated={{ deprecated_k8s_versions.kubernetes_versions | length }},
+          development={{ dev_k8s_versions.kubernetes_versions | length }},
+          total={{ all_k8s_versions.kubernetes_versions | length }}
