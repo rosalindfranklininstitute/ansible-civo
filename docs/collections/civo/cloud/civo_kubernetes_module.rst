@@ -51,6 +51,7 @@ Synopsis
 
 - Create, scale, upgrade, or delete Civo Kubernetes (k3s) clusters.
 - Supports in\-place node\-count scaling when the cluster already exists.
+- When the cluster has a single pool (the default), :literal:`node\_count` targets that pool. When multiple pools exist you :strong:`must` supply :literal:`pool\_id` to identify which pool to scale; otherwise the module fails to avoid silently operating on the wrong pool.
 - Supports in\-place Kubernetes version upgrade via :literal:`upgrade\_version`.
 - Returns the kubeconfig for an active cluster.
 - Uses the :literal:`civo` CLI binary on the control node.
@@ -369,9 +370,13 @@ Parameters
 
         <div class="ansible-option-cell">
 
-      Number of worker nodes.
+      Desired number of worker nodes in the target pool.
 
-      When changed on an existing cluster the node pool is scaled in place.
+      When the cluster has only one pool this targets that pool.
+
+      When the cluster has multiple pools :literal:`pool\_id` must also be supplied.
+
+      When changed on an existing cluster the target pool is scaled in place.
 
 
       .. rst-class:: ansible-option-line
@@ -415,6 +420,44 @@ Parameters
       .. rst-class:: ansible-option-line
 
       :ansible-option-default-bold:`Default:` :ansible-option-default:`"g4s.kube.medium"`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-pool_id"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_module__parameter-pool_id:
+
+      .. rst-class:: ansible-option-title
+
+      **pool_id**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-pool_id" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      ID of the node pool to scale.
+
+      Required when the cluster has more than one pool and :literal:`node\_count` is being changed.
+
+      Ignored during cluster creation (the first pool is always created automatically).
+
 
       .. raw:: html
 
@@ -674,6 +717,10 @@ See Also
        Manage Civo private networks.
    :ref:`civo.cloud.civo\_firewall <ansible_collections.civo.cloud.civo_firewall_module>`
        Manage Civo firewalls and firewall rules.
+   :ref:`civo.cloud.civo\_kubernetes\_pool <ansible_collections.civo.cloud.civo_kubernetes_pool_module>`
+       Manage node pools in a Civo Kubernetes cluster.
+   :ref:`civo.cloud.civo\_kubernetes\_node <ansible_collections.civo.cloud.civo_kubernetes_node_module>`
+       Recycle or delete a node in a Civo Kubernetes cluster.
 
 .. Examples
 
@@ -699,11 +746,18 @@ Examples
         dest: ~/.kube/my-cluster.yaml
         mode: "0600"
 
-    - name: Scale the cluster to 5 nodes
+    - name: Scale the default (only) pool to 5 nodes
       civo.cloud.civo_kubernetes:
         region: LON1
         name: my-cluster
         node_count: 5
+
+    - name: Scale a specific pool when the cluster has multiple pools
+      civo.cloud.civo_kubernetes:
+        region: LON1
+        name: my-cluster
+        node_count: 2
+        pool_id: "aaaa-bbbb-cccc"
 
     - name: Upgrade the cluster to a newer Kubernetes version
       civo.cloud.civo_kubernetes:
@@ -1080,7 +1134,7 @@ Common return values are documented :ref:`here <common_return_values>`, the foll
 
         <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
 
-      Number of worker nodes (returned as a string by the CLI). For idempotency the module compares this against the :literal:`node\_count` parameter.
+      Total number of worker nodes across all pools (returned as a string by the CLI).
 
 
       .. rst-class:: ansible-option-line

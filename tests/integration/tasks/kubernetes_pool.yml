@@ -1,8 +1,192 @@
 ---
-# Kubernetes node pool management integration tests
+# Kubernetes node pool management integration tests.
+# Depends on the cluster created in kubernetes.yml ({{ test_prefix }}-k8s).
+# Creates a second pool, verifies it, scales it, then deletes it.
 # Tags: [kubernetes, kubernetes_pool]
-# Placeholder — full implementation pending civo_kubernetes_pool module.
-- name: "[kubernetes_pool] Placeholder"
-  ansible.builtin.debug:
-    msg: "kubernetes_pool tests not yet implemented"
+
+# -------------------------------------------------------------------------
+# READ — list pools before we add one (baseline)
+# -------------------------------------------------------------------------
+- name: "[kubernetes_pool] List pools before adding a second pool"
+  civo.cloud.civo_kubernetes_pool_info:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+  register: kp_pools_before
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert baseline pool count"
+  ansible.builtin.assert:
+    that:
+      - kp_pools_before.pools | length >= 1
+    fail_msg: "Expected at least one pool before test: {{ kp_pools_before }}"
+  tags: [kubernetes, kubernetes_pool]
+
+# -------------------------------------------------------------------------
+# CREATE — add a second pool
+# -------------------------------------------------------------------------
+- name: "[kubernetes_pool] Create second node pool"
+  civo.cloud.civo_kubernetes_pool:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    name: "{{ test_prefix }}-pool2"
+    node_size: "{{ k8s_node_size }}"
+    node_count: 1
+    wait: true
+    timeout: 600
+    state: present
+  register: kp_create
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert pool created"
+  ansible.builtin.assert:
+    that:
+      - kp_create.changed
+      - kp_create.pool.id is defined
+      - kp_create.pool.id | length > 0
+    fail_msg: "Pool creation failed: {{ kp_create }}"
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Store new pool ID"
+  ansible.builtin.set_fact:
+    kp_pool2_id: "{{ kp_create.pool.id }}"
+  tags: [kubernetes, kubernetes_pool]
+
+# -------------------------------------------------------------------------
+# READ — verify the new pool appears in pool_info
+# -------------------------------------------------------------------------
+- name: "[kubernetes_pool] Read pool info for the new pool"
+  civo.cloud.civo_kubernetes_pool_info:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    pool_id: "{{ kp_pool2_id }}"
+  register: kp_info
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert new pool visible"
+  ansible.builtin.assert:
+    that:
+      - kp_info.pools | length == 1
+      - kp_info.pools[0].id == kp_pool2_id
+      - kp_info.pools[0].count == 1
+    fail_msg: "Pool info after create failed: {{ kp_info }}"
+  tags: [kubernetes, kubernetes_pool]
+
+# -------------------------------------------------------------------------
+# Idempotency — present with same node_count
+# -------------------------------------------------------------------------
+- name: "[kubernetes_pool] Idempotency — present with same count"
+  civo.cloud.civo_kubernetes_pool:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    pool_id: "{{ kp_pool2_id }}"
+    node_count: 1
+    wait: true
+    state: present
+  register: kp_idem
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not kp_idem.changed
+    fail_msg: "Pool create is not idempotent: {{ kp_idem }}"
+  tags: [kubernetes, kubernetes_pool]
+
+# -------------------------------------------------------------------------
+# Scale — increase to 2 nodes
+# -------------------------------------------------------------------------
+- name: "[kubernetes_pool] Scale second pool to 2 nodes"
+  civo.cloud.civo_kubernetes_pool:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    pool_id: "{{ kp_pool2_id }}"
+    node_count: 2
+    wait: true
+    timeout: 600
+    state: present
+  register: kp_scale
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert scale changed"
+  ansible.builtin.assert:
+    that:
+      - kp_scale.changed
+      - kp_scale.pool.count == 2
+    fail_msg: "Pool scale failed: {{ kp_scale }}"
+  tags: [kubernetes, kubernetes_pool]
+
+# -------------------------------------------------------------------------
+# Verify cluster-level civo_kubernetes is now required to pass pool_id
+# when scaling the default pool (multi-pool guard)
+# -------------------------------------------------------------------------
+- name: "[kubernetes_pool] Verify civo_kubernetes requires pool_id with multi-pool cluster"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    node_count: 1
+    state: present
+  register: kp_guard
+  ignore_errors: true
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert civo_kubernetes failed with helpful error"
+  ansible.builtin.assert:
+    that:
+      - kp_guard is failed
+      - "'pool_id' in kp_guard.msg or 'pool' in kp_guard.msg"
+    fail_msg: "Expected civo_kubernetes to fail requiring pool_id: {{ kp_guard }}"
+  tags: [kubernetes, kubernetes_pool]
+
+# -------------------------------------------------------------------------
+# DELETE — remove the second pool
+# -------------------------------------------------------------------------
+- name: "[kubernetes_pool] Delete second pool"
+  civo.cloud.civo_kubernetes_pool:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    pool_id: "{{ kp_pool2_id }}"
+    state: absent
+  register: kp_delete
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert pool deleted"
+  ansible.builtin.assert:
+    that:
+      - kp_delete.changed
+    fail_msg: "Pool delete failed: {{ kp_delete }}"
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Idempotency of delete"
+  civo.cloud.civo_kubernetes_pool:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    pool_id: "{{ kp_pool2_id }}"
+    state: absent
+  register: kp_delete_idem
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert delete idempotent"
+  ansible.builtin.assert:
+    that:
+      - not kp_delete_idem.changed
+    fail_msg: "Pool delete is not idempotent: {{ kp_delete_idem }}"
+  tags: [kubernetes, kubernetes_pool]
+
+# -------------------------------------------------------------------------
+# READ with instances — after delete only the original pool should remain
+# -------------------------------------------------------------------------
+- name: "[kubernetes_pool] List pools after delete"
+  civo.cloud.civo_kubernetes_pool_info:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    instances: true
+  register: kp_pools_after
+  tags: [kubernetes, kubernetes_pool]
+
+- name: "[kubernetes_pool] Assert only original pool remains"
+  ansible.builtin.assert:
+    that:
+      - kp_pools_after.pools | length == kp_pools_before.pools | length
+      - kp_pools_after.pools | selectattr('id', 'equalto', kp_pool2_id) | list | length == 0
+    fail_msg: "Pool still present after delete: {{ kp_pools_after }}"
   tags: [kubernetes, kubernetes_pool]

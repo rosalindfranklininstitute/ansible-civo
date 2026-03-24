@@ -10,6 +10,10 @@ short_description: Manage Civo Kubernetes clusters
 description:
   - Create, scale, upgrade, or delete Civo Kubernetes (k3s) clusters.
   - Supports in-place node-count scaling when the cluster already exists.
+  - When the cluster has a single pool (the default), C(node_count) targets
+    that pool.  When multiple pools exist you B(must) supply C(pool_id) to
+    identify which pool to scale; otherwise the module fails to avoid silently
+    operating on the wrong pool.
   - Supports in-place Kubernetes version upgrade via C(upgrade_version).
   - Returns the kubeconfig for an active cluster.
   - Uses the C(civo) CLI binary on the control node.
@@ -27,10 +31,20 @@ options:
     default: g4s.kube.medium
   node_count:
     description:
-      - Number of worker nodes.
-      - When changed on an existing cluster the node pool is scaled in place.
+      - Desired number of worker nodes in the target pool.
+      - When the cluster has only one pool this targets that pool.
+      - When the cluster has multiple pools C(pool_id) must also be supplied.
+      - When changed on an existing cluster the target pool is scaled in place.
     type: int
     default: 3
+  pool_id:
+    description:
+      - ID of the node pool to scale.
+      - Required when the cluster has more than one pool and C(node_count) is
+        being changed.
+      - Ignored during cluster creation (the first pool is always created
+        automatically).
+    type: str
   network:
     description: Name or ID of the network.
     type: str
@@ -89,6 +103,8 @@ options:
 seealso:
   - module: civo.cloud.civo_network
   - module: civo.cloud.civo_firewall
+  - module: civo.cloud.civo_kubernetes_pool
+  - module: civo.cloud.civo_kubernetes_node
 """
 
 EXAMPLES = r"""
@@ -109,11 +125,18 @@ EXAMPLES = r"""
     dest: ~/.kube/my-cluster.yaml
     mode: "0600"
 
-- name: Scale the cluster to 5 nodes
+- name: Scale the default (only) pool to 5 nodes
   civo.cloud.civo_kubernetes:
     region: LON1
     name: my-cluster
     node_count: 5
+
+- name: Scale a specific pool when the cluster has multiple pools
+  civo.cloud.civo_kubernetes:
+    region: LON1
+    name: my-cluster
+    node_count: 2
+    pool_id: "aaaa-bbbb-cccc"
 
 - name: Upgrade the cluster to a newer Kubernetes version
   civo.cloud.civo_kubernetes:
@@ -157,8 +180,8 @@ cluster:
       sample: "ACTIVE"
     nodes:
       description: >-
-        Number of worker nodes (returned as a string by the CLI).
-        For idempotency the module compares this against the C(node_count) parameter.
+        Total number of worker nodes across all pools (returned as a string
+        by the CLI).
       type: str
       sample: "3"
     kubernetes_version:
@@ -173,6 +196,9 @@ cluster:
       description: Raw kubeconfig YAML for the cluster (fetched separately via C(civo kubernetes config)).
       type: str
 """
+
+import json as _json
+import time as _time
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -194,10 +220,13 @@ def _get_kubeconfig(module, cluster_name, api_key, region, binary):
     return ""
 
 
-def _get_node_pool_id(module, cluster_name, api_key, region, binary):
-    """Return the ID of the first node pool in the cluster."""
-    import json as _json
+def _list_node_pools(module, cluster_name, api_key, region, binary):
+    """Return a list of node pool dicts for *cluster_name*.
 
+    The CLI mixes human-readable table text and a JSON array in stdout.
+    The JSON array is extracted by finding the line that starts with '['.
+    Keys are capitalized in the CLI output (e.g. "ID", "Count").
+    """
     env_update = {"CIVO_TOKEN": api_key}
     cmd = [
         binary,
@@ -213,8 +242,6 @@ def _get_node_pool_id(module, cluster_name, api_key, region, binary):
     rc, stdout, stderr = module.run_command(cmd, environ_update=env_update)
     if rc != 0:
         module.fail_json(msg=f"Failed to list node pools for '{cluster_name}': {stderr}")
-    # The CLI mixes human-readable table text and a JSON array in stdout.
-    # Extract the line that starts with "[" to get just the JSON part.
     json_line = None
     for line in stdout.splitlines():
         line = line.strip()
@@ -222,19 +249,64 @@ def _get_node_pool_id(module, cluster_name, api_key, region, binary):
             json_line = line
             break
     if json_line is None:
-        module.fail_json(msg=f"Failed to find node-pool JSON in output: {stdout}")
+        module.fail_json(msg=f"Failed to find node-pool JSON in output: {stdout!r}")
     try:
         pools = _json.loads(json_line)
-    except _json.JSONDecodeError:
-        module.fail_json(msg=f"Failed to parse node-pool JSON: {json_line}")
+    except _json.JSONDecodeError as exc:
+        module.fail_json(msg=f"Failed to parse node-pool JSON: {exc}: {json_line!r}")
+    return pools if isinstance(pools, list) else []
+
+
+def _resolve_pool(module, cluster_name, api_key, region, binary, requested_pool_id):
+    """Return (pool_id, current_node_count) for the target pool.
+
+    If *requested_pool_id* is given it is validated against the real pool list.
+    If it is empty and there is exactly one pool, that pool is used.
+    If it is empty and there are multiple pools, the module fails with a clear
+    message so the operator knows they must be explicit.
+    """
+    pools = _list_node_pools(module, cluster_name, api_key, region, binary)
     if not pools:
         module.fail_json(msg=f"No node pools found for cluster '{cluster_name}'")
-    # The CLI returns capitalized keys (e.g. "ID") in node-pool ls JSON
+
+    if requested_pool_id:
+        for pool in pools:
+            pid = pool.get("ID") or pool.get("id") or ""
+            if pid == requested_pool_id:
+                count = pool.get("Count") or pool.get("count") or pool.get("nodes", 0)
+                return pid, int(count)
+        module.fail_json(
+            msg=f"pool_id '{requested_pool_id}' not found in cluster '{cluster_name}'. "
+            f"Available pools: {[p.get('ID') or p.get('id') for p in pools]}"
+        )
+
+    if len(pools) > 1:
+        pool_ids = [p.get("ID") or p.get("id") for p in pools]
+        module.fail_json(
+            msg=(
+                f"Cluster '{cluster_name}' has {len(pools)} node pools. "
+                "Specify 'pool_id' to identify which pool to scale. "
+                f"Available pool IDs: {pool_ids}"
+            )
+        )
+
     pool = pools[0]
-    pool_id = pool.get("ID") or pool.get("id")
-    if not pool_id:
+    pid = pool.get("ID") or pool.get("id")
+    if not pid:
         module.fail_json(msg=f"Could not find pool ID in: {pool}")
-    return pool_id
+    count = pool.get("Count") or pool.get("count") or pool.get("nodes", 0)
+    return pid, int(count)
+
+
+def _pool_node_count(module, cluster_name, pool_id, api_key, region, binary):
+    """Return the current node count for a specific pool (used while waiting)."""
+    pools = _list_node_pools(module, cluster_name, api_key, region, binary)
+    for pool in pools:
+        pid = pool.get("ID") or pool.get("id") or ""
+        if pid == pool_id:
+            count = pool.get("Count") or pool.get("count") or pool.get("nodes", 0)
+            return int(count)
+    return None  # pool disappeared
 
 
 def main():
@@ -243,6 +315,7 @@ def main():
         name={"type": "str", "required": True},
         node_size={"type": "str", "default": "g4s.kube.medium"},
         node_count={"type": "int", "default": 3},
+        pool_id={"type": "str", "default": ""},
         network={"type": "str", "default": "default"},
         firewall={"type": "str"},
         cni={"type": "str", "default": "flannel", "choices": ["flannel", "cilium"]},
@@ -314,15 +387,21 @@ def main():
 
         # ---- scale in place if node_count changed ----
         desired_count = module.params["node_count"]
-        # CLI JSON uses "nodes" (string), not "node_count" or "num_target_nodes"
-        current_count = existing.get("nodes") or existing.get("node_count") or existing.get("num_target_nodes", 0)
-        if int(desired_count) != int(current_count):
+        requested_pool_id = module.params.get("pool_id") or ""
+
+        # Resolve which pool to target and its current count.
+        # This call fails if there are multiple pools and pool_id is not given.
+        pool_id, current_count = _resolve_pool(module, name, api_key, region, binary, requested_pool_id)
+
+        if desired_count != current_count:
             if module.check_mode:
                 module.exit_json(
                     changed=True,
-                    msg=f"Would scale cluster '{name}' from {current_count} to {desired_count} nodes",
+                    msg=(
+                        f"Would scale pool '{pool_id}' in cluster '{name}' "
+                        f"from {current_count} to {desired_count} nodes"
+                    ),
                 )
-            pool_id = _get_node_pool_id(module, name, api_key, region, binary)
             run_civo_command(
                 module,
                 ["kubernetes", "node-pool", "scale", name, pool_id, "--nodes", str(desired_count)],
@@ -331,24 +410,22 @@ def main():
                 binary,
             )
             if do_wait:
-                # The cluster stays ACTIVE during scaling, so we can't use
-                # wait_for_active (it returns immediately).  Instead poll until
-                # the "nodes" field reflects the desired count.
-                import time as _time
-
+                # The cluster stays ACTIVE during scaling, so wait_for_active
+                # returns immediately.  Instead poll the specific pool's count.
                 deadline = _time.time() + timeout
                 while _time.time() < deadline:
-                    existing = find_resource_by_name(module, "kubernetes", name, api_key, region, binary) or existing
-                    cur = existing.get("nodes") or existing.get("node_count") or existing.get("num_target_nodes", 0)
-                    if int(cur) == int(desired_count):
+                    cur = _pool_node_count(module, name, pool_id, api_key, region, binary)
+                    if cur is not None and cur == desired_count:
                         break
                     _time.sleep(15)
                 else:
                     module.fail_json(
-                        msg=f"Timed out after {timeout}s waiting for cluster '{name}' to scale to {desired_count} nodes"
+                        msg=(
+                            f"Timed out after {timeout}s waiting for pool '{pool_id}' "
+                            f"in cluster '{name}' to reach {desired_count} nodes"
+                        )
                     )
-            else:
-                existing = find_resource_by_name(module, "kubernetes", name, api_key, region, binary) or existing
+            existing = find_resource_by_name(module, "kubernetes", name, api_key, region, binary) or existing
             existing["kubeconfig"] = _get_kubeconfig(module, name, api_key, region, binary)
             module.exit_json(changed=True, cluster=existing)
 

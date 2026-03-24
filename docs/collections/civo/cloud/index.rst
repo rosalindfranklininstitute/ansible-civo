@@ -64,6 +64,9 @@ Modules
 * :ansplugin:`civo_instance_info module <civo.cloud.civo_instance_info#module>` -- Gather information about Civo compute instances
 * :ansplugin:`civo_kubernetes module <civo.cloud.civo_kubernetes#module>` -- Manage Civo Kubernetes clusters
 * :ansplugin:`civo_kubernetes_info module <civo.cloud.civo_kubernetes_info#module>` -- Gather information about Civo Kubernetes clusters
+* :ansplugin:`civo_kubernetes_node module <civo.cloud.civo_kubernetes_node#module>` -- Recycle or delete a node in a Civo Kubernetes cluster
+* :ansplugin:`civo_kubernetes_pool module <civo.cloud.civo_kubernetes_pool#module>` -- Manage node pools in a Civo Kubernetes cluster
+* :ansplugin:`civo_kubernetes_pool_info module <civo.cloud.civo_kubernetes_pool_info#module>` -- Query node pools in a Civo Kubernetes cluster
 * :ansplugin:`civo_loadbalancer module <civo.cloud.civo_loadbalancer#module>` -- Manage Civo load balancers
 * :ansplugin:`civo_loadbalancer_info module <civo.cloud.civo_loadbalancer_info#module>` -- Gather information about Civo load balancers
 * :ansplugin:`civo_network module <civo.cloud.civo_network#module>` -- Manage Civo private networks
@@ -87,6 +90,9 @@ Modules
     civo_instance_info_module
     civo_kubernetes_module
     civo_kubernetes_info_module
+    civo_kubernetes_node_module
+    civo_kubernetes_pool_module
+    civo_kubernetes_pool_info_module
     civo_loadbalancer_module
     civo_loadbalancer_info_module
     civo_network_module

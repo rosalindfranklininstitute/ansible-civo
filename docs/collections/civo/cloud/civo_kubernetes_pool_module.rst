@@ -1,0 +1,809 @@
+.. Document meta
+
+:orphan:
+
+.. |antsibull-internal-nbsp| unicode:: 0xA0
+    :trim:
+
+.. meta::
+  :antsibull-docs: 2.24.0
+
+.. Anchors
+
+.. _ansible_collections.civo.cloud.civo_kubernetes_pool_module:
+
+.. Anchors: short name for ansible.builtin
+
+.. Title
+
+civo.cloud.civo_kubernetes_pool module -- Manage node pools in a Civo Kubernetes cluster
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. Collection note
+
+.. note::
+    This module is part of the `civo.cloud collection <https://galaxy.ansible.com/ui/repo/published/civo/cloud/>`_ (version 0.0.1).
+
+    It is not included in ``ansible-core``.
+    To check whether it is installed, run :code:`ansible-galaxy collection list`.
+
+    To install it, use: :code:`ansible\-galaxy collection install civo.cloud`.
+
+    To use it in a playbook, specify: :code:`civo.cloud.civo_kubernetes_pool`.
+
+.. version_added
+
+.. rst-class:: ansible-version-added
+
+New in civo.cloud 0.0.1
+
+.. contents::
+   :local:
+   :depth: 1
+
+.. Deprecated
+
+
+Synopsis
+--------
+
+.. Description
+
+- Create, scale, or delete additional node pools in an existing Civo Kubernetes cluster.
+- :literal:`state=present` creates the pool if it does not exist, or scales it to :literal:`node\_count` if it already exists.
+- :literal:`state=absent` deletes the pool.
+- The default pool created with the cluster is :strong:`not` managed by this module; use :ref:`civo.cloud.civo\_kubernetes <ansible_collections.civo.cloud.civo_kubernetes_module>` with :literal:`node\_count` for that.
+- Uses the :literal:`civo` CLI binary on the control node.
+
+
+.. Aliases
+
+
+.. Requirements
+
+
+
+
+
+
+.. Options
+
+Parameters
+----------
+
+.. tabularcolumns:: \X{1}{3}\X{2}{3}
+
+.. list-table::
+  :width: 100%
+  :widths: auto
+  :header-rows: 1
+  :class: longtable ansible-option-table
+
+  * - Parameter
+    - Comments
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-api_key"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-api_key:
+
+      .. rst-class:: ansible-option-title
+
+      **api_key**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-api_key" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Civo API token.
+
+      Falls back to the :literal:`CIVO\_TOKEN` environment variable when not set.
+
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-civo_binary"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-civo_binary:
+
+      .. rst-class:: ansible-option-title
+
+      **civo_binary**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-civo_binary" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Path to the :literal:`civo` CLI binary.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`"civo"`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-cluster"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-cluster:
+
+      .. rst-class:: ansible-option-title
+
+      **cluster**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-cluster" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string` / :ansible-option-required:`required`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Name of the Kubernetes cluster to manage pools for.
+
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-name"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-name:
+
+      .. rst-class:: ansible-option-title
+
+      **name**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-name" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Name for the node pool. Used only during creation (\ :literal:`\-\-name` flag). When omitted the Civo API generates a name automatically.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`""`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-node_count"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-node_count:
+
+      .. rst-class:: ansible-option-title
+
+      **node_count**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-node_count" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`integer`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Desired number of nodes in the pool.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`1`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-node_size"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-node_size:
+
+      .. rst-class:: ansible-option-title
+
+      **node_size**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-node_size" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Instance size slug for nodes in this pool.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`"g4s.kube.medium"`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-pool_id"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-pool_id:
+
+      .. rst-class:: ansible-option-title
+
+      **pool_id**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-pool_id" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      ID of an existing pool to update or delete. When supplied the module locates the pool by ID rather than by name. Required for :literal:`state=absent` when more than one pool exists and the pool cannot be identified by name alone.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`""`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-region"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-region:
+
+      .. rst-class:: ansible-option-title
+
+      **region**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-region" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Civo region identifier.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`"LON1"`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-state"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-state:
+
+      .. rst-class:: ansible-option-title
+
+      **state**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Whether the node pool should exist.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-choices:`Choices:`
+
+      - :ansible-option-choices-entry-default:`"present"` :ansible-option-choices-default-mark:`← (default)`
+      - :ansible-option-choices-entry:`"absent"`
+
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-timeout"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-timeout:
+
+      .. rst-class:: ansible-option-title
+
+      **timeout**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-timeout" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`integer`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Seconds to wait for the pool to reach the desired node count.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-default-bold:`Default:` :ansible-option-default:`600`
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-wait"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__parameter-wait:
+
+      .. rst-class:: ansible-option-title
+
+      **wait**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-wait" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`boolean`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Wait for the pool to reach the desired node count after creation or scaling.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-choices:`Choices:`
+
+      - :ansible-option-choices-entry:`false`
+      - :ansible-option-choices-entry-default:`true` :ansible-option-choices-default-mark:`← (default)`
+
+
+      .. raw:: html
+
+        </div>
+
+
+.. Attributes
+
+
+.. Notes
+
+
+.. Seealso
+
+See Also
+--------
+
+.. seealso::
+
+   :ref:`civo.cloud.civo\_kubernetes <ansible_collections.civo.cloud.civo_kubernetes_module>`
+       Manage Civo Kubernetes clusters.
+   :ref:`civo.cloud.civo\_kubernetes\_pool\_info <ansible_collections.civo.cloud.civo_kubernetes_pool_info_module>`
+       Query node pools in a Civo Kubernetes cluster.
+   :ref:`civo.cloud.civo\_kubernetes\_node <ansible_collections.civo.cloud.civo_kubernetes_node_module>`
+       Recycle or delete a node in a Civo Kubernetes cluster.
+
+.. Examples
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    - name: Add a GPU node pool to an existing cluster
+      civo.cloud.civo_kubernetes_pool:
+        region: LON1
+        cluster: my-cluster
+        name: gpu-pool
+        node_size: g4g.kube.large
+        node_count: 2
+        wait: true
+      register: pool
+
+    - name: Scale the pool to 4 nodes
+      civo.cloud.civo_kubernetes_pool:
+        region: LON1
+        cluster: my-cluster
+        pool_id: "{{ pool.pool.id }}"
+        node_count: 4
+
+    - name: Delete the pool
+      civo.cloud.civo_kubernetes_pool:
+        region: LON1
+        cluster: my-cluster
+        pool_id: "{{ pool.pool.id }}"
+        state: absent
+
+
+
+.. Facts
+
+
+.. Return values
+
+Return Values
+-------------
+Common return values are documented :ref:`here <common_return_values>`, the following are the fields unique to this module:
+
+.. tabularcolumns:: \X{1}{3}\X{2}{3}
+
+.. list-table::
+  :width: 100%
+  :widths: auto
+  :header-rows: 1
+  :class: longtable ansible-option-table
+
+  * - Key
+    - Description
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-pool"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__return-pool:
+
+      .. rst-class:: ansible-option-title
+
+      **pool**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-pool" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`dictionary`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Details of the node pool.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` when state is :literal:`present`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-pool/count"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__return-pool/count:
+
+      .. rst-class:: ansible-option-title
+
+      **count**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-pool/count" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`integer`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Current node count in the pool.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`2`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-pool/id"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__return-pool/id:
+
+      .. rst-class:: ansible-option-title
+
+      **id**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-pool/id" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Pool UUID.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"aaaa\-bbbb\-cccc\-dddd"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+  * - .. raw:: html
+
+        <div class="ansible-option-indent"></div><div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="return-pool/size"></div>
+
+      .. raw:: latex
+
+        \hspace{0.02\textwidth}\begin{minipage}[t]{0.3\textwidth}
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_pool_module__return-pool/size:
+
+      .. rst-class:: ansible-option-title
+
+      **size**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#return-pool/size" title="Permalink to this return value"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+      .. raw:: latex
+
+        \end{minipage}
+
+    - .. raw:: html
+
+        <div class="ansible-option-indent-desc"></div><div class="ansible-option-cell">
+
+      Instance size slug for nodes in the pool.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-returned-bold:`Returned:` success
+
+      .. rst-class:: ansible-option-line
+      .. rst-class:: ansible-option-sample
+
+      :ansible-option-sample-bold:`Sample:` :ansible-rv-sample-value:`"g4s.kube.medium"`
+
+
+      .. raw:: html
+
+        </div>
+
+
+
+
+..  Status (Presently only deprecated)
+
+
+.. Authors
+
+Authors
+~~~~~~~
+
+- The Rosalind Franklin Institute
+
+
+.. Extra links
+
+Collection links
+~~~~~~~~~~~~~~~~
+
+.. ansible-links::
+
+  - title: "Issue Tracker"
+    url: "https://github.com/rosalindfranklininstitute/ansible-civo/issues"
+    external: true
+  - title: "Homepage"
+    url: "https://www.rfi.ac.uk"
+    external: true
+  - title: "Repository (Sources)"
+    url: "https://github.com/rosalindfranklininstitute/ansible-civo"
+    external: true
+
+
+.. Parsing errors

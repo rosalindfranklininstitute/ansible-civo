@@ -1,8 +1,124 @@
 ---
-# Kubernetes node recycle / delete integration tests
+# Kubernetes node recycle / delete integration tests.
+# Depends on the cluster created in kubernetes.yml ({{ test_prefix }}-k8s).
+# After these tests the cluster is left with its original node count.
 # Tags: [kubernetes, kubernetes_node]
-# Placeholder — full implementation pending civo_kubernetes_node module.
-- name: "[kubernetes_node] Placeholder"
+
+# -------------------------------------------------------------------------
+# Get pool info so we know the pool ID and a node hostname to work with
+# -------------------------------------------------------------------------
+- name: "[kubernetes_node] List pools with instance details"
+  civo.cloud.civo_kubernetes_pool_info:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    instances: true
+  register: kn_pools
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Assert at least one pool with at least one node"
+  ansible.builtin.assert:
+    that:
+      - kn_pools.pools | length >= 1
+      - kn_pools.pools[0].instances | length >= 1
+    fail_msg: "Expected at least one pool with one node: {{ kn_pools }}"
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Store pool_id and first node hostname"
+  ansible.builtin.set_fact:
+    kn_pool_id: "{{ kn_pools.pools[0].id }}"
+    kn_node_hostname: "{{ kn_pools.pools[0].instances[0].hostname }}"
+    kn_original_count: "{{ kn_pools.pools[0].count }}"
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Debug node selected for tests"
   ansible.builtin.debug:
-    msg: "kubernetes_node tests not yet implemented"
+    msg: "pool={{ kn_pool_id }}, node={{ kn_node_hostname }}, original count={{ kn_original_count }}"
+  tags: [kubernetes, kubernetes_node]
+
+# -------------------------------------------------------------------------
+# Scale pool up to 2 so we have a spare node to delete and still keep one
+# -------------------------------------------------------------------------
+- name: "[kubernetes_node] Scale pool to 2 nodes so we have one to delete"
+  civo.cloud.civo_kubernetes_pool:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    pool_id: "{{ kn_pool_id }}"
+    node_count: 2
+    wait: true
+    timeout: 600
+    state: present
+  register: kn_scale_up
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Refresh pool info after scale-up"
+  civo.cloud.civo_kubernetes_pool_info:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    pool_id: "{{ kn_pool_id }}"
+    instances: true
+  register: kn_pools_2
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Store second node hostname (the one we will delete)"
+  ansible.builtin.set_fact:
+    kn_node_to_delete: "{{ kn_pools_2.pools[0].instances[1].hostname }}"
+  tags: [kubernetes, kubernetes_node]
+
+# -------------------------------------------------------------------------
+# Recycle the first node
+# -------------------------------------------------------------------------
+- name: "[kubernetes_node] Recycle first node"
+  civo.cloud.civo_kubernetes_node:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    node: "{{ kn_node_hostname }}"
+    state: recycle
+  register: kn_recycle
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Assert recycle changed"
+  ansible.builtin.assert:
+    that:
+      - kn_recycle.changed
+      - kn_recycle.node == kn_node_hostname
+    fail_msg: "Node recycle failed: {{ kn_recycle }}"
+  tags: [kubernetes, kubernetes_node]
+
+# -------------------------------------------------------------------------
+# Delete the second node (reduces pool size from 2 to 1)
+# -------------------------------------------------------------------------
+- name: "[kubernetes_node] Delete second node (reduces pool size)"
+  civo.cloud.civo_kubernetes_node:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    node: "{{ kn_node_to_delete }}"
+    pool_id: "{{ kn_pool_id }}"
+    state: absent
+  register: kn_delete
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Assert delete changed"
+  ansible.builtin.assert:
+    that:
+      - kn_delete.changed
+    fail_msg: "Node delete failed: {{ kn_delete }}"
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Wait for pool to shrink back to 1 node"
+  civo.cloud.civo_kubernetes_pool_info:
+    cluster: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    pool_id: "{{ kn_pool_id }}"
+    instances: true
+  register: kn_pools_post_delete
+  until: kn_pools_post_delete.pools | length > 0 and kn_pools_post_delete.pools[0].count == 1
+  retries: 40
+  delay: 15
+  tags: [kubernetes, kubernetes_node]
+
+- name: "[kubernetes_node] Assert pool is back to 1 node"
+  ansible.builtin.assert:
+    that:
+      - kn_pools_post_delete.pools[0].count == 1
+    fail_msg: "Pool did not shrink to 1 node: {{ kn_pools_post_delete }}"
   tags: [kubernetes, kubernetes_node]
