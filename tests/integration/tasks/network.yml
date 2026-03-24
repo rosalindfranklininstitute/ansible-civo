@@ -1,0 +1,59 @@
+---
+# Network integration tests: create / read / idempotency / destroy
+
+- name: "[network] Create test network"
+  civo.cloud.civo_network:
+    name: "{{ test_prefix }}-network"
+    region: "{{ region }}"
+    state: present
+  register: net_create
+  tags: [network]
+
+- name: "[network] Assert created"
+  ansible.builtin.assert:
+    that:
+      - net_create.changed
+      - net_create.network.id is defined
+      - net_create.network.id | length > 0
+    fail_msg: "Network creation failed: {{ net_create }}"
+  tags: [network]
+
+- name: "[network] READ — info by name"
+  civo.cloud.civo_network_info:
+    name: "{{ test_prefix }}-network"
+    region: "{{ region }}"
+  register: net_info
+  tags: [network]
+
+- name: "[network] Assert info returned"
+  ansible.builtin.assert:
+    that:
+      - net_info.networks | length == 1
+      - net_info.networks[0].id == net_create.network.id
+    fail_msg: "Network info failed: {{ net_info }}"
+  tags: [network]
+
+- name: "[network] Idempotency — present again"
+  civo.cloud.civo_network:
+    name: "{{ test_prefix }}-network"
+    region: "{{ region }}"
+    state: present
+  register: net_idem
+  tags: [network]
+
+- name: "[network] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not net_idem.changed
+    fail_msg: "Network create is not idempotent: {{ net_idem }}"
+  tags: [network]
+
+- name: "[network] Wait for network to become Active"
+  civo.cloud.civo_network_info:
+    name: "{{ test_prefix }}-network"
+    region: "{{ region }}"
+  register: net_wait
+  until: net_wait.networks | length > 0 and net_wait.networks[0].status == 'Active'
+  retries: 20
+  delay: 10
+  tags: [network]

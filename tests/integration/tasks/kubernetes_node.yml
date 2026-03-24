@@ -1,0 +1,8 @@
+---
+# Kubernetes node recycle / delete integration tests
+# Tags: [kubernetes, kubernetes_node]
+# Placeholder — full implementation pending civo_kubernetes_node module.
+- name: "[kubernetes_node] Placeholder"
+  ansible.builtin.debug:
+    msg: "kubernetes_node tests not yet implemented"
+  tags: [kubernetes, kubernetes_node]

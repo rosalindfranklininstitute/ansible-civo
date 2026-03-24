@@ -1,0 +1,79 @@
+---
+# Volume integration tests: create / read / idempotency / resize / attach / destroy
+
+- name: "[volume] Create test volume"
+  civo.cloud.civo_volume:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+    size_gb: 5
+    network: default
+    state: present
+  register: vol_create
+  tags: [volume]
+
+- name: "[volume] Assert created"
+  ansible.builtin.assert:
+    that:
+      - vol_create.changed
+      - vol_create.volume.id is defined
+    fail_msg: "Volume creation failed: {{ vol_create }}"
+  tags: [volume]
+
+- name: "[volume] READ — info by name"
+  civo.cloud.civo_volume_info:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+  register: vol_info
+  tags: [volume]
+
+- name: "[volume] Assert info returned"
+  ansible.builtin.assert:
+    that:
+      - vol_info.volumes | length == 1
+      - vol_info.volumes[0].id == vol_create.volume.id
+    fail_msg: "Volume info failed: {{ vol_info }}"
+  tags: [volume]
+
+- name: "[volume] Idempotency"
+  civo.cloud.civo_volume:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+    size_gb: 5
+    network: default
+    state: present
+  register: vol_idem
+  tags: [volume]
+
+- name: "[volume] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not vol_idem.changed
+    fail_msg: "Volume create is not idempotent: {{ vol_idem }}"
+  tags: [volume]
+
+- name: "[volume] Wait for volume to become available before resize"
+  civo.cloud.civo_volume_info:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+  register: vol_wait
+  until: vol_wait.volumes | length > 0 and vol_wait.volumes[0].status == 'available'
+  retries: 30
+  delay: 15
+  tags: [volume]
+
+- name: "[volume] Resize volume (update in place)"
+  civo.cloud.civo_volume:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+    size_gb: 10
+    network: default
+    state: present
+  register: vol_resize
+  tags: [volume]
+
+- name: "[volume] Assert resize changed"
+  ansible.builtin.assert:
+    that:
+      - vol_resize.changed
+    fail_msg: "Volume resize did not report changed: {{ vol_resize }}"
+  tags: [volume]

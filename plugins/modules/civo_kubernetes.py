@@ -8,8 +8,9 @@ DOCUMENTATION = r"""
 module: civo_kubernetes
 short_description: Manage Civo Kubernetes clusters
 description:
-  - Create, scale, or delete Civo Kubernetes (k3s) clusters.
+  - Create, scale, upgrade, or delete Civo Kubernetes (k3s) clusters.
   - Supports in-place node-count scaling when the cluster already exists.
+  - Supports in-place Kubernetes version upgrade via C(upgrade_version).
   - Returns the kubeconfig for an active cluster.
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
@@ -51,6 +52,14 @@ options:
     type: list
     elements: str
     default: []
+  upgrade_version:
+    description:
+      - Target Kubernetes version string to upgrade an existing cluster to
+        (e.g. C(1.29.2-k3s1)).
+      - Ignored when creating a new cluster; use C(version) for that.
+      - Calls C(civo kubernetes upgrade CLUSTER UPGRADE_VERSION) and waits for
+        the cluster to return to C(ACTIVE) status.
+    type: str
   wait:
     description: Wait for the cluster to become ready before returning.
     type: bool
@@ -105,6 +114,13 @@ EXAMPLES = r"""
     region: LON1
     name: my-cluster
     node_count: 5
+
+- name: Upgrade the cluster to a newer Kubernetes version
+  civo.cloud.civo_kubernetes:
+    region: LON1
+    name: my-cluster
+    upgrade_version: "1.29.2-k3s1"
+    wait: true
 
 - name: Delete a cluster
   civo.cloud.civo_kubernetes:
@@ -232,6 +248,7 @@ def main():
         cni={"type": "str", "default": "flannel", "choices": ["flannel", "cilium"]},
         version={"type": "str", "default": ""},
         applications={"type": "list", "elements": "str", "default": []},
+        upgrade_version={"type": "str"},
         wait={"type": "bool", "default": True},
         timeout={"type": "int", "default": 600},
     )
@@ -260,6 +277,41 @@ def main():
         module.exit_json(changed=True, msg=f"Cluster '{name}' deleted")
 
     if existing:
+        # ---- upgrade version if requested ----
+        upgrade_version = module.params.get("upgrade_version")
+        if upgrade_version:
+            current_version = existing.get("kubernetes_version", "")
+            if current_version != upgrade_version:
+                if module.check_mode:
+                    module.exit_json(
+                        changed=True,
+                        msg=f"Would upgrade cluster '{name}' from {current_version} to {upgrade_version}",
+                    )
+                run_civo_command(
+                    module,
+                    ["kubernetes", "upgrade", name, upgrade_version],
+                    api_key,
+                    region,
+                    binary,
+                )
+                if do_wait:
+                    existing = wait_for_active(
+                        module,
+                        "kubernetes",
+                        name,
+                        api_key,
+                        region,
+                        binary=binary,
+                        timeout=timeout,
+                    )
+                else:
+                    existing = find_resource_by_name(module, "kubernetes", name, api_key, region, binary) or existing
+                existing["kubeconfig"] = _get_kubeconfig(module, name, api_key, region, binary)
+                module.exit_json(changed=True, cluster=existing)
+            # already at the desired version — fall through to no-change path
+            existing["kubeconfig"] = _get_kubeconfig(module, name, api_key, region, binary)
+            module.exit_json(changed=False, cluster=existing)
+
         # ---- scale in place if node_count changed ----
         desired_count = module.params["node_count"]
         # CLI JSON uses "nodes" (string), not "node_count" or "num_target_nodes"

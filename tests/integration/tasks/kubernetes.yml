@@ -1,0 +1,126 @@
+---
+# Kubernetes core integration tests: create / read / idempotency / scale
+
+- name: "[kubernetes] Create test cluster"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    node_size: "{{ k8s_node_size }}"
+    node_count: 1
+    network: "{{ test_prefix }}-network"
+    cni: flannel
+    wait: true
+    timeout: 600
+    state: present
+  register: k8s_create
+  tags: [kubernetes]
+
+- name: "[kubernetes] Assert created"
+  ansible.builtin.assert:
+    that:
+      - k8s_create.changed
+      - k8s_create.cluster.id is defined
+      - k8s_create.cluster.kubeconfig is defined
+    fail_msg: "Kubernetes cluster creation failed: {{ k8s_create }}"
+  tags: [kubernetes]
+
+- name: "[kubernetes] READ — info by name with kubeconfig"
+  civo.cloud.civo_kubernetes_info:
+    name: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    kubeconfig: true
+  register: k8s_info
+  tags: [kubernetes]
+
+- name: "[kubernetes] Assert info returned"
+  ansible.builtin.assert:
+    that:
+      - k8s_info.clusters | length == 1
+      - k8s_info.clusters[0].id == k8s_create.cluster.id
+      - k8s_info.clusters[0].kubeconfig is defined
+    fail_msg: "Kubernetes info failed: {{ k8s_info }}"
+  tags: [kubernetes]
+
+- name: "[kubernetes] Idempotency"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    node_size: "{{ k8s_node_size }}"
+    node_count: 1
+    network: "{{ test_prefix }}-network"
+    cni: flannel
+    wait: true
+    state: present
+  register: k8s_idem
+  tags: [kubernetes]
+
+- name: "[kubernetes] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not k8s_idem.changed
+    fail_msg: "Kubernetes cluster create is not idempotent: {{ k8s_idem }}"
+  tags: [kubernetes]
+
+# -----------------------------------------------------------------------
+# Scale node pool
+# -----------------------------------------------------------------------
+- name: "[kubernetes] Scale cluster to 2 nodes"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    node_size: "{{ k8s_node_size }}"
+    node_count: 2
+    network: "{{ test_prefix }}-network"
+    wait: true
+    timeout: 600
+    state: present
+  register: k8s_scale
+  tags: [kubernetes, kubernetes_scale]
+
+- name: "[kubernetes] Assert scaled"
+  ansible.builtin.assert:
+    that:
+      - k8s_scale.changed
+      - k8s_scale.cluster.nodes | int == 2
+    fail_msg: "Kubernetes scaling failed: {{ k8s_scale }}"
+  tags: [kubernetes, kubernetes_scale]
+
+- name: "[kubernetes] Scale idempotency (same node count)"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    node_size: "{{ k8s_node_size }}"
+    node_count: 2
+    network: "{{ test_prefix }}-network"
+    wait: true
+    state: present
+  register: k8s_scale_idem
+  tags: [kubernetes, kubernetes_scale]
+
+- name: "[kubernetes] Assert scale idempotent"
+  ansible.builtin.assert:
+    that:
+      - not k8s_scale_idem.changed
+    fail_msg: "Kubernetes scale is not idempotent: {{ k8s_scale_idem }}"
+  tags: [kubernetes, kubernetes_scale]
+
+# Scale back to 1 to minimise cost
+- name: "[kubernetes] Scale cluster back to 1 node"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    node_size: "{{ k8s_node_size }}"
+    node_count: 1
+    network: "{{ test_prefix }}-network"
+    wait: true
+    timeout: 600
+    state: present
+  register: k8s_scale_back
+  tags: [kubernetes, kubernetes_scale]
+
+- name: "[kubernetes] Assert scaled back"
+  ansible.builtin.assert:
+    that:
+      - k8s_scale_back.changed
+    fail_msg: "Kubernetes scale-back failed: {{ k8s_scale_back }}"
+  tags: [kubernetes, kubernetes_scale]

@@ -1,0 +1,44 @@
+---
+# Volume attach to instance
+
+- name: "[volume] Wait for volume to be available after resize"
+  civo.cloud.civo_volume_info:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+  register: vol_pre_attach
+  until: vol_pre_attach.volumes | length > 0 and vol_pre_attach.volumes[0].status == 'available'
+  retries: 40
+  delay: 15
+  tags: [volume]
+
+- name: "[volume] Attach to instance"
+  civo.cloud.civo_volume:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+    instance: "{{ test_prefix }}-vm"
+    state: attached
+  register: vol_attach
+  tags: [volume]
+
+- name: "[volume] Assert attach changed"
+  ansible.builtin.assert:
+    that:
+      - vol_attach.changed
+    fail_msg: "Volume attach failed: {{ vol_attach }}"
+  tags: [volume]
+
+- name: "[volume] Idempotency of attach"
+  civo.cloud.civo_volume:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+    instance: "{{ test_prefix }}-vm"
+    state: attached
+  register: vol_attach_idem
+  tags: [volume]
+
+- name: "[volume] Assert attach idempotent"
+  ansible.builtin.assert:
+    that:
+      - not vol_attach_idem.changed
+    fail_msg: "Volume attach is not idempotent: {{ vol_attach_idem }}"
+  tags: [volume]

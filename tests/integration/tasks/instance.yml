@@ -1,0 +1,128 @@
+---
+# Instance integration tests: create / read / idempotency / stop / start / destroy
+# Note: Instance is created on 'default' network so volume attach works
+# (volumes on custom networks stay "creating" due to a Civo bug).
+
+- name: "[instance] Create test instance"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    size: "{{ instance_size }}"
+    diskimage: debian-11
+    network: default
+    public_ip: create
+    wait: true
+    timeout: 600
+    state: present
+  register: inst_create
+  tags: [instance]
+
+- name: "[instance] Assert created"
+  ansible.builtin.assert:
+    that:
+      - inst_create.changed
+      - inst_create.instance.id is defined
+      - inst_create.instance.public_ip is defined
+    fail_msg: "Instance creation failed: {{ inst_create }}"
+  tags: [instance]
+
+- name: "[instance] READ — info by hostname"
+  civo.cloud.civo_instance_info:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+  register: inst_info
+  tags: [instance]
+
+- name: "[instance] Assert info returned"
+  ansible.builtin.assert:
+    that:
+      - inst_info.instances | length == 1
+      - inst_info.instances[0].id == inst_create.instance.id
+    fail_msg: "Instance info failed: {{ inst_info }}"
+  tags: [instance]
+
+- name: "[instance] Idempotency"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    size: "{{ instance_size }}"
+    diskimage: debian-11
+    network: default
+    public_ip: create
+    wait: true
+    state: present
+  register: inst_idem
+  tags: [instance]
+
+- name: "[instance] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not inst_idem.changed
+    fail_msg: "Instance create is not idempotent: {{ inst_idem }}"
+  tags: [instance]
+
+- name: "[instance] Stop instance"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: stopped
+    wait: true
+  register: inst_stop
+  tags: [instance]
+
+- name: "[instance] Assert stopped"
+  ansible.builtin.assert:
+    that:
+      - inst_stop.changed
+      - inst_stop.instance.status | upper == "SHUTOFF"
+    fail_msg: "Instance stop failed: {{ inst_stop }}"
+  tags: [instance]
+
+- name: "[instance] Stop idempotency (already stopped)"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: stopped
+  register: inst_stop_idem
+  tags: [instance]
+
+- name: "[instance] Assert stop idempotent"
+  ansible.builtin.assert:
+    that:
+      - not inst_stop_idem.changed
+    fail_msg: "Instance stop is not idempotent: {{ inst_stop_idem }}"
+  tags: [instance]
+
+- name: "[instance] Start instance"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: started
+    wait: true
+    timeout: 300
+  register: inst_start
+  tags: [instance]
+
+- name: "[instance] Assert started"
+  ansible.builtin.assert:
+    that:
+      - inst_start.changed
+      - inst_start.instance.status | upper == "ACTIVE"
+    fail_msg: "Instance start failed: {{ inst_start }}"
+  tags: [instance]
+
+- name: "[instance] Start idempotency (already active)"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: started
+    size: "{{ instance_size }}"
+  register: inst_start_idem
+  tags: [instance]
+
+- name: "[instance] Assert start idempotent"
+  ansible.builtin.assert:
+    that:
+      - not inst_start_idem.changed
+    fail_msg: "Instance start is not idempotent: {{ inst_start_idem }}"
+  tags: [instance]

@@ -1,0 +1,78 @@
+---
+# Firewall integration tests: create / read / idempotency / destroy
+
+- name: "[firewall] Create test firewall"
+  civo.cloud.civo_firewall:
+    name: "{{ test_prefix }}-fw"
+    region: "{{ region }}"
+    network: "{{ test_prefix }}-network"
+    rules:
+      - label: allow-ssh
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "22"
+        cidr: "0.0.0.0/0"
+      - label: allow-https
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "443"
+        cidr: "0.0.0.0/0"
+    state: present
+  register: fw_create
+  tags: [firewall]
+
+- name: "[firewall] Assert created"
+  ansible.builtin.assert:
+    that:
+      - fw_create.changed
+      - fw_create.firewall.id is defined
+    fail_msg: "Firewall creation failed: {{ fw_create }}"
+  tags: [firewall]
+
+- name: "[firewall] READ — info with rules"
+  civo.cloud.civo_firewall_info:
+    name: "{{ test_prefix }}-fw"
+    region: "{{ region }}"
+    rules: true
+  register: fw_info
+  tags: [firewall]
+
+- name: "[firewall] Assert info returned"
+  ansible.builtin.assert:
+    that:
+      - fw_info.firewalls | length == 1
+      - fw_info.firewalls[0].id == fw_create.firewall.id
+      - fw_info.firewalls[0].rules is defined
+    fail_msg: "Firewall info failed: {{ fw_info }}"
+  tags: [firewall]
+
+- name: "[firewall] Idempotency — present again"
+  civo.cloud.civo_firewall:
+    name: "{{ test_prefix }}-fw"
+    region: "{{ region }}"
+    network: "{{ test_prefix }}-network"
+    rules:
+      - label: allow-ssh
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "22"
+        cidr: "0.0.0.0/0"
+      - label: allow-https
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "443"
+        cidr: "0.0.0.0/0"
+    state: present
+  register: fw_idem
+  tags: [firewall]
+
+- name: "[firewall] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not fw_idem.changed
+    fail_msg: "Firewall create is not idempotent: {{ fw_idem }}"
+  tags: [firewall]

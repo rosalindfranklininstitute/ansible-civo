@@ -1,0 +1,8 @@
+---
+# Kubernetes node pool management integration tests
+# Tags: [kubernetes, kubernetes_pool]
+# Placeholder — full implementation pending civo_kubernetes_pool module.
+- name: "[kubernetes_pool] Placeholder"
+  ansible.builtin.debug:
+    msg: "kubernetes_pool tests not yet implemented"
+  tags: [kubernetes, kubernetes_pool]

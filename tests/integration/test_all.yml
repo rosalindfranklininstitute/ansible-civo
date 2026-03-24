@@ -7,11 +7,17 @@
 #   - civo CLI installed and configured
 #   - Collection installed at ~/.ansible/collections/ansible_collections/civo/cloud
 #
-# Run with:
+# Run all tests:
 #   ansible-playbook tests/integration/test_all.yml -v
 #
+# Run a subset by tag:
+#   ansible-playbook tests/integration/test_all.yml -v --tags kubernetes
+#   ansible-playbook tests/integration/test_all.yml -v --tags kubernetes_upgrade
+#   ansible-playbook tests/integration/test_all.yml -v --tags kubernetes_node
+#   ansible-playbook tests/integration/test_all.yml -v --tags kubernetes_pool
+#
 # Resources are named with "ansible-test-" prefix for easy identification.
-# A final always: block guarantees cleanup even on failure.
+# The final always: block in each include guarantees cleanup even on failure.
 
 - name: Civo.cloud integration tests
   hosts: localhost
@@ -28,944 +34,119 @@
 
   tasks:
 
-    # =========================================================================
-    # Wrap all real work in a block so the always: cleanup always fires
-    # =========================================================================
     - name: Run all tests
       block:
 
-        # =====================================================================
-        # NETWORK — create / read / idempotency
-        # =====================================================================
-        - name: "[network] Create test network"
-          civo.cloud.civo_network:
-            name: "{{ test_prefix }}-network"
-            region: "{{ region }}"
-            state: present
-          register: net_create
-
-        - name: "[network] Assert created"
-          ansible.builtin.assert:
-            that:
-              - net_create.changed
-              - net_create.network.id is defined
-              - net_create.network.id | length > 0
-            fail_msg: "Network creation failed: {{ net_create }}"
-
-        - name: "[network] READ — info by name"
-          civo.cloud.civo_network_info:
-            name: "{{ test_prefix }}-network"
-            region: "{{ region }}"
-          register: net_info
-
-        - name: "[network] Assert info returned"
-          ansible.builtin.assert:
-            that:
-              - net_info.networks | length == 1
-              - net_info.networks[0].id == net_create.network.id
-            fail_msg: "Network info failed: {{ net_info }}"
-
-        - name: "[network] Idempotency — present again"
-          civo.cloud.civo_network:
-            name: "{{ test_prefix }}-network"
-            region: "{{ region }}"
-            state: present
-          register: net_idem
-
-        - name: "[network] Assert idempotent"
-          ansible.builtin.assert:
-            that:
-              - not net_idem.changed
-            fail_msg: "Network create is not idempotent: {{ net_idem }}"
-
-        - name: "[network] Wait for network to become Active"
-          civo.cloud.civo_network_info:
-            name: "{{ test_prefix }}-network"
-            region: "{{ region }}"
-          register: net_wait
-          until: net_wait.networks | length > 0 and net_wait.networks[0].status == 'Active'
-          retries: 20
-          delay: 10
-
-        # =====================================================================
-        # FIREWALL — create / read / idempotency
-        # =====================================================================
-        - name: "[firewall] Create test firewall"
-          civo.cloud.civo_firewall:
-            name: "{{ test_prefix }}-fw"
-            region: "{{ region }}"
-            network: "{{ test_prefix }}-network"
-            rules:
-              - label: allow-ssh
-                direction: ingress
-                action: allow
-                protocol: tcp
-                port: "22"
-                cidr: "0.0.0.0/0"
-              - label: allow-https
-                direction: ingress
-                action: allow
-                protocol: tcp
-                port: "443"
-                cidr: "0.0.0.0/0"
-            state: present
-          register: fw_create
-
-        - name: "[firewall] Assert created"
-          ansible.builtin.assert:
-            that:
-              - fw_create.changed
-              - fw_create.firewall.id is defined
-            fail_msg: "Firewall creation failed: {{ fw_create }}"
-
-        - name: "[firewall] READ — info with rules"
-          civo.cloud.civo_firewall_info:
-            name: "{{ test_prefix }}-fw"
-            region: "{{ region }}"
-            rules: true
-          register: fw_info
-
-        - name: "[firewall] Assert info returned"
-          ansible.builtin.assert:
-            that:
-              - fw_info.firewalls | length == 1
-              - fw_info.firewalls[0].id == fw_create.firewall.id
-              - fw_info.firewalls[0].rules is defined
-            fail_msg: "Firewall info failed: {{ fw_info }}"
-
-        - name: "[firewall] Idempotency — present again"
-          civo.cloud.civo_firewall:
-            name: "{{ test_prefix }}-fw"
-            region: "{{ region }}"
-            network: "{{ test_prefix }}-network"
-            rules:
-              - label: allow-ssh
-                direction: ingress
-                action: allow
-                protocol: tcp
-                port: "22"
-                cidr: "0.0.0.0/0"
-              - label: allow-https
-                direction: ingress
-                action: allow
-                protocol: tcp
-                port: "443"
-                cidr: "0.0.0.0/0"
-            state: present
-          register: fw_idem
-
-        - name: "[firewall] Assert idempotent"
-          ansible.builtin.assert:
-            that:
-              - not fw_idem.changed
-            fail_msg: "Firewall create is not idempotent: {{ fw_idem }}"
-
-        # =====================================================================
-        # RESERVED IP — create / read / idempotency
-        # =====================================================================
-        - name: "[reserved_ip] Reserve a test IP"
-          civo.cloud.civo_reserved_ip:
-            name: "{{ test_prefix }}-ip"
-            region: "{{ region }}"
-            state: present
-          register: rip_create
-
-        - name: "[reserved_ip] Assert created"
-          ansible.builtin.assert:
-            that:
-              - rip_create.changed
-              - rip_create.reserved_ip.id is defined
-            fail_msg: "Reserved IP creation failed: {{ rip_create }}"
-
-        - name: "[reserved_ip] READ — info by name"
-          civo.cloud.civo_reserved_ip_info:
-            name: "{{ test_prefix }}-ip"
-            region: "{{ region }}"
-          register: rip_info
-
-        - name: "[reserved_ip] Assert info returned"
-          ansible.builtin.assert:
-            that:
-              - rip_info.reserved_ips | length == 1
-              - rip_info.reserved_ips[0].id == rip_create.reserved_ip.id
-            fail_msg: "Reserved IP info failed: {{ rip_info }}"
-
-        - name: "[reserved_ip] Idempotency"
-          civo.cloud.civo_reserved_ip:
-            name: "{{ test_prefix }}-ip"
-            region: "{{ region }}"
-            state: present
-          register: rip_idem
-
-        - name: "[reserved_ip] Assert idempotent"
-          ansible.builtin.assert:
-            that:
-              - not rip_idem.changed
-            fail_msg: "Reserved IP create is not idempotent: {{ rip_idem }}"
-
-        # =====================================================================
-        # VOLUME — create / read / idempotency / resize
-        # =====================================================================
-        - name: "[volume] Create test volume"
-          civo.cloud.civo_volume:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-            size_gb: 5
-            network: default
-            state: present
-          register: vol_create
-
-        - name: "[volume] Assert created"
-          ansible.builtin.assert:
-            that:
-              - vol_create.changed
-              - vol_create.volume.id is defined
-            fail_msg: "Volume creation failed: {{ vol_create }}"
-
-        - name: "[volume] READ — info by name"
-          civo.cloud.civo_volume_info:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-          register: vol_info
-
-        - name: "[volume] Assert info returned"
-          ansible.builtin.assert:
-            that:
-              - vol_info.volumes | length == 1
-              - vol_info.volumes[0].id == vol_create.volume.id
-            fail_msg: "Volume info failed: {{ vol_info }}"
-
-        - name: "[volume] Idempotency"
-          civo.cloud.civo_volume:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-            size_gb: 5
-            network: default
-            state: present
-          register: vol_idem
-
-        - name: "[volume] Assert idempotent"
-          ansible.builtin.assert:
-            that:
-              - not vol_idem.changed
-            fail_msg: "Volume create is not idempotent: {{ vol_idem }}"
-
-        - name: "[volume] Wait for volume to become available before resize"
-          civo.cloud.civo_volume_info:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-          register: vol_wait
-          until: vol_wait.volumes | length > 0 and vol_wait.volumes[0].status == 'available'
-          retries: 30
-          delay: 15
-
-        - name: "[volume] Resize volume (update in place)"
-          civo.cloud.civo_volume:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-            size_gb: 10
-            network: default
-            state: present
-          register: vol_resize
-
-        - name: "[volume] Assert resize changed"
-          ansible.builtin.assert:
-            that:
-              - vol_resize.changed
-            fail_msg: "Volume resize did not report changed: {{ vol_resize }}"
-
-        # =====================================================================
-        # INSTANCE — create / read / idempotency
-        # Note: Instance created on 'default' network so we can test volume
-        # attach (volumes on custom networks have a Civo bug where they stay
-        # in "creating" state forever). Network/firewall are tested separately.
-        # =====================================================================
-        - name: "[instance] Create test instance"
-          civo.cloud.civo_instance:
-            hostname: "{{ test_prefix }}-vm"
-            region: "{{ region }}"
-            size: "{{ instance_size }}"
-            diskimage: debian-11
-            network: default
-            public_ip: create
-            wait: true
-            timeout: 600
-            state: present
-          register: inst_create
-
-        - name: "[instance] Assert created"
-          ansible.builtin.assert:
-            that:
-              - inst_create.changed
-              - inst_create.instance.id is defined
-              - inst_create.instance.public_ip is defined
-            fail_msg: "Instance creation failed: {{ inst_create }}"
-
-        - name: "[instance] READ — info by hostname"
-          civo.cloud.civo_instance_info:
-            hostname: "{{ test_prefix }}-vm"
-            region: "{{ region }}"
-          register: inst_info
-
-        - name: "[instance] Assert info returned"
-          ansible.builtin.assert:
-            that:
-              - inst_info.instances | length == 1
-              - inst_info.instances[0].id == inst_create.instance.id
-            fail_msg: "Instance info failed: {{ inst_info }}"
-
-        - name: "[instance] Idempotency"
-          civo.cloud.civo_instance:
-            hostname: "{{ test_prefix }}-vm"
-            region: "{{ region }}"
-            size: "{{ instance_size }}"
-            diskimage: debian-11
-            network: default
-            public_ip: create
-            wait: true
-            state: present
-          register: inst_idem
-
-        - name: "[instance] Assert idempotent"
-          ansible.builtin.assert:
-            that:
-              - not inst_idem.changed
-            fail_msg: "Instance create is not idempotent: {{ inst_idem }}"
-
-        # =====================================================================
-        # INSTANCE — stop / start
-        # =====================================================================
-        - name: "[instance] Stop instance"
-          civo.cloud.civo_instance:
-            hostname: "{{ test_prefix }}-vm"
-            region: "{{ region }}"
-            state: stopped
-            wait: true
-          register: inst_stop
-
-        - name: "[instance] Assert stopped"
-          ansible.builtin.assert:
-            that:
-              - inst_stop.changed
-              - inst_stop.instance.status | upper == "SHUTOFF"
-            fail_msg: "Instance stop failed: {{ inst_stop }}"
-
-        - name: "[instance] Stop idempotency (already stopped)"
-          civo.cloud.civo_instance:
-            hostname: "{{ test_prefix }}-vm"
-            region: "{{ region }}"
-            state: stopped
-          register: inst_stop_idem
-
-        - name: "[instance] Assert stop idempotent"
-          ansible.builtin.assert:
-            that:
-              - not inst_stop_idem.changed
-            fail_msg: "Instance stop is not idempotent: {{ inst_stop_idem }}"
-
-        - name: "[instance] Start instance"
-          civo.cloud.civo_instance:
-            hostname: "{{ test_prefix }}-vm"
-            region: "{{ region }}"
-            state: started
-            wait: true
-            timeout: 300
-          register: inst_start
-
-        - name: "[instance] Assert started"
-          ansible.builtin.assert:
-            that:
-              - inst_start.changed
-              - inst_start.instance.status | upper == "ACTIVE"
-            fail_msg: "Instance start failed: {{ inst_start }}"
-
-        - name: "[instance] Start idempotency (already active)"
-          civo.cloud.civo_instance:
-            hostname: "{{ test_prefix }}-vm"
-            region: "{{ region }}"
-            state: started
-            size: "{{ instance_size }}"
-          register: inst_start_idem
-
-        - name: "[instance] Assert start idempotent"
-          ansible.builtin.assert:
-            that:
-              - not inst_start_idem.changed
-            fail_msg: "Instance start is not idempotent: {{ inst_start_idem }}"
-
-        # =====================================================================
-        # RESERVED IP — assign to instance
-        # =====================================================================
-        - name: "[reserved_ip] Assign to instance"
-          civo.cloud.civo_reserved_ip:
-            name: "{{ test_prefix }}-ip"
-            region: "{{ region }}"
-            instance: "{{ test_prefix }}-vm"
-            state: assigned
-          register: rip_assign
-
-        - name: "[reserved_ip] Assert assignment changed"
-          ansible.builtin.assert:
-            that:
-              - rip_assign.changed
-            fail_msg: "Reserved IP assignment failed: {{ rip_assign }}"
-
-        - name: "[reserved_ip] Idempotency of assignment"
-          civo.cloud.civo_reserved_ip:
-            name: "{{ test_prefix }}-ip"
-            region: "{{ region }}"
-            instance: "{{ test_prefix }}-vm"
-            state: assigned
-          register: rip_assign_idem
-
-        - name: "[reserved_ip] Assert assignment idempotent"
-          ansible.builtin.assert:
-            that:
-              - not rip_assign_idem.changed
-            fail_msg: "Reserved IP assignment is not idempotent: {{ rip_assign_idem }}"
-
-        # =====================================================================
-        # VOLUME — attach to instance (both on default network)
-        # =====================================================================
-        - name: "[volume] Wait for volume to be available after resize"
-          civo.cloud.civo_volume_info:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-          register: vol_pre_attach
-          until: vol_pre_attach.volumes | length > 0 and vol_pre_attach.volumes[0].status == 'available'
-          retries: 40
-          delay: 15
-
-        - name: "[volume] Attach to instance"
-          civo.cloud.civo_volume:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-            instance: "{{ test_prefix }}-vm"
-            state: attached
-          register: vol_attach
-
-        - name: "[volume] Assert attach changed"
-          ansible.builtin.assert:
-            that:
-              - vol_attach.changed
-            fail_msg: "Volume attach failed: {{ vol_attach }}"
-
-        - name: "[volume] Idempotency of attach"
-          civo.cloud.civo_volume:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-            instance: "{{ test_prefix }}-vm"
-            state: attached
-          register: vol_attach_idem
-
-        - name: "[volume] Assert attach idempotent"
-          ansible.builtin.assert:
-            that:
-              - not vol_attach_idem.changed
-            fail_msg: "Volume attach is not idempotent: {{ vol_attach_idem }}"
-
-        # =====================================================================
-        # OBJECT STORE — create / read / idempotency
-        # =====================================================================
-        - name: "[objectstore] Create test object store"
-          civo.cloud.civo_objectstore:
-            name: "{{ test_prefix }}-bucket"
-            region: "{{ region }}"
-            max_size_gb: 500
-            wait: true
-            timeout: 120
-            state: present
-          register: obs_create
-
-        - name: "[objectstore] Assert created"
-          ansible.builtin.assert:
-            that:
-              - obs_create.changed
-              - obs_create.objectstore.id is defined
-            fail_msg: "Object store creation failed: {{ obs_create }}"
-
-        - name: "[objectstore] READ — info by name"
-          civo.cloud.civo_objectstore_info:
-            name: "{{ test_prefix }}-bucket"
-            region: "{{ region }}"
-          register: obs_info
-
-        - name: "[objectstore] Assert info returned"
-          ansible.builtin.assert:
-            that:
-              - obs_info.objectstores | length == 1
-              - obs_info.objectstores[0].name == test_prefix + '-bucket'
-            fail_msg: "Object store info failed: {{ obs_info }}"
-
-        - name: "[objectstore] Idempotency"
-          civo.cloud.civo_objectstore:
-            name: "{{ test_prefix }}-bucket"
-            region: "{{ region }}"
-            max_size_gb: 500
-            wait: true
-            state: present
-          register: obs_idem
-
-        - name: "[objectstore] Assert idempotent"
-          ansible.builtin.assert:
-            that:
-              - not obs_idem.changed
-            fail_msg: "Object store create is not idempotent: {{ obs_idem }}"
-
-        # =====================================================================
-        # DATABASE — create / read / idempotency
-        # =====================================================================
-        - name: "[database] Create test database"
-          civo.cloud.civo_database:
-            name: "{{ test_prefix }}-db"
-            region: "{{ region }}"
-            size: "{{ db_size }}"
-            engine: "{{ db_engine }}"
-            version: "{{ db_version }}"
-            nodes: 1
-            network: "{{ test_prefix }}-network"
-            wait: true
-            timeout: 600
-            state: present
-          register: db_create
-
-        - name: "[database] Assert created"
-          ansible.builtin.assert:
-            that:
-              - db_create.changed
-              - db_create.database.id is defined
-            fail_msg: "Database creation failed: {{ db_create }}"
-
-        - name: "[database] READ — info by name"
-          civo.cloud.civo_database_info:
-            name: "{{ test_prefix }}-db"
-            region: "{{ region }}"
-          register: db_info
-
-        - name: "[database] Assert info returned"
-          ansible.builtin.assert:
-            that:
-              - db_info.databases | length == 1
-              - db_info.databases[0].id == db_create.database.id
-            fail_msg: "Database info failed: {{ db_info }}"
-
-        - name: "[database] Idempotency"
-          civo.cloud.civo_database:
-            name: "{{ test_prefix }}-db"
-            region: "{{ region }}"
-            size: "{{ db_size }}"
-            engine: "{{ db_engine }}"
-            version: "{{ db_version }}"
-            nodes: 1
-            network: "{{ test_prefix }}-network"
-            wait: true
-            state: present
-          register: db_idem
-
-        - name: "[database] Assert idempotent"
-          ansible.builtin.assert:
-            that:
-              - not db_idem.changed
-            fail_msg: "Database create is not idempotent: {{ db_idem }}"
-
-        # =====================================================================
-        # KUBERNETES — create / read / idempotency
-        # =====================================================================
-        - name: "[kubernetes] Create test cluster"
-          civo.cloud.civo_kubernetes:
-            name: "{{ test_prefix }}-k8s"
-            region: "{{ region }}"
-            node_size: "{{ k8s_node_size }}"
-            node_count: 1
-            network: "{{ test_prefix }}-network"
-            cni: flannel
-            wait: true
-            timeout: 600
-            state: present
-          register: k8s_create
-
-        - name: "[kubernetes] Assert created"
-          ansible.builtin.assert:
-            that:
-              - k8s_create.changed
-              - k8s_create.cluster.id is defined
-              - k8s_create.cluster.kubeconfig is defined
-            fail_msg: "Kubernetes cluster creation failed: {{ k8s_create }}"
-
-        - name: "[kubernetes] READ — info by name with kubeconfig"
-          civo.cloud.civo_kubernetes_info:
-            name: "{{ test_prefix }}-k8s"
-            region: "{{ region }}"
-            kubeconfig: true
-          register: k8s_info
-
-        - name: "[kubernetes] Assert info returned"
-          ansible.builtin.assert:
-            that:
-              - k8s_info.clusters | length == 1
-              - k8s_info.clusters[0].id == k8s_create.cluster.id
-              - k8s_info.clusters[0].kubeconfig is defined
-            fail_msg: "Kubernetes info failed: {{ k8s_info }}"
-
-        - name: "[kubernetes] Idempotency"
-          civo.cloud.civo_kubernetes:
-            name: "{{ test_prefix }}-k8s"
-            region: "{{ region }}"
-            node_size: "{{ k8s_node_size }}"
-            node_count: 1
-            network: "{{ test_prefix }}-network"
-            cni: flannel
-            wait: true
-            state: present
-          register: k8s_idem
-
-        - name: "[kubernetes] Assert idempotent"
-          ansible.builtin.assert:
-            that:
-              - not k8s_idem.changed
-            fail_msg: "Kubernetes cluster create is not idempotent: {{ k8s_idem }}"
-
-        # =====================================================================
-        # KUBERNETES — scale node pool
-        # =====================================================================
-        - name: "[kubernetes] Scale cluster to 2 nodes"
-          civo.cloud.civo_kubernetes:
-            name: "{{ test_prefix }}-k8s"
-            region: "{{ region }}"
-            node_size: "{{ k8s_node_size }}"
-            node_count: 2
-            network: "{{ test_prefix }}-network"
-            wait: true
-            timeout: 600
-            state: present
-          register: k8s_scale
-
-        - name: "[kubernetes] Assert scaled"
-          ansible.builtin.assert:
-            that:
-              - k8s_scale.changed
-              - k8s_scale.cluster.nodes | int == 2
-            fail_msg: "Kubernetes scaling failed: {{ k8s_scale }}"
-
-        - name: "[kubernetes] Scale idempotency (same node count)"
-          civo.cloud.civo_kubernetes:
-            name: "{{ test_prefix }}-k8s"
-            region: "{{ region }}"
-            node_size: "{{ k8s_node_size }}"
-            node_count: 2
-            network: "{{ test_prefix }}-network"
-            wait: true
-            state: present
-          register: k8s_scale_idem
-
-        - name: "[kubernetes] Assert scale idempotent"
-          ansible.builtin.assert:
-            that:
-              - not k8s_scale_idem.changed
-            fail_msg: "Kubernetes scale is not idempotent: {{ k8s_scale_idem }}"
-
-        # Scale back to 1 to minimise cost
-        - name: "[kubernetes] Scale cluster back to 1 node"
-          civo.cloud.civo_kubernetes:
-            name: "{{ test_prefix }}-k8s"
-            region: "{{ region }}"
-            node_size: "{{ k8s_node_size }}"
-            node_count: 1
-            network: "{{ test_prefix }}-network"
-            wait: true
-            timeout: 600
-            state: present
-          register: k8s_scale_back
-
-        - name: "[kubernetes] Assert scaled back"
-          ansible.builtin.assert:
-            that:
-              - k8s_scale_back.changed
-            fail_msg: "Kubernetes scale-back failed: {{ k8s_scale_back }}"
-
-        # =====================================================================
-        # LOAD BALANCER — read-only (LBs are created by K8s, not via CLI)
-        # =====================================================================
-        - name: "[loadbalancer] List all load balancers (read-only)"
-          civo.cloud.civo_loadbalancer_info:
-            region: "{{ region }}"
-          register: lb_list
-
-        - name: "[loadbalancer] Assert info module returns a list"
-          ansible.builtin.assert:
-            that:
-              - lb_list.loadbalancers is defined
-              - lb_list.loadbalancers is iterable
-            fail_msg: "Load balancer info did not return a list: {{ lb_list }}"
-
-        - name: "[loadbalancer] Lookup a non-existent LB by name"
-          civo.cloud.civo_loadbalancer_info:
-            region: "{{ region }}"
-            name: "does-not-exist-lb"
-          register: lb_missing
-
-        - name: "[loadbalancer] Assert empty list for non-existent LB"
-          ansible.builtin.assert:
-            that:
-              - lb_missing.loadbalancers | length == 0
-            fail_msg: "Expected empty list for non-existent LB: {{ lb_missing }}"
-
-        - name: "[loadbalancer] state=present on non-existent LB (no-op)"
-          civo.cloud.civo_loadbalancer:
-            region: "{{ region }}"
-            name: "does-not-exist-lb"
-            state: present
-          register: lb_present_noop
-
-        - name: "[loadbalancer] Assert no change for non-existent LB present"
-          ansible.builtin.assert:
-            that:
-              - not lb_present_noop.changed
-            fail_msg: "Expected no change for non-existent LB: {{ lb_present_noop }}"
-
-        - name: "[loadbalancer] state=absent on non-existent LB (no-op)"
-          civo.cloud.civo_loadbalancer:
-            region: "{{ region }}"
-            name: "does-not-exist-lb"
-            state: absent
-          register: lb_absent_noop
-
-        - name: "[loadbalancer] Assert no change for non-existent LB absent"
-          ansible.builtin.assert:
-            that:
-              - not lb_absent_noop.changed
-            fail_msg: "Expected no change for absent non-existent LB: {{ lb_absent_noop }}"
-
-        # =====================================================================
-        # READ — list all resources (no name filter)
-        # =====================================================================
-        - name: "[network_info] List all networks"
-          civo.cloud.civo_network_info:
-            region: "{{ region }}"
-          register: all_nets
-
-        - name: "[network_info] Assert test network in list"
-          ansible.builtin.assert:
-            that:
-              - all_nets.networks | selectattr('label', 'equalto', test_prefix + '-network') | list | length == 1
-
-        - name: "[firewall_info] List all firewalls"
-          civo.cloud.civo_firewall_info:
-            region: "{{ region }}"
-          register: all_fws
-
-        - name: "[firewall_info] Assert test firewall in list"
-          ansible.builtin.assert:
-            that:
-              - all_fws.firewalls | selectattr('name', 'equalto', test_prefix + '-fw') | list | length == 1
-
-        - name: "[instance_info] List all instances"
-          civo.cloud.civo_instance_info:
-            region: "{{ region }}"
-          register: all_insts
-
-        - name: "[instance_info] Assert test instance in list"
-          ansible.builtin.assert:
-            that:
-              - all_insts.instances | selectattr('hostname', 'equalto', test_prefix + '-vm') | list | length == 1
-
-        - name: "[volume_info] List all volumes"
-          civo.cloud.civo_volume_info:
-            region: "{{ region }}"
-          register: all_vols
-
-        - name: "[volume_info] Assert test volume in list"
-          ansible.builtin.assert:
-            that:
-              - all_vols.volumes | selectattr('name', 'equalto', test_prefix + '-vol') | list | length == 1
-
-        - name: "[reserved_ip_info] List all reserved IPs"
-          civo.cloud.civo_reserved_ip_info:
-            region: "{{ region }}"
-          register: all_ips
-
-        - name: "[reserved_ip_info] Assert test IP in list"
-          ansible.builtin.assert:
-            that:
-              - all_ips.reserved_ips | selectattr('name', 'equalto', test_prefix + '-ip') | list | length == 1
-
-        - name: "[objectstore_info] List all object stores"
-          civo.cloud.civo_objectstore_info:
-            region: "{{ region }}"
-          register: all_obs
-
-        - name: "[objectstore_info] Assert test bucket in list"
-          ansible.builtin.assert:
-            that:
-              - all_obs.objectstores | selectattr('name', 'equalto', test_prefix + '-bucket') | list | length == 1
-
-        - name: "[database_info] List all databases"
-          civo.cloud.civo_database_info:
-            region: "{{ region }}"
-          register: all_dbs
-
-        - name: "[database_info] Assert test database in list"
-          ansible.builtin.assert:
-            that:
-              - all_dbs.databases | selectattr('name', 'equalto', test_prefix + '-db') | list | length == 1
-
-        - name: "[kubernetes_info] List all clusters"
-          civo.cloud.civo_kubernetes_info:
-            region: "{{ region }}"
-          register: all_k8s
-
-        - name: "[kubernetes_info] Assert test cluster in list"
-          ansible.builtin.assert:
-            that:
-              - all_k8s.clusters | selectattr('name', 'equalto', test_prefix + '-k8s') | list | length == 1
-
-        - name: "[loadbalancer_info] List all load balancers"
-          civo.cloud.civo_loadbalancer_info:
-            region: "{{ region }}"
-          register: all_lbs
-
-        - name: "[loadbalancer_info] Assert list returned (may be empty)"
-          ansible.builtin.assert:
-            that:
-              - all_lbs.loadbalancers is defined
-              - all_lbs.loadbalancers is iterable
-            fail_msg: "Load balancer info did not return a list: {{ all_lbs }}"
-
-        - name: "All create/read/update tests passed"
+        - name: Include network tests
+          ansible.builtin.include_tasks:
+            file: tasks/network.yml
+            apply:
+              tags: [network]
+          tags: [always, network]
+
+        - name: Include firewall tests
+          ansible.builtin.include_tasks:
+            file: tasks/firewall.yml
+            apply:
+              tags: [firewall]
+          tags: [always, firewall]
+
+        - name: Include reserved IP tests
+          ansible.builtin.include_tasks:
+            file: tasks/reserved_ip.yml
+            apply:
+              tags: [reserved_ip]
+          tags: [always, reserved_ip]
+
+        - name: Include volume tests
+          ansible.builtin.include_tasks:
+            file: tasks/volume.yml
+            apply:
+              tags: [volume]
+          tags: [always, volume]
+
+        - name: Include instance tests
+          ansible.builtin.include_tasks:
+            file: tasks/instance.yml
+            apply:
+              tags: [instance]
+          tags: [always, instance]
+
+        - name: Include reserved IP assign tests
+          ansible.builtin.include_tasks:
+            file: tasks/reserved_ip_assign.yml
+            apply:
+              tags: [reserved_ip]
+          tags: [always, reserved_ip]
+
+        - name: Include volume attach tests
+          ansible.builtin.include_tasks:
+            file: tasks/volume_attach.yml
+            apply:
+              tags: [volume]
+          tags: [always, volume]
+
+        - name: Include object store tests
+          ansible.builtin.include_tasks:
+            file: tasks/objectstore.yml
+            apply:
+              tags: [objectstore]
+          tags: [always, objectstore]
+
+        - name: Include database tests
+          ansible.builtin.include_tasks:
+            file: tasks/database.yml
+            apply:
+              tags: [database]
+          tags: [always, database]
+
+        - name: Include Kubernetes core tests
+          ansible.builtin.include_tasks:
+            file: tasks/kubernetes.yml
+            apply:
+              tags: [kubernetes]
+          tags: [always, kubernetes]
+
+        - name: Include Kubernetes upgrade tests
+          ansible.builtin.include_tasks:
+            file: tasks/kubernetes_upgrade.yml
+            apply:
+              tags: [kubernetes, kubernetes_upgrade]
+          tags: [kubernetes_upgrade]
+
+        - name: Include Kubernetes node tests
+          ansible.builtin.include_tasks:
+            file: tasks/kubernetes_node.yml
+            apply:
+              tags: [kubernetes, kubernetes_node]
+          tags: [kubernetes_node]
+
+        - name: Include Kubernetes pool tests
+          ansible.builtin.include_tasks:
+            file: tasks/kubernetes_pool.yml
+            apply:
+              tags: [kubernetes, kubernetes_pool]
+          tags: [kubernetes_pool]
+
+        - name: Include load balancer tests
+          ansible.builtin.include_tasks:
+            file: tasks/loadbalancer.yml
+            apply:
+              tags: [loadbalancer]
+          tags: [always, loadbalancer]
+
+        - name: Include info (list-all) tests
+          ansible.builtin.include_tasks:
+            file: tasks/info_all.yml
+            apply:
+              tags: [info]
+          tags: [always, info]
+
+        - name: All create/read/update tests passed
           ansible.builtin.debug:
             msg: "All resources created, read back, and verified. Proceeding to destroy phase."
 
-      # =======================================================================
-      # ALWAYS — destroy in reverse dependency order regardless of test outcome
-      # =======================================================================
       always:
-
-        - name: "[kubernetes] Destroy cluster"
-          civo.cloud.civo_kubernetes:
-            name: "{{ test_prefix }}-k8s"
-            region: "{{ region }}"
-            state: absent
-          register: k8s_destroy
-          ignore_errors: true
-
-        - name: "[database] Destroy database"
-          civo.cloud.civo_database:
-            name: "{{ test_prefix }}-db"
-            region: "{{ region }}"
-            state: absent
-          register: db_destroy
-          ignore_errors: true
-
-        - name: "[objectstore] Destroy object store"
-          civo.cloud.civo_objectstore:
-            name: "{{ test_prefix }}-bucket"
-            region: "{{ region }}"
-            state: absent
-          register: obs_destroy
-          ignore_errors: true
-
-        - name: "[volume] Detach volume"
-          civo.cloud.civo_volume:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-            state: detached
-          register: vol_detach
-          ignore_errors: true
-
-        - name: "[reserved_ip] Unassign reserved IP"
-          civo.cloud.civo_reserved_ip:
-            name: "{{ test_prefix }}-ip"
-            region: "{{ region }}"
-            state: unassigned
-          register: rip_unassign
-          ignore_errors: true
-
-        - name: "[instance] Destroy instance"
-          civo.cloud.civo_instance:
-            hostname: "{{ test_prefix }}-vm"
-            region: "{{ region }}"
-            state: absent
-          register: inst_destroy
-          ignore_errors: true
-
-        - name: "[volume] Destroy volume"
-          civo.cloud.civo_volume:
-            name: "{{ test_prefix }}-vol"
-            region: "{{ region }}"
-            state: absent
-          register: vol_destroy
-          ignore_errors: true
-
-        - name: "[reserved_ip] Release reserved IP"
-          civo.cloud.civo_reserved_ip:
-            name: "{{ test_prefix }}-ip"
-            region: "{{ region }}"
-            state: absent
-          register: rip_destroy
-          ignore_errors: true
-
-        - name: "[firewall] Destroy firewall"
-          civo.cloud.civo_firewall:
-            name: "{{ test_prefix }}-fw"
-            region: "{{ region }}"
-            state: absent
-          register: fw_destroy
-          ignore_errors: true
-
-        - name: "[network] Destroy network"
-          civo.cloud.civo_network:
-            name: "{{ test_prefix }}-network"
-            region: "{{ region }}"
-            state: absent
-          register: net_destroy
-          ignore_errors: true
-
-        # -----------------------------------------------------------------------
-        # Post-destroy verification — confirm no test resources remain
-        # -----------------------------------------------------------------------
-        - name: "[cleanup] Verify no test networks remain"
-          civo.cloud.civo_network_info:
-            region: "{{ region }}"
-          register: sweep_nets
-
-        - name: "[cleanup] Assert no test networks left"
-          ansible.builtin.assert:
-            that:
-              - sweep_nets.networks | selectattr('label', 'search', '^' + test_prefix) | list | length == 0
-            fail_msg: >-
-              Test networks still present: {{
-                sweep_nets.networks
-                | selectattr('label', 'search', '^' + test_prefix)
-                | map(attribute='label') | list
-              }}
-          failed_when: false
-
-        - name: "[cleanup] Verify no test instances remain"
-          civo.cloud.civo_instance_info:
-            region: "{{ region }}"
-          register: sweep_insts
-
-        - name: "[cleanup] Assert no test instances left"
-          ansible.builtin.assert:
-            that:
-              - sweep_insts.instances | selectattr('hostname', 'search', '^' + test_prefix) | list | length == 0
-            fail_msg: >-
-              Test instances still present: {{
-                sweep_insts.instances
-                | selectattr('hostname', 'search', '^' + test_prefix)
-                | map(attribute='hostname') | list
-              }}
-          failed_when: false
-
-        - name: "[cleanup] Summary"
-          ansible.builtin.debug:
-            msg: >-
-              Destroy complete.
-              network={{ net_destroy.changed | default('skipped') }},
-              firewall={{ fw_destroy.changed | default('skipped') }},
-              instance={{ inst_destroy.changed | default('skipped') }},
-              volume={{ vol_destroy.changed | default('skipped') }},
-              reserved_ip={{ rip_destroy.changed | default('skipped') }},
-              objectstore={{ obs_destroy.changed | default('skipped') }},
-              database={{ db_destroy.changed | default('skipped') }},
-              kubernetes={{ k8s_destroy.changed | default('skipped') }}
+        - name: Cleanup all test resources
+          ansible.builtin.include_tasks:
+            file: tasks/cleanup.yml

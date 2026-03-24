@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `civo_kubernetes`: new `upgrade_version` parameter — calls `civo kubernetes upgrade`
+  and waits for the cluster to return to `ACTIVE` status.
+- Integration tests for Kubernetes version upgrade
+  (`tests/integration/tasks/kubernetes_upgrade.yml`, tag `kubernetes_upgrade`).
+- Modularised integration test suite: `test_all.yml` now orchestrates per-resource
+  task files under `tests/integration/tasks/` with per-resource tags.
+
 ## v0.0.1 — 2026-03-24
 
 ### Added

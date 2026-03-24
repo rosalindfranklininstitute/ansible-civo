@@ -1,0 +1,48 @@
+---
+# Reserved IP integration tests: create / read / idempotency / assign / destroy
+
+- name: "[reserved_ip] Reserve a test IP"
+  civo.cloud.civo_reserved_ip:
+    name: "{{ test_prefix }}-ip"
+    region: "{{ region }}"
+    state: present
+  register: rip_create
+  tags: [reserved_ip]
+
+- name: "[reserved_ip] Assert created"
+  ansible.builtin.assert:
+    that:
+      - rip_create.changed
+      - rip_create.reserved_ip.id is defined
+    fail_msg: "Reserved IP creation failed: {{ rip_create }}"
+  tags: [reserved_ip]
+
+- name: "[reserved_ip] READ — info by name"
+  civo.cloud.civo_reserved_ip_info:
+    name: "{{ test_prefix }}-ip"
+    region: "{{ region }}"
+  register: rip_info
+  tags: [reserved_ip]
+
+- name: "[reserved_ip] Assert info returned"
+  ansible.builtin.assert:
+    that:
+      - rip_info.reserved_ips | length == 1
+      - rip_info.reserved_ips[0].id == rip_create.reserved_ip.id
+    fail_msg: "Reserved IP info failed: {{ rip_info }}"
+  tags: [reserved_ip]
+
+- name: "[reserved_ip] Idempotency"
+  civo.cloud.civo_reserved_ip:
+    name: "{{ test_prefix }}-ip"
+    region: "{{ region }}"
+    state: present
+  register: rip_idem
+  tags: [reserved_ip]
+
+- name: "[reserved_ip] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not rip_idem.changed
+    fail_msg: "Reserved IP create is not idempotent: {{ rip_idem }}"
+  tags: [reserved_ip]

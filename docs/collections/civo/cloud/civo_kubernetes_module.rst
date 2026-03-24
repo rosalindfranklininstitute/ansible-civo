@@ -49,8 +49,9 @@ Synopsis
 
 .. Description
 
-- Create, scale, or delete Civo Kubernetes (k3s) clusters.
+- Create, scale, upgrade, or delete Civo Kubernetes (k3s) clusters.
 - Supports in\-place node\-count scaling when the cluster already exists.
+- Supports in\-place Kubernetes version upgrade via :literal:`upgrade\_version`.
 - Returns the kubeconfig for an active cluster.
 - Uses the :literal:`civo` CLI binary on the control node.
 
@@ -540,6 +541,44 @@ Parameters
   * - .. raw:: html
 
         <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-upgrade_version"></div>
+
+      .. _ansible_collections.civo.cloud.civo_kubernetes_module__parameter-upgrade_version:
+
+      .. rst-class:: ansible-option-title
+
+      **upgrade_version**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-upgrade_version" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      Target Kubernetes version string to upgrade an existing cluster to (e.g. :literal:`1.29.2\-k3s1`\ ).
+
+      Ignored when creating a new cluster; use :literal:`version` for that.
+
+      Calls :literal:`civo kubernetes upgrade CLUSTER UPGRADE\_VERSION` and waits for the cluster to return to :literal:`ACTIVE` status.
+
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
         <div class="ansibleOptionAnchor" id="parameter-version"></div>
 
       .. _ansible_collections.civo.cloud.civo_kubernetes_module__parameter-version:
@@ -665,6 +704,13 @@ Examples
         region: LON1
         name: my-cluster
         node_count: 5
+
+    - name: Upgrade the cluster to a newer Kubernetes version
+      civo.cloud.civo_kubernetes:
+        region: LON1
+        name: my-cluster
+        upgrade_version: "1.29.2-k3s1"
+        wait: true
 
     - name: Delete a cluster
       civo.cloud.civo_kubernetes:

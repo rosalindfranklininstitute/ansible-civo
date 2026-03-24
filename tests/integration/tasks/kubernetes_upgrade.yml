@@ -1,0 +1,74 @@
+---
+# Kubernetes version upgrade integration tests
+# Requires an existing cluster named "{{ test_prefix }}-k8s" (created in kubernetes.yml).
+# Creates a separate cluster on an older version, upgrades it, then deletes it.
+# Tags: [kubernetes, kubernetes_upgrade]
+
+- name: "[kubernetes_upgrade] Create cluster on older version for upgrade test"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s-upgrade"
+    region: "{{ region }}"
+    node_size: "{{ k8s_node_size }}"
+    node_count: 1
+    network: "{{ test_prefix }}-network"
+    cni: flannel
+    version: "1.31.6-k3s1"
+    wait: true
+    timeout: 600
+    state: present
+  register: k8s_upgrade_create
+  tags: [kubernetes, kubernetes_upgrade]
+
+- name: "[kubernetes_upgrade] Assert cluster created at old version"
+  ansible.builtin.assert:
+    that:
+      - k8s_upgrade_create.changed
+      - k8s_upgrade_create.cluster.id is defined
+      - k8s_upgrade_create.cluster.kubernetes_version == "1.31.6-k3s1"
+    fail_msg: "Upgrade test cluster creation failed: {{ k8s_upgrade_create }}"
+  tags: [kubernetes, kubernetes_upgrade]
+
+- name: "[kubernetes_upgrade] Upgrade cluster to newer version"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s-upgrade"
+    region: "{{ region }}"
+    upgrade_version: "1.32.5-k3s1"
+    wait: true
+    timeout: 900
+    state: present
+  register: k8s_upgraded
+  tags: [kubernetes, kubernetes_upgrade]
+
+- name: "[kubernetes_upgrade] Assert upgrade changed and version updated"
+  ansible.builtin.assert:
+    that:
+      - k8s_upgraded.changed
+      - k8s_upgraded.cluster.kubernetes_version == "1.32.5-k3s1"
+    fail_msg: "Kubernetes upgrade failed: {{ k8s_upgraded }}"
+  tags: [kubernetes, kubernetes_upgrade]
+
+- name: "[kubernetes_upgrade] Idempotency — upgrade to same version again"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s-upgrade"
+    region: "{{ region }}"
+    upgrade_version: "1.32.5-k3s1"
+    wait: true
+    state: present
+  register: k8s_upgrade_idem
+  tags: [kubernetes, kubernetes_upgrade]
+
+- name: "[kubernetes_upgrade] Assert upgrade idempotent"
+  ansible.builtin.assert:
+    that:
+      - not k8s_upgrade_idem.changed
+    fail_msg: "Kubernetes upgrade is not idempotent: {{ k8s_upgrade_idem }}"
+  tags: [kubernetes, kubernetes_upgrade]
+
+- name: "[kubernetes_upgrade] Destroy upgrade test cluster"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s-upgrade"
+    region: "{{ region }}"
+    state: absent
+  register: k8s_upgrade_destroy
+  ignore_errors: true
+  tags: [kubernetes, kubernetes_upgrade]

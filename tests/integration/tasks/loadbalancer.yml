@@ -1,0 +1,60 @@
+---
+# Load balancer integration tests (read-only — LBs are created by K8s CCM)
+
+- name: "[loadbalancer] List all load balancers (read-only)"
+  civo.cloud.civo_loadbalancer_info:
+    region: "{{ region }}"
+  register: lb_list
+  tags: [loadbalancer]
+
+- name: "[loadbalancer] Assert info module returns a list"
+  ansible.builtin.assert:
+    that:
+      - lb_list.loadbalancers is defined
+      - lb_list.loadbalancers is iterable
+    fail_msg: "Load balancer info did not return a list: {{ lb_list }}"
+  tags: [loadbalancer]
+
+- name: "[loadbalancer] Lookup a non-existent LB by name"
+  civo.cloud.civo_loadbalancer_info:
+    region: "{{ region }}"
+    name: "does-not-exist-lb"
+  register: lb_missing
+  tags: [loadbalancer]
+
+- name: "[loadbalancer] Assert empty list for non-existent LB"
+  ansible.builtin.assert:
+    that:
+      - lb_missing.loadbalancers | length == 0
+    fail_msg: "Expected empty list for non-existent LB: {{ lb_missing }}"
+  tags: [loadbalancer]
+
+- name: "[loadbalancer] state=present on non-existent LB (no-op)"
+  civo.cloud.civo_loadbalancer:
+    region: "{{ region }}"
+    name: "does-not-exist-lb"
+    state: present
+  register: lb_present_noop
+  tags: [loadbalancer]
+
+- name: "[loadbalancer] Assert no change for non-existent LB present"
+  ansible.builtin.assert:
+    that:
+      - not lb_present_noop.changed
+    fail_msg: "Expected no change for non-existent LB: {{ lb_present_noop }}"
+  tags: [loadbalancer]
+
+- name: "[loadbalancer] state=absent on non-existent LB (no-op)"
+  civo.cloud.civo_loadbalancer:
+    region: "{{ region }}"
+    name: "does-not-exist-lb"
+    state: absent
+  register: lb_absent_noop
+  tags: [loadbalancer]
+
+- name: "[loadbalancer] Assert no change for non-existent LB absent"
+  ansible.builtin.assert:
+    that:
+      - not lb_absent_noop.changed
+    fail_msg: "Expected no change for absent non-existent LB: {{ lb_absent_noop }}"
+  tags: [loadbalancer]

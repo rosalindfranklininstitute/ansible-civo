@@ -1,0 +1,34 @@
+---
+# Reserved IP assignment to instance
+
+- name: "[reserved_ip] Assign to instance"
+  civo.cloud.civo_reserved_ip:
+    name: "{{ test_prefix }}-ip"
+    region: "{{ region }}"
+    instance: "{{ test_prefix }}-vm"
+    state: assigned
+  register: rip_assign
+  tags: [reserved_ip]
+
+- name: "[reserved_ip] Assert assignment changed"
+  ansible.builtin.assert:
+    that:
+      - rip_assign.changed
+    fail_msg: "Reserved IP assignment failed: {{ rip_assign }}"
+  tags: [reserved_ip]
+
+- name: "[reserved_ip] Idempotency of assignment"
+  civo.cloud.civo_reserved_ip:
+    name: "{{ test_prefix }}-ip"
+    region: "{{ region }}"
+    instance: "{{ test_prefix }}-vm"
+    state: assigned
+  register: rip_assign_idem
+  tags: [reserved_ip]
+
+- name: "[reserved_ip] Assert assignment idempotent"
+  ansible.builtin.assert:
+    that:
+      - not rip_assign_idem.changed
+    fail_msg: "Reserved IP assignment is not idempotent: {{ rip_assign_idem }}"
+  tags: [reserved_ip]

@@ -1,0 +1,134 @@
+---
+# Cleanup: destroy all test resources in reverse dependency order.
+# Every task uses ignore_errors: true so cleanup always completes.
+# Tags are not applied here so cleanup always runs regardless of --tags.
+
+- name: "[kubernetes] Destroy cluster"
+  civo.cloud.civo_kubernetes:
+    name: "{{ test_prefix }}-k8s"
+    region: "{{ region }}"
+    state: absent
+  register: k8s_destroy
+  ignore_errors: true
+
+- name: "[database] Destroy database"
+  civo.cloud.civo_database:
+    name: "{{ test_prefix }}-db"
+    region: "{{ region }}"
+    state: absent
+  register: db_destroy
+  ignore_errors: true
+
+- name: "[objectstore] Destroy object store"
+  civo.cloud.civo_objectstore:
+    name: "{{ test_prefix }}-bucket"
+    region: "{{ region }}"
+    state: absent
+  register: obs_destroy
+  ignore_errors: true
+
+- name: "[volume] Detach volume"
+  civo.cloud.civo_volume:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+    state: detached
+  register: vol_detach
+  ignore_errors: true
+
+- name: "[reserved_ip] Unassign reserved IP"
+  civo.cloud.civo_reserved_ip:
+    name: "{{ test_prefix }}-ip"
+    region: "{{ region }}"
+    state: unassigned
+  register: rip_unassign
+  ignore_errors: true
+
+- name: "[instance] Destroy instance"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: absent
+  register: inst_destroy
+  ignore_errors: true
+
+- name: "[volume] Destroy volume"
+  civo.cloud.civo_volume:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+    state: absent
+  register: vol_destroy
+  ignore_errors: true
+
+- name: "[reserved_ip] Release reserved IP"
+  civo.cloud.civo_reserved_ip:
+    name: "{{ test_prefix }}-ip"
+    region: "{{ region }}"
+    state: absent
+  register: rip_destroy
+  ignore_errors: true
+
+- name: "[firewall] Destroy firewall"
+  civo.cloud.civo_firewall:
+    name: "{{ test_prefix }}-fw"
+    region: "{{ region }}"
+    state: absent
+  register: fw_destroy
+  ignore_errors: true
+
+- name: "[network] Destroy network"
+  civo.cloud.civo_network:
+    name: "{{ test_prefix }}-network"
+    region: "{{ region }}"
+    state: absent
+  register: net_destroy
+  ignore_errors: true
+
+# -------------------------------------------------------------------------
+# Post-destroy verification
+# -------------------------------------------------------------------------
+- name: "[cleanup] Verify no test networks remain"
+  civo.cloud.civo_network_info:
+    region: "{{ region }}"
+  register: sweep_nets
+
+- name: "[cleanup] Assert no test networks left"
+  ansible.builtin.assert:
+    that:
+      - sweep_nets.networks | selectattr('label', 'search', '^' + test_prefix) | list | length == 0
+    fail_msg: >-
+      Test networks still present: {{
+        sweep_nets.networks
+        | selectattr('label', 'search', '^' + test_prefix)
+        | map(attribute='label') | list
+      }}
+  failed_when: false
+
+- name: "[cleanup] Verify no test instances remain"
+  civo.cloud.civo_instance_info:
+    region: "{{ region }}"
+  register: sweep_insts
+
+- name: "[cleanup] Assert no test instances left"
+  ansible.builtin.assert:
+    that:
+      - sweep_insts.instances | selectattr('hostname', 'search', '^' + test_prefix) | list | length == 0
+    fail_msg: >-
+      Test instances still present: {{
+        sweep_insts.instances
+        | selectattr('hostname', 'search', '^' + test_prefix)
+        | map(attribute='hostname') | list
+      }}
+  failed_when: false
+
+- name: "[cleanup] Summary"
+  ansible.builtin.debug:
+    msg: >-
+      Destroy complete.
+      network={{ net_destroy.changed | default('skipped') }},
+      firewall={{ fw_destroy.changed | default('skipped') }},
+      instance={{ inst_destroy.changed | default('skipped') }},
+      volume={{ vol_destroy.changed | default('skipped') }},
+      reserved_ip={{ rip_destroy.changed | default('skipped') }},
+      objectstore={{ obs_destroy.changed | default('skipped') }},
+      database={{ db_destroy.changed | default('skipped') }},
+      kubernetes={{ k8s_destroy.changed | default('skipped') }}

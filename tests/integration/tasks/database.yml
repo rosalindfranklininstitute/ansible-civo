@@ -1,0 +1,61 @@
+---
+# Database integration tests: create / read / idempotency / destroy
+
+- name: "[database] Create test database"
+  civo.cloud.civo_database:
+    name: "{{ test_prefix }}-db"
+    region: "{{ region }}"
+    size: "{{ db_size }}"
+    engine: "{{ db_engine }}"
+    version: "{{ db_version }}"
+    nodes: 1
+    network: "{{ test_prefix }}-network"
+    wait: true
+    timeout: 600
+    state: present
+  register: db_create
+  tags: [database]
+
+- name: "[database] Assert created"
+  ansible.builtin.assert:
+    that:
+      - db_create.changed
+      - db_create.database.id is defined
+    fail_msg: "Database creation failed: {{ db_create }}"
+  tags: [database]
+
+- name: "[database] READ — info by name"
+  civo.cloud.civo_database_info:
+    name: "{{ test_prefix }}-db"
+    region: "{{ region }}"
+  register: db_info
+  tags: [database]
+
+- name: "[database] Assert info returned"
+  ansible.builtin.assert:
+    that:
+      - db_info.databases | length == 1
+      - db_info.databases[0].id == db_create.database.id
+    fail_msg: "Database info failed: {{ db_info }}"
+  tags: [database]
+
+- name: "[database] Idempotency"
+  civo.cloud.civo_database:
+    name: "{{ test_prefix }}-db"
+    region: "{{ region }}"
+    size: "{{ db_size }}"
+    engine: "{{ db_engine }}"
+    version: "{{ db_version }}"
+    nodes: 1
+    network: "{{ test_prefix }}-network"
+    wait: true
+    state: present
+  register: db_idem
+  tags: [database]
+
+- name: "[database] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not db_idem.changed
+    fail_msg: "Database create is not idempotent: {{ db_idem }}"
+  tags: [database]

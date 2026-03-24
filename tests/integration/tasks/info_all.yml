@@ -1,0 +1,112 @@
+---
+# List-all (no name filter) smoke tests for every _info module
+
+- name: "[network_info] List all networks"
+  civo.cloud.civo_network_info:
+    region: "{{ region }}"
+  register: all_nets
+  tags: [info]
+
+- name: "[network_info] Assert test network in list"
+  ansible.builtin.assert:
+    that:
+      - all_nets.networks | selectattr('label', 'equalto', test_prefix + '-network') | list | length == 1
+  tags: [info]
+
+- name: "[firewall_info] List all firewalls"
+  civo.cloud.civo_firewall_info:
+    region: "{{ region }}"
+  register: all_fws
+  tags: [info]
+
+- name: "[firewall_info] Assert test firewall in list"
+  ansible.builtin.assert:
+    that:
+      - all_fws.firewalls | selectattr('name', 'equalto', test_prefix + '-fw') | list | length == 1
+  tags: [info]
+
+- name: "[instance_info] List all instances"
+  civo.cloud.civo_instance_info:
+    region: "{{ region }}"
+  register: all_insts
+  tags: [info]
+
+- name: "[instance_info] Assert test instance in list"
+  ansible.builtin.assert:
+    that:
+      - all_insts.instances | selectattr('hostname', 'equalto', test_prefix + '-vm') | list | length == 1
+  tags: [info]
+
+- name: "[volume_info] List all volumes"
+  civo.cloud.civo_volume_info:
+    region: "{{ region }}"
+  register: all_vols
+  tags: [info]
+
+- name: "[volume_info] Assert test volume in list"
+  ansible.builtin.assert:
+    that:
+      - all_vols.volumes | selectattr('name', 'equalto', test_prefix + '-vol') | list | length == 1
+  tags: [info]
+
+- name: "[reserved_ip_info] List all reserved IPs"
+  civo.cloud.civo_reserved_ip_info:
+    region: "{{ region }}"
+  register: all_ips
+  tags: [info]
+
+- name: "[reserved_ip_info] Assert test IP in list"
+  ansible.builtin.assert:
+    that:
+      - all_ips.reserved_ips | selectattr('name', 'equalto', test_prefix + '-ip') | list | length == 1
+  tags: [info]
+
+- name: "[objectstore_info] List all object stores"
+  civo.cloud.civo_objectstore_info:
+    region: "{{ region }}"
+  register: all_obs
+  tags: [info]
+
+- name: "[objectstore_info] Assert test bucket in list"
+  ansible.builtin.assert:
+    that:
+      - all_obs.objectstores | selectattr('name', 'equalto', test_prefix + '-bucket') | list | length == 1
+  tags: [info]
+
+- name: "[database_info] List all databases"
+  civo.cloud.civo_database_info:
+    region: "{{ region }}"
+  register: all_dbs
+  tags: [info]
+
+- name: "[database_info] Assert test database in list"
+  ansible.builtin.assert:
+    that:
+      - all_dbs.databases | selectattr('name', 'equalto', test_prefix + '-db') | list | length == 1
+  tags: [info]
+
+- name: "[kubernetes_info] List all clusters"
+  civo.cloud.civo_kubernetes_info:
+    region: "{{ region }}"
+  register: all_k8s
+  tags: [info]
+
+- name: "[kubernetes_info] Assert test cluster in list"
+  ansible.builtin.assert:
+    that:
+      - all_k8s.clusters | selectattr('name', 'equalto', test_prefix + '-k8s') | list | length == 1
+  tags: [info]
+
+- name: "[loadbalancer_info] List all load balancers"
+  civo.cloud.civo_loadbalancer_info:
+    region: "{{ region }}"
+  register: all_lbs
+  tags: [info]
+
+- name: "[loadbalancer_info] Assert list returned (may be empty)"
+  ansible.builtin.assert:
+    that:
+      - all_lbs.loadbalancers is defined
+      - all_lbs.loadbalancers is iterable
+    fail_msg: "Load balancer info did not return a list: {{ all_lbs }}"
+  tags: [info]

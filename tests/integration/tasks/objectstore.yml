@@ -1,0 +1,53 @@
+---
+# Object store integration tests: create / read / idempotency / destroy
+
+- name: "[objectstore] Create test object store"
+  civo.cloud.civo_objectstore:
+    name: "{{ test_prefix }}-bucket"
+    region: "{{ region }}"
+    max_size_gb: 500
+    wait: true
+    timeout: 120
+    state: present
+  register: obs_create
+  tags: [objectstore]
+
+- name: "[objectstore] Assert created"
+  ansible.builtin.assert:
+    that:
+      - obs_create.changed
+      - obs_create.objectstore.id is defined
+    fail_msg: "Object store creation failed: {{ obs_create }}"
+  tags: [objectstore]
+
+- name: "[objectstore] READ — info by name"
+  civo.cloud.civo_objectstore_info:
+    name: "{{ test_prefix }}-bucket"
+    region: "{{ region }}"
+  register: obs_info
+  tags: [objectstore]
+
+- name: "[objectstore] Assert info returned"
+  ansible.builtin.assert:
+    that:
+      - obs_info.objectstores | length == 1
+      - obs_info.objectstores[0].name == test_prefix + '-bucket'
+    fail_msg: "Object store info failed: {{ obs_info }}"
+  tags: [objectstore]
+
+- name: "[objectstore] Idempotency"
+  civo.cloud.civo_objectstore:
+    name: "{{ test_prefix }}-bucket"
+    region: "{{ region }}"
+    max_size_gb: 500
+    wait: true
+    state: present
+  register: obs_idem
+  tags: [objectstore]
+
+- name: "[objectstore] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not obs_idem.changed
+    fail_msg: "Object store create is not idempotent: {{ obs_idem }}"
+  tags: [objectstore]
