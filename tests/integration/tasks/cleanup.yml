@@ -19,11 +19,12 @@
   register: db_destroy
   ignore_errors: true
 
-- name: "[objectstore] Destroy object store"
+- name: "[objectstore] Destroy object store and purge its credential"
   civo.cloud.civo_objectstore:
     name: "{{ test_prefix }}-bucket"
     region: "{{ region }}"
     state: absent
+    purge_credentials: true
   register: obs_destroy
   ignore_errors: true
 

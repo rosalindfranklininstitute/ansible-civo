@@ -9,6 +9,10 @@ module: civo_objectstore
 short_description: Manage Civo S3-compatible object stores
 description:
   - Create or delete Civo object store buckets.
+  - When a store is created without an explicit owner credential, Civo
+    automatically generates a dedicated credential for it.  Those auto-created
+    credentials are B(not) removed when the store is deleted.  Set
+    I(purge_credentials=true) on the delete call to clean them up.
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
@@ -29,6 +33,19 @@ options:
       - When omitted, new credentials are generated automatically.
       - Maps to the C(--owner-access-key) CLI flag.
     type: str
+  purge_credentials:
+    description:
+      - When C(true) and I(state=absent), also delete the object store's
+        owner credential after the store is removed.
+      - The module looks up the linked credential via C(civo objectstore show)
+        (which returns the C(accesskey) field), then cross-references
+        C(civo objectstore credential ls) to find its name and deletes it.
+      - B(Only) set this when you know the credential is not shared with other
+        stores.  If you created the store with an explicit I(access_key_id)
+        pointing to a shared credential, leave this as C(false).
+      - Has no effect when I(state=present).
+    type: bool
+    default: false
   wait:
     description: Wait for the object store to become ready before returning.
     type: bool
@@ -72,11 +89,12 @@ EXAMPLES = r"""
   ansible.builtin.debug:
     msg: "Endpoint: {{ bucket.objectstore.endpoint }}"
 
-- name: Delete an object store
+- name: Delete an object store and its auto-created credential
   civo.cloud.civo_objectstore:
     region: LON1
     name: my-bucket
     state: absent
+    purge_credentials: true
 """
 
 RETURN = r"""
@@ -129,6 +147,7 @@ def main():
         name={"type": "str", "required": True},
         max_size_gb={"type": "int"},
         access_key_id={"type": "str"},
+        purge_credentials={"type": "bool", "default": False},
         wait={"type": "bool", "default": True},
         timeout={"type": "int", "default": 300},
     )
@@ -142,6 +161,7 @@ def main():
     binary = module.params["civo_binary"]
     do_wait = module.params["wait"]
     timeout = module.params["timeout"]
+    purge_credentials = module.params["purge_credentials"]
 
     if not api_key:
         module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
@@ -153,7 +173,46 @@ def main():
             module.exit_json(changed=False, msg=f"Object store '{name}' not found")
         if module.check_mode:
             module.exit_json(changed=True, msg=f"Would delete object store '{name}'")
+
+        # Resolve linked credential before the store is deleted (show returns accesskey).
+        cred_name_to_delete = None
+        if purge_credentials:
+            _rc, show_data, _stderr = run_civo_command(
+                module, ["objectstore", "show", name], api_key, region, binary, check_rc=False
+            )
+            show_list = show_data if isinstance(show_data, list) else ([show_data] if show_data else [])
+            store_access_key = None
+            for item in show_list:
+                if isinstance(item, dict):
+                    store_access_key = item.get("accesskey") or item.get("access_key")
+                    if store_access_key:
+                        break
+
+            if store_access_key:
+                _rc2, cred_data, _stderr2 = run_civo_command(
+                    module, ["objectstore", "credential", "ls"], api_key, region, binary, check_rc=False
+                )
+                creds = cred_data if isinstance(cred_data, list) else []
+                for cred in creds:
+                    if cred.get("access_key") == store_access_key:
+                        cred_name_to_delete = cred.get("name")
+                        break
+
         run_civo_command(module, ["objectstore", "delete", name], api_key, region, binary)
+
+        if purge_credentials and cred_name_to_delete:
+            run_civo_command(
+                module,
+                ["objectstore", "credential", "delete", cred_name_to_delete],
+                api_key,
+                region,
+                binary,
+            )
+            module.exit_json(
+                changed=True,
+                msg=f"Object store '{name}' deleted; credential '{cred_name_to_delete}' purged",
+            )
+
         module.exit_json(changed=True, msg=f"Object store '{name}' deleted")
 
     if existing:

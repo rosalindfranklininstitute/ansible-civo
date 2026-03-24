@@ -4,6 +4,15 @@
 
 ### Added
 
+- `civo_objectstore`: new `purge_credentials` parameter (default C(false)).
+  When C(state=absent) and C(purge_credentials=true), the module looks up the
+  store's owner credential via C(civo objectstore show) (C(accesskey) field),
+  cross-references C(civo objectstore credential ls), and deletes the linked
+  credential.  Safe by default — the credential is not touched unless the
+  caller opts in.  The integration test cleanup path now sets
+  C(purge_credentials=true) and a dedicated C(purge_credentials) test case
+  was added to C(tests/integration/tasks/objectstore.yml).
+
 - New module `civo_sshkey` — upload, rename, or remove SSH public keys stored
   in a Civo account; idempotent create and delete.
 - New module `civo_sshkey_info` — list SSH keys in a Civo account, with

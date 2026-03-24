@@ -50,6 +50,7 @@ Synopsis
 .. Description
 
 - Create or delete Civo object store buckets.
+- When a store is created without an explicit owner credential, Civo automatically generates a dedicated credential for it. Those auto\-created credentials are :strong:`not` removed when the store is deleted. Set :emphasis:`purge\_credentials=true` on the delete call to clean them up.
 - Uses the :literal:`civo` CLI binary on the control node.
 
 
@@ -264,6 +265,54 @@ Parameters
   * - .. raw:: html
 
         <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-purge_credentials"></div>
+
+      .. _ansible_collections.civo.cloud.civo_objectstore_module__parameter-purge_credentials:
+
+      .. rst-class:: ansible-option-title
+
+      **purge_credentials**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-purge_credentials" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-type:`boolean`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      When :literal:`true` and :emphasis:`state=absent`\ , also delete the object store's owner credential after the store is removed.
+
+      The module looks up the linked credential via :literal:`civo objectstore show` (which returns the :literal:`accesskey` field), then cross\-references :literal:`civo objectstore credential ls` to find its name and deletes it.
+
+      :strong:`Only` set this when you know the credential is not shared with other stores. If you created the store with an explicit :emphasis:`access\_key\_id` pointing to a shared credential, leave this as :literal:`false`.
+
+      Has no effect when :emphasis:`state=present`.
+
+
+      .. rst-class:: ansible-option-line
+
+      :ansible-option-choices:`Choices:`
+
+      - :ansible-option-choices-entry-default:`false` :ansible-option-choices-default-mark:`← (default)`
+      - :ansible-option-choices-entry:`true`
+
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
         <div class="ansibleOptionAnchor" id="parameter-region"></div>
 
       .. _ansible_collections.civo.cloud.civo_objectstore_module__parameter-region:
@@ -457,11 +506,12 @@ Examples
       ansible.builtin.debug:
         msg: "Endpoint: {{ bucket.objectstore.endpoint }}"
 
-    - name: Delete an object store
+    - name: Delete an object store and its auto-created credential
       civo.cloud.civo_objectstore:
         region: LON1
         name: my-bucket
         state: absent
+        purge_credentials: true
 
 
 

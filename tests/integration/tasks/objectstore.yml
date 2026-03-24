@@ -51,3 +51,56 @@
       - not obs_idem.changed
     fail_msg: "Object store create is not idempotent: {{ obs_idem }}"
   tags: [objectstore]
+
+# =========================================================================
+# purge_credentials: verify auto-created credential is deleted with the store
+# =========================================================================
+- name: "[objectstore] purge_credentials test — create ephemeral store"
+  civo.cloud.civo_objectstore:
+    name: "{{ test_prefix }}-store"
+    region: "{{ region }}"
+    max_size_gb: 500
+    wait: true
+    timeout: 120
+    state: present
+  register: obs_purge_create
+  tags: [objectstore]
+
+- name: "[objectstore] purge_credentials test — capture credential count before delete"
+  civo.cloud.civo_objectstore_info:
+    region: "{{ region }}"
+  register: creds_before
+  tags: [objectstore]
+
+- name: "[objectstore] purge_credentials test — delete store with purge_credentials=true"
+  civo.cloud.civo_objectstore:
+    name: "{{ test_prefix }}-store"
+    region: "{{ region }}"
+    state: absent
+    purge_credentials: true
+  register: obs_purge_delete
+  tags: [objectstore]
+
+- name: "[objectstore] purge_credentials test — assert store deleted and credential mentioned"
+  ansible.builtin.assert:
+    that:
+      - obs_purge_delete.changed
+      - "'purged' in obs_purge_delete.msg or 'deleted' in obs_purge_delete.msg"
+    fail_msg: "Expected store deletion with credential purge: {{ obs_purge_delete }}"
+  tags: [objectstore]
+
+- name: "[objectstore] purge_credentials test — absent again is idempotent"
+  civo.cloud.civo_objectstore:
+    name: "{{ test_prefix }}-store"
+    region: "{{ region }}"
+    state: absent
+    purge_credentials: true
+  register: obs_purge_idem
+  tags: [objectstore]
+
+- name: "[objectstore] purge_credentials test — assert no change on absent→absent"
+  ansible.builtin.assert:
+    that:
+      - not obs_purge_idem.changed
+    fail_msg: "Expected no change deleting non-existent store: {{ obs_purge_idem }}"
+  tags: [objectstore]
