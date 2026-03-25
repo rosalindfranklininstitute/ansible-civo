@@ -27,7 +27,7 @@ civo.cloud.civo_database module -- Manage Civo managed databases
     It is not included in ``ansible-core``.
     To check whether it is installed, run :code:`ansible-galaxy collection list`.
 
-    To install it, use: :code:`ansible\-galaxy collection install civo.cloud`.
+    For installation instructions, see :doc:`Installation </guide_installation>`.
 
     To use it in a playbook, specify: :code:`civo.cloud.civo_database`.
 
