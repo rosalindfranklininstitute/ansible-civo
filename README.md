@@ -22,11 +22,14 @@ same conventions as `community.hetznercloud` and `amazon.aws`.
 | `civo.cloud.civo_firewall` | Firewalls + ingress/egress rules |
 | `civo.cloud.civo_instance` | Compute instances (VMs) |
 | `civo.cloud.civo_kubernetes` | Kubernetes clusters (k3s) |
+| `civo.cloud.civo_kubernetes_node` | Individual nodes within a cluster pool |
+| `civo.cloud.civo_kubernetes_pool` | Node pools within a cluster |
 | `civo.cloud.civo_volume` | Block storage volumes |
 | `civo.cloud.civo_loadbalancer` | Load balancers (read/delete only — see note below) |
 | `civo.cloud.civo_reserved_ip` | Reserved (static) public IPs |
 | `civo.cloud.civo_database` | Managed databases (PostgreSQL / MySQL) |
 | `civo.cloud.civo_objectstore` | S3-compatible object stores |
+| `civo.cloud.civo_sshkey` | SSH public keys |
 
 ### Info (read-only) modules
 
@@ -36,11 +39,19 @@ same conventions as `community.hetznercloud` and `amazon.aws`.
 | `civo.cloud.civo_firewall_info` | Firewalls (optionally includes rules) |
 | `civo.cloud.civo_instance_info` | Compute instances |
 | `civo.cloud.civo_kubernetes_info` | Kubernetes clusters (optionally includes kubeconfig) |
+| `civo.cloud.civo_kubernetes_pool_info` | Node pools within a cluster |
+| `civo.cloud.civo_kubernetes_version_info` | Available Kubernetes versions |
 | `civo.cloud.civo_volume_info` | Block storage volumes |
 | `civo.cloud.civo_loadbalancer_info` | Load balancers |
 | `civo.cloud.civo_reserved_ip_info` | Reserved IPs |
 | `civo.cloud.civo_database_info` | Managed databases |
 | `civo.cloud.civo_objectstore_info` | Object stores |
+| `civo.cloud.civo_sshkey_info` | SSH public keys |
+| `civo.cloud.civo_diskimage_info` | Available disk images |
+| `civo.cloud.civo_size_info` | Available instance/node sizes |
+| `civo.cloud.civo_region_info` | Available regions |
+| `civo.cloud.civo_quota_info` | Account quota and usage |
+| `civo.cloud.civo_volumetype_info` | Available volume types |
 
 All modules support **check mode** and **multi-region** deployments.
 
@@ -92,15 +103,20 @@ ansible-galaxy collection install -r requirements.yml
 
 ## Authentication
 
-Export your Civo API token before running any playbook:
+Authentication is resolved in priority order:
 
-```bash
-export CIVO_TOKEN="your-api-token"
-```
-
-The `CIVO_TOKEN` environment variable is the recommended approach.
-Alternatively, pass `api_key` directly to each module task
-(vault-encrypt it if you do).
+1. **`api_key` module parameter** — pass the token directly (vault-encrypt it):
+   ```yaml
+   civo.cloud.civo_network:
+     api_key: "{{ vault_civo_token }}"
+     ...
+   ```
+2. **`CIVO_TOKEN` environment variable** — recommended for CI and local use:
+   ```bash
+   export CIVO_TOKEN="your-api-token"
+   ```
+3. **`~/.civo.json`** — the active key from the Civo CLI config file
+   (populated by `civo apikey add` / `civo apikey current`).
 
 ## Quick start
 
@@ -200,6 +216,21 @@ Alternatively, pass `api_key` directly to each module task
     content: "{{ k8s.cluster.kubeconfig }}"
     dest: "~/.kube/civo-prod.yaml"
     mode: "0600"
+
+- name: Scale a node pool
+  civo.cloud.civo_kubernetes_pool:
+    cluster: my-cluster
+    region: LON1
+    pool_id: "{{ pool_id }}"
+    count: 5
+    state: present
+
+- name: Recycle a node
+  civo.cloud.civo_kubernetes_node:
+    cluster: my-cluster
+    region: LON1
+    node_id: "{{ node_id }}"
+    state: recycled
 ```
 
 ### Volume — create, resize and attach
@@ -330,31 +361,123 @@ All modules support Ansible check mode — no real API calls are made:
 ansible-playbook site.yml --check
 ```
 
-## Development
+## Collection structure
 
-### Pre-commit hooks
-
-```bash
-pip install pre-commit
-pre-commit install
+```
+ansible-civo/
+├── galaxy.yml                         # Collection metadata (namespace: civo.cloud)
+├── plugins/
+│   ├── module_utils/
+│   │   └── civo_utils.py              # Shared helpers: auth, CLI exec, JSON parsing, wait loops
+│   └── modules/
+│       ├── civo_network.py            # CRUD modules (one per resource type)
+│       ├── civo_network_info.py       # Info (read-only) modules
+│       └── ...
+├── roles/
+│   └── civo/                          # Dispatcher role
+│       ├── defaults/main.yml          # All tuneable defaults
+│       └── tasks/                     # Per-resource task files
+├── tests/
+│   └── integration/
+│       ├── test_all.yml               # Master integration test playbook
+│       └── tasks/                     # Per-resource test task files
+├── docs/
+│   ├── conf.py                        # Sphinx configuration
+│   ├── antsibull-docs.cfg             # antsibull-docs configuration
+│   └── _build/html/                   # Generated HTML (gitignored)
+├── Makefile                           # Developer convenience targets
+├── dev-requirements.txt               # Python deps for docs + lint
+└── pyproject.toml                     # ruff configuration
 ```
 
-### CI
+All modules follow the same pattern: resolve auth → find or create/delete
+resource via `civo` CLI with `-o json` → parse JSON → optionally poll for
+`ACTIVE` status → return structured result. Shared logic lives in
+`plugins/module_utils/civo_utils.py`.
 
-GitHub Actions runs on every pull request:
+## Development
 
-- `ruff` — Python linting and formatting
-- `ansible-lint` — Ansible best-practice checks
-- `ansible-test sanity` — collection sanity checks
-
-### Docs
+### Setup
 
 ```bash
 pip install -r dev-requirements.txt
-cd docs && make html
+pre-commit install
 ```
 
-Open `docs/_build/html/index.html` in your browser.
+### Make targets
+
+| Target | What it does |
+|---|---|
+| `make lint` | Run `ruff check` on `plugins/` |
+| `make format` | Run `ruff format` on `plugins/` |
+| `make ansible-lint` | Run `ansible-lint` across the whole project |
+| `make docs` | Generate per-module RST with antsibull-docs, then build Sphinx HTML |
+| `make sanity` | Run `ansible-test sanity --docker` (requires Docker) |
+| `make clean` | Remove `docs/_build/` and `docs/collections/` |
+
+### Building docs locally
+
+The docs pipeline requires the collection to be importable by antsibull-docs.
+Symlink it into the Ansible collections path first:
+
+```bash
+mkdir -p ~/.ansible/collections/ansible_collections/civo
+ln -s "$(pwd)" ~/.ansible/collections/ansible_collections/civo/cloud
+```
+
+Then build:
+
+```bash
+make docs
+# open docs/_build/html/index.html
+```
+
+Docs are published automatically to GitHub Pages on every push to `main` via
+`.github/workflows/docs.yml`.
+
+### Running integration tests
+
+Integration tests make **real API calls** and provision actual Civo resources.
+They are tagged by resource type for selective execution.
+
+**Prerequisites:**
+- `CIVO_TOKEN` set in your environment
+- `civo` CLI installed and in `$PATH`
+- Collection installed at `~/.ansible/collections/ansible_collections/civo/cloud`
+  (or symlinked as above)
+
+**Run the full suite:**
+
+```bash
+ansible-playbook tests/integration/test_all.yml -v
+```
+
+**Run a single resource type:**
+
+```bash
+ansible-playbook tests/integration/test_all.yml -v --tags network
+ansible-playbook tests/integration/test_all.yml -v --tags kubernetes
+ansible-playbook tests/integration/test_all.yml -v --tags kubernetes_upgrade
+ansible-playbook tests/integration/test_all.yml -v --tags kubernetes_node
+ansible-playbook tests/integration/test_all.yml -v --tags kubernetes_pool
+```
+
+Available tags: `network`, `firewall`, `instance`, `volume`, `reserved_ip`,
+`objectstore`, `database`, `kubernetes`, `kubernetes_upgrade`, `kubernetes_node`,
+`kubernetes_pool`, `sshkey`, `catalog`, `loadbalancer`, `info`.
+
+All test resources are prefixed with `ansible-test-` for easy identification.
+The `always:` cleanup block in `test_all.yml` deletes all created resources
+even if the tests fail mid-run.
+
+### CI
+
+GitHub Actions runs on every push and pull request (`.github/workflows/ci.yml`):
+
+- `ruff` — Python linting and formatting checks
+- `ansible-lint` — Ansible best-practice checks
+- `ansible-test sanity` — collection sanity checks against Ansible stable-2.14,
+  stable-2.15, stable-2.16, and devel
 
 ## License
 
