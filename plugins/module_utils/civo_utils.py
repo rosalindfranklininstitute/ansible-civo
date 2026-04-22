@@ -62,7 +62,9 @@ def _civo_api_key_fallback(*args, **_kwargs):
                 key = config.get("apikeys", {}).get(key_name)
                 if key:
                     return key
-        except Exception:
+        except (OSError, ValueError):
+            # OSError: permission denied or file vanished between isfile() and open()
+            # ValueError: json.load() failed on a corrupt config file
             pass
 
     raise AnsibleFallbackNotFound
