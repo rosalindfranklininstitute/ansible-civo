@@ -136,6 +136,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
     common_argument_spec,
     find_resource_by_name,
+    is_uuid,
     run_civo_command,
 )
 
@@ -227,15 +228,19 @@ def main():
             module.fail_json(msg="'instance' is required when state=attached")
 
         current_instance_id = existing.get("instance_id", "")
-        # Consider it already attached if instance_id is non-empty and matches
-        # (match by name is handled by the CLI; we compare non-empty vs empty here)
-        if current_instance_id and current_instance_id != "":
-            # Check whether already attached to the right instance
-            # We re-fetch to compare by hostname via the full instance record
-            # For safety just check if instance_id is set; the CLI is idempotent
-            volume = find_resource_by_name(module, "volume", name, api_key, region, binary) or {}
-            if volume.get("instance_id") == current_instance_id:
-                module.exit_json(changed=changed, volume=volume, diff={"before": before, "after": volume})
+        if current_instance_id:
+            # Volume is already attached — check whether it is attached to the
+            # requested instance.  The API stores the instance UUID; if the user
+            # passed a name we resolve it first so the comparison is UUID-to-UUID.
+            if is_uuid(instance):
+                desired_instance_id = instance
+            else:
+                inst_obj = find_resource_by_name(module, "instance", instance, api_key, region, binary)
+                if inst_obj is None:
+                    module.fail_json(msg=f"Instance '{instance}' not found in region '{region}'")
+                desired_instance_id = inst_obj.get("id", "")
+            if desired_instance_id == current_instance_id:
+                module.exit_json(changed=changed, volume=existing, diff={"before": before, "after": existing})
 
         if module.check_mode:
             module.exit_json(

@@ -27,7 +27,7 @@
     fail_msg: "Volume attach failed: {{ vol_attach }}"
   tags: [volume]
 
-- name: "[volume] Idempotency of attach"
+- name: "[volume] Idempotency of attach (by name)"
   civo.cloud.civo_volume:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
@@ -36,9 +36,28 @@
   register: vol_attach_idem
   tags: [volume]
 
-- name: "[volume] Assert attach idempotent"
+- name: "[volume] Assert attach idempotent (by name)"
   ansible.builtin.assert:
     that:
       - not vol_attach_idem.changed
     fail_msg: "Volume attach is not idempotent: {{ vol_attach_idem }}"
+  tags: [volume]
+
+# Re-attach using the instance UUID — exercises the is_uuid() branch of the
+# attachment idempotency check (previously this always returned changed=False
+# regardless of which instance was requested).
+- name: "[volume] Idempotency of attach (by UUID)"
+  civo.cloud.civo_volume:
+    name: "{{ test_prefix }}-vol"
+    region: "{{ region }}"
+    instance: "{{ vol_attach.volume.instance_id }}"
+    state: attached
+  register: vol_attach_uuid
+  tags: [volume]
+
+- name: "[volume] Assert attach idempotent by UUID"
+  ansible.builtin.assert:
+    that:
+      - not vol_attach_uuid.changed
+    fail_msg: "Volume attach by UUID is not idempotent: {{ vol_attach_uuid }}"
   tags: [volume]
