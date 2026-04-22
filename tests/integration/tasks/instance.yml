@@ -126,3 +126,21 @@
       - not inst_start_idem.changed
     fail_msg: "Instance start is not idempotent: {{ inst_start_idem }}"
   tags: [instance]
+
+- name: "[instance] Graceful reboot (state=rebooted)"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: rebooted
+    wait: true
+    timeout: 300
+  register: inst_reboot
+  tags: [instance]
+
+- name: "[instance] Assert reboot reported changed and instance is ACTIVE"
+  ansible.builtin.assert:
+    that:
+      - inst_reboot.changed
+      - inst_reboot.instance.status | upper == "ACTIVE"
+    fail_msg: "Instance reboot failed: {{ inst_reboot }}"
+  tags: [instance]
