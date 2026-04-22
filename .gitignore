@@ -7,6 +7,9 @@
 # Sphinx build output
 docs/_build/
 
+# antsibull-docs generated module reference (rebuilt by `make docs`)
+docs/collections/
+
 # Python
 __pycache__/
 *.pyc

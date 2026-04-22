@@ -37,8 +37,11 @@ jobs:
 
       - name: Generate per-module RST with antsibull-docs
         run: |
-          antsibull-docs collection \
+          antsibull-docs \
+            --config-file docs/antsibull-docs.cfg \
+            collection \
             --use-current \
+            --cleanup everything \
             --dest-dir docs/ \
             civo.cloud
 

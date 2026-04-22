@@ -16,9 +16,9 @@ format:
 # Build docs
 docs:
 	@echo "Generating per-module RST with antsibull-docs..."
-	antsibull-docs collection --use-current --dest-dir docs/ civo.cloud
+	antsibull-docs --config-file docs/antsibull-docs.cfg collection --use-current --cleanup everything --dest-dir docs/ civo.cloud
 	@echo "Building Sphinx HTML..."
-	sphinx-build -b html docs/ docs/_build/html
+	sphinx-build -j auto -b html docs/ docs/_build/html
 	@echo "Docs available at docs/_build/html/index.html"
 
 # Run ansible-lint
@@ -30,4 +30,4 @@ sanity:
 	ansible-test sanity --docker -v --color
 
 clean:
-	rm -rf docs/_build/
+	rm -rf docs/_build/ docs/collections/
