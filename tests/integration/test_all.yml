@@ -26,7 +26,7 @@
     region: LON1
     test_prefix: "ansible-test"
     # Cheapest selectable sizes
-    instance_size: g3.xsmall        # 1 CPU, 1 GB RAM, 25 GB disk
+    instance_size: g4s.xsmall        # 1 CPU, 1 GB RAM, 25 GB disk
     k8s_node_size: g4s.kube.xsmall  # 1 CPU, 1 GB RAM
     db_size: g3.db.small            # g3.db.xsmall is not selectable
     db_engine: postgresql
