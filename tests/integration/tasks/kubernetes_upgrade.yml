@@ -4,6 +4,9 @@
 # Creates a separate cluster on an older version, upgrades it, then deletes it.
 # Tags: [kubernetes, kubernetes_upgrade]
 
+# NOTE: versions below must be two consecutive releases available in the target
+# region. Run `civo kubernetes versions` to get the current list and update
+# these values if the test fails with "version not found".
 - name: "[kubernetes_upgrade] Create cluster on older version for upgrade test"
   civo.cloud.civo_kubernetes:
     name: "{{ test_prefix }}-k8s-upgrade"
