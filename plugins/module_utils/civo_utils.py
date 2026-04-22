@@ -3,8 +3,9 @@
 """
 Shared utilities for the civo.cloud Ansible collection.
 
-All modules wrap the ``civo`` CLI binary, authenticating via the
-``CIVO_TOKEN`` environment variable or the ``api_key`` module argument.
+All modules wrap the ``civo`` CLI binary.  Authentication is resolved in
+order: explicit ``api_key`` parameter → ``CIVO_TOKEN`` environment variable →
+active key in ``~/.civo.json`` (the civo CLI config file).
 JSON output (``-o json``) is used throughout so results are machine-readable.
 """
 
@@ -13,13 +14,58 @@ import os
 import re
 import time
 
-from ansible.module_utils.basic import env_fallback  # noqa: F401 – re-exported
+from ansible.module_utils.basic import AnsibleFallbackNotFound
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
 CIVO_BINARY_DEFAULT = "civo"
+
+# Matches a standard RFC 4122 UUID (case-insensitive).
+_UUID_RE = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
+
+
+def is_uuid(value):
+    """Return True if *value* looks like a Civo resource UUID."""
+    return bool(_UUID_RE.match(value))
+
+
+def _civo_api_key_fallback(*args, **_kwargs):
+    """Ansible fallback that checks CIVO_TOKEN then ~/.civo.json.
+
+    Priority:
+    1. ``CIVO_TOKEN`` environment variable.
+    2. The active API key stored in ``~/.civo.json`` (populated by
+       ``civo apikey add`` / ``civo apikey ls``).
+
+    Raises ``AnsibleFallbackNotFound`` if neither source yields a value,
+    which causes Ansible to leave the parameter as ``None`` so that the
+    module's own ``fail_json`` check runs with a user-friendly message.
+    """
+    # 1. Environment variable
+    token = os.environ.get("CIVO_TOKEN")
+    if token:
+        return token
+
+    # 2. ~/.civo.json — the civo CLI config file
+    config_path = os.path.expanduser("~/.civo.json")
+    if os.path.isfile(config_path):
+        try:
+            with open(config_path) as fh:
+                config = json.load(fh)
+            key_name = config.get("meta", {}).get("current_apikey", "")
+            if key_name:
+                key = config.get("apikeys", {}).get(key_name)
+                if key:
+                    return key
+        except Exception:
+            pass
+
+    raise AnsibleFallbackNotFound
 
 
 # ---------------------------------------------------------------------------
@@ -81,11 +127,16 @@ def run_civo_command(module, args, api_key, region, binary=None, check_rc=True):
 
 
 def find_resource_by_name(module, resource_type, name, api_key, region, binary=None):
-    """Return the first resource dict whose name matches *name*, or None.
+    """Return the resource dict whose name matches *name*, or None.
 
     Unlike a naive ``None``-on-error approach, this function distinguishes
     between a genuine "not found" (empty list) and a CLI error so that real
     failures are surfaced rather than silently treated as absent resources.
+
+    Fails hard if more than one resource with the same name is found.  Name
+    collisions should not occur in a healthy Civo account, but if they do the
+    caller cannot safely determine which resource to operate on, and silently
+    picking one would risk mutating or deleting the wrong resource.
     """
     rc, data, stderr = run_civo_command(
         module,
@@ -108,21 +159,28 @@ def find_resource_by_name(module, resource_type, name, api_key, region, binary=N
         return None
 
     items = data if isinstance(data, list) else data.get("items", [])
-    for item in items:
-        # Different resource types use different fields for their display name:
-        #   network     → "label"
-        #   instance    → "hostname"
-        #   all others  → "name"
-        if resource_type == "network":
-            if item.get("label") == name:
-                return item
-        elif resource_type == "instance":
-            if item.get("hostname") == name:
-                return item
-        else:
-            if item.get("name") == name:
-                return item
-    return None
+
+    # Different resource types use different fields for their display name:
+    #   network     → "label"
+    #   instance    → "hostname"
+    #   all others  → "name"
+    if resource_type == "network":
+        matches = [item for item in items if item.get("label") == name]
+    elif resource_type == "instance":
+        matches = [item for item in items if item.get("hostname") == name]
+    else:
+        matches = [item for item in items if item.get("name") == name]
+
+    if len(matches) > 1:
+        module.fail_json(
+            msg=(
+                f"Found {len(matches)} {resource_type} resources named '{name}'. "
+                "Resource names must be unique within a region. "
+                "Resolve the collision manually before running this module."
+            )
+        )
+
+    return matches[0] if matches else None
 
 
 # ---------------------------------------------------------------------------
@@ -185,16 +243,19 @@ def wait_for_active(
 def common_argument_spec():
     """Return the argument_spec entries shared by all civo.cloud modules.
 
-    Note: ``api_key`` uses Ansible's ``env_fallback`` mechanism so that
-    ``CIVO_TOKEN`` in the environment is transparently used when the
-    parameter is not passed explicitly.  ``required`` is intentionally
-    omitted — the env fallback fires only when ``required`` is not True.
+    ``api_key`` is resolved in order:
+    1. Explicit ``api_key`` module parameter.
+    2. ``CIVO_TOKEN`` environment variable.
+    3. Active key in ``~/.civo.json`` (the civo CLI config file).
+
+    ``required`` is intentionally omitted so that the fallback chain runs;
+    a missing key produces a clear ``fail_json`` message in each module.
     """
     return {
         "api_key": {
             "type": "str",
             "no_log": True,
-            "fallback": (env_fallback, ["CIVO_TOKEN"]),
+            "fallback": (_civo_api_key_fallback, []),
         },
         "region": {"type": "str", "default": "LON1"},
         "state": {"type": "str", "default": "present", "choices": ["present", "absent"]},
