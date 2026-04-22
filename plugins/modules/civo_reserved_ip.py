@@ -95,8 +95,10 @@ reserved_ip:
       type: str
     assigned_to:
       description: >
-        Resource the IP is assigned to, or C("No resource") when unassigned.
+        Resource the IP is assigned to.  When assigned the value is
+        C("hostname (instance-uuid)"); when unassigned it is C("No resource").
       type: str
+      sample: "web-01.example.com (a1b2c3d4-0000-0000-0000-000000000000)"
 """
 
 from ansible.module_utils.basic import AnsibleModule
