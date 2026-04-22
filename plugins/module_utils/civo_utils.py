@@ -184,6 +184,58 @@ def find_resource_by_name(module, resource_type, name, api_key, region, binary=N
 
 
 # ---------------------------------------------------------------------------
+# Kubernetes node-pool helper
+# ---------------------------------------------------------------------------
+
+
+def list_node_pools(module, cluster_name, api_key, region, binary=None):
+    """Return the list of node pool dicts for *cluster_name*.
+
+    The Civo CLI mixes human-readable table text and a JSON array in stdout.
+    The JSON array is extracted by finding the first line that starts with '['.
+    Keys are capitalised in the CLI output (e.g. ``"ID"``, ``"Count"``).
+
+    Fails the module (via ``fail_json``) on CLI errors or unparseable output
+    rather than silently returning an empty list, so callers see the real error.
+    """
+    if binary is None:
+        binary = CIVO_BINARY_DEFAULT
+
+    env_update = {"CIVO_TOKEN": api_key}
+    cmd = [
+        binary,
+        "kubernetes",
+        "node-pool",
+        "ls",
+        cluster_name,
+        "--region",
+        region,
+        "-o",
+        "json",
+    ]
+    rc, stdout, stderr = module.run_command(cmd, environ_update=env_update)
+    if rc != 0:
+        module.fail_json(msg=f"Failed to list node pools for '{cluster_name}': {stderr}")
+
+    json_line = None
+    for line in stdout.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("["):
+            json_line = stripped
+            break
+
+    if json_line is None:
+        module.fail_json(msg=f"Failed to find node-pool JSON in output: {stdout!r}")
+
+    try:
+        pools = json.loads(json_line)
+    except ValueError as exc:
+        module.fail_json(msg=f"Failed to parse node-pool JSON: {exc}: {json_line!r}")
+
+    return pools if isinstance(pools, list) else []
+
+
+# ---------------------------------------------------------------------------
 # Wait helper
 # ---------------------------------------------------------------------------
 

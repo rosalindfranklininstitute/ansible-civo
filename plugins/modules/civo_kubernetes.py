@@ -197,7 +197,6 @@ cluster:
       type: str
 """
 
-import json as _json
 import time as _time
 
 from ansible.module_utils.basic import AnsibleModule
@@ -205,6 +204,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
     common_argument_spec,
     find_resource_by_name,
+    list_node_pools,
     run_civo_command,
     wait_for_active,
 )
@@ -220,43 +220,6 @@ def _get_kubeconfig(module, cluster_name, api_key, region, binary):
     return ""
 
 
-def _list_node_pools(module, cluster_name, api_key, region, binary):
-    """Return a list of node pool dicts for *cluster_name*.
-
-    The CLI mixes human-readable table text and a JSON array in stdout.
-    The JSON array is extracted by finding the line that starts with '['.
-    Keys are capitalized in the CLI output (e.g. "ID", "Count").
-    """
-    env_update = {"CIVO_TOKEN": api_key}
-    cmd = [
-        binary,
-        "kubernetes",
-        "node-pool",
-        "ls",
-        cluster_name,
-        "--region",
-        region,
-        "-o",
-        "json",
-    ]
-    rc, stdout, stderr = module.run_command(cmd, environ_update=env_update)
-    if rc != 0:
-        module.fail_json(msg=f"Failed to list node pools for '{cluster_name}': {stderr}")
-    json_line = None
-    for line in stdout.splitlines():
-        line = line.strip()
-        if line.startswith("["):
-            json_line = line
-            break
-    if json_line is None:
-        module.fail_json(msg=f"Failed to find node-pool JSON in output: {stdout!r}")
-    try:
-        pools = _json.loads(json_line)
-    except _json.JSONDecodeError as exc:
-        module.fail_json(msg=f"Failed to parse node-pool JSON: {exc}: {json_line!r}")
-    return pools if isinstance(pools, list) else []
-
-
 def _resolve_pool(module, cluster_name, api_key, region, binary, requested_pool_id):
     """Return (pool_id, current_node_count) for the target pool.
 
@@ -265,7 +228,7 @@ def _resolve_pool(module, cluster_name, api_key, region, binary, requested_pool_
     If it is empty and there are multiple pools, the module fails with a clear
     message so the operator knows they must be explicit.
     """
-    pools = _list_node_pools(module, cluster_name, api_key, region, binary)
+    pools = list_node_pools(module, cluster_name, api_key, region, binary)
     if not pools:
         module.fail_json(msg=f"No node pools found for cluster '{cluster_name}'")
 
@@ -300,7 +263,7 @@ def _resolve_pool(module, cluster_name, api_key, region, binary, requested_pool_
 
 def _pool_node_count(module, cluster_name, pool_id, api_key, region, binary):
     """Return the current node count for a specific pool (used while waiting)."""
-    pools = _list_node_pools(module, cluster_name, api_key, region, binary)
+    pools = list_node_pools(module, cluster_name, api_key, region, binary)
     for pool in pools:
         pid = pool.get("ID") or pool.get("id") or ""
         if pid == pool_id:

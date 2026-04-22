@@ -125,47 +125,15 @@ pool:
       sample: "g4s.kube.medium"
 """
 
-import json as _json
 import time as _time
 
 from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
     common_argument_spec,
+    list_node_pools,
     run_civo_command,
 )
-
-
-def _list_pools(module, cluster, api_key, region, binary):
-    """Return pool dicts for *cluster*.  Keys may be capitalized."""
-    env_update = {"CIVO_TOKEN": api_key}
-    cmd = [
-        binary,
-        "kubernetes",
-        "node-pool",
-        "ls",
-        cluster,
-        "--region",
-        region,
-        "-o",
-        "json",
-    ]
-    rc, stdout, stderr = module.run_command(cmd, environ_update=env_update)
-    if rc != 0:
-        module.fail_json(msg=f"Failed to list node pools for '{cluster}': {stderr}")
-    json_line = None
-    for line in stdout.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("["):
-            json_line = stripped
-            break
-    if json_line is None:
-        return []
-    try:
-        pools = _json.loads(json_line)
-    except _json.JSONDecodeError:
-        return []
-    return pools if isinstance(pools, list) else []
 
 
 def _normalise_pool(pool):
@@ -193,7 +161,7 @@ def _wait_for_pool_count(module, cluster, pool_id, desired, api_key, region, bin
     """Poll until the pool reaches *desired* node count."""
     deadline = _time.time() + timeout
     while _time.time() < deadline:
-        pools = _list_pools(module, cluster, api_key, region, binary)
+        pools = list_node_pools(module, cluster, api_key, region, binary)
         for pool in pools:
             n = _normalise_pool(pool)
             if n["id"] == pool_id:
@@ -233,7 +201,7 @@ def main():
     if not api_key:
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
-    pools = _list_pools(module, cluster, api_key, region, binary)
+    pools = list_node_pools(module, cluster, api_key, region, binary)
     existing = _find_pool(pools, pool_id, pool_name)
     before = existing or {}
 
@@ -289,7 +257,7 @@ def main():
             deadline = _time.time() + timeout
             new_pool = None
             while _time.time() < deadline:
-                fresh_pools = _list_pools(module, cluster, api_key, region, binary)
+                fresh_pools = list_node_pools(module, cluster, api_key, region, binary)
                 for p in fresh_pools:
                     n = _normalise_pool(p)
                     if n["id"] not in original_ids:
@@ -306,7 +274,7 @@ def main():
                 module.fail_json(msg=f"Timed out after {timeout}s waiting for new pool to reach {node_count} nodes")
         else:
             original_ids = {_normalise_pool(p)["id"] for p in pools}
-            fresh_pools = _list_pools(module, cluster, api_key, region, binary)
+            fresh_pools = list_node_pools(module, cluster, api_key, region, binary)
             new_pool = None
             for p in fresh_pools:
                 n = _normalise_pool(p)
@@ -340,7 +308,7 @@ def main():
                 module, cluster, existing["id"], node_count, api_key, region, binary, timeout
             )
         else:
-            pools = _list_pools(module, cluster, api_key, region, binary)
+            pools = list_node_pools(module, cluster, api_key, region, binary)
             existing = _find_pool(pools, existing["id"], pool_name) or existing
         module.exit_json(changed=True, pool=existing, diff={"before": before, "after": existing})
 

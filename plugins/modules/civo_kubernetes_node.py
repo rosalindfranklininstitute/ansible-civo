@@ -101,6 +101,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
     common_argument_spec,
+    list_node_pools,
     run_civo_command,
 )
 
@@ -143,38 +144,6 @@ def _list_instances_in_pool(module, cluster, pool_id, api_key, region, binary):
     return instances if isinstance(instances, list) else []
 
 
-def _list_pools(module, cluster, api_key, region, binary):
-    """Return pool dicts for *cluster*.  Keys may be capitalized."""
-    env_update = {"CIVO_TOKEN": api_key}
-    cmd = [
-        binary,
-        "kubernetes",
-        "node-pool",
-        "ls",
-        cluster,
-        "--region",
-        region,
-        "-o",
-        "json",
-    ]
-    rc, stdout, stderr = module.run_command(cmd, environ_update=env_update)
-    if rc != 0:
-        module.fail_json(msg=f"Failed to list node pools for '{cluster}': {stderr}")
-    json_line = None
-    for line in stdout.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("["):
-            json_line = stripped
-            break
-    if json_line is None:
-        return []
-    try:
-        pools = _json.loads(json_line)
-    except _json.JSONDecodeError:
-        return []
-    return pools if isinstance(pools, list) else []
-
-
 def _find_node(module, cluster, node_hostname, pool_id, api_key, region, binary):
     """Locate a node by hostname across pools.
 
@@ -184,7 +153,7 @@ def _find_node(module, cluster, node_hostname, pool_id, api_key, region, binary)
     if pool_id:
         pools_to_search = [{"ID": pool_id, "id": pool_id}]
     else:
-        pools_to_search = _list_pools(module, cluster, api_key, region, binary)
+        pools_to_search = list_node_pools(module, cluster, api_key, region, binary)
 
     for pool in pools_to_search:
         pid = pool.get("ID") or pool.get("id") or ""
