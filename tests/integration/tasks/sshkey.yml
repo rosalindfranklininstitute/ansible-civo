@@ -94,12 +94,32 @@
   tags: [sshkey]
 
 # =========================================================================
-# DELETE
+# RENAME
 # =========================================================================
-- name: "[sshkey] Delete test SSH key"
+- name: "[sshkey] Rename key"
   civo.cloud.civo_sshkey:
     region: "{{ region }}"
     name: "{{ test_prefix }}-sshkey"
+    new_name: "{{ test_prefix }}-sshkey-renamed"
+    state: present
+  register: sshkey_rename
+  tags: [sshkey]
+
+- name: "[sshkey] Assert key renamed"
+  ansible.builtin.assert:
+    that:
+      - sshkey_rename.changed
+      - sshkey_rename.sshkey.name == test_prefix ~ "-sshkey-renamed"
+    fail_msg: "Expected SSH key to be renamed: {{ sshkey_rename }}"
+  tags: [sshkey]
+
+# =========================================================================
+# DELETE
+# =========================================================================
+- name: "[sshkey] Delete renamed key"
+  civo.cloud.civo_sshkey:
+    region: "{{ region }}"
+    name: "{{ test_prefix }}-sshkey-renamed"
     state: absent
   register: sshkey_delete
   tags: [sshkey]
@@ -114,7 +134,7 @@
 - name: "[sshkey] Delete non-existent key (idempotent)"
   civo.cloud.civo_sshkey:
     region: "{{ region }}"
-    name: "{{ test_prefix }}-sshkey"
+    name: "{{ test_prefix }}-sshkey-renamed"
     state: absent
   register: sshkey_delete_idem
   tags: [sshkey]

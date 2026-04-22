@@ -84,6 +84,30 @@
   register: net_destroy
   ignore_errors: true
 
+- name: "[network] Destroy cidr network (if left from failed run)"
+  civo.cloud.civo_network:
+    name: "{{ test_prefix }}-network-cidr"
+    region: "{{ region }}"
+    state: absent
+  register: net_cidr_destroy
+  ignore_errors: true
+
+- name: "[sshkey] Delete test SSH key (original name)"
+  civo.cloud.civo_sshkey:
+    name: "{{ test_prefix }}-sshkey"
+    region: "{{ region }}"
+    state: absent
+  register: sshkey_destroy_orig
+  ignore_errors: true
+
+- name: "[sshkey] Delete test SSH key (renamed)"
+  civo.cloud.civo_sshkey:
+    name: "{{ test_prefix }}-sshkey-renamed"
+    region: "{{ region }}"
+    state: absent
+  register: sshkey_destroy_renamed
+  ignore_errors: true
+
 # -------------------------------------------------------------------------
 # Post-destroy verification
 # -------------------------------------------------------------------------

@@ -57,3 +57,56 @@
   retries: 20
   delay: 10
   tags: [network]
+
+# =========================================================================
+# CIDR parameter (covers the cidr branch in civo_network)
+# =========================================================================
+- name: "[network] Create second network with explicit CIDR"
+  civo.cloud.civo_network:
+    name: "{{ test_prefix }}-network-cidr"
+    region: "{{ region }}"
+    cidr: "172.16.100.0/24"
+    state: present
+  register: net_cidr
+  tags: [network]
+
+- name: "[network] Assert cidr network created"
+  ansible.builtin.assert:
+    that:
+      - net_cidr.changed
+      - net_cidr.network.id is defined
+    fail_msg: "Network with CIDR creation failed: {{ net_cidr }}"
+  tags: [network]
+
+- name: "[network] Delete cidr network"
+  civo.cloud.civo_network:
+    name: "{{ test_prefix }}-network-cidr"
+    region: "{{ region }}"
+    state: absent
+  register: net_cidr_delete
+  tags: [network]
+
+- name: "[network] Assert cidr network deleted"
+  ansible.builtin.assert:
+    that:
+      - net_cidr_delete.changed
+    fail_msg: "Network with CIDR deletion failed: {{ net_cidr_delete }}"
+  tags: [network]
+
+# =========================================================================
+# ABSENT idempotency (not-found path)
+# =========================================================================
+- name: "[network] Absent idempotency — network does not exist"
+  civo.cloud.civo_network:
+    name: "{{ test_prefix }}-network-cidr"
+    region: "{{ region }}"
+    state: absent
+  register: net_absent_idem
+  tags: [network]
+
+- name: "[network] Assert absent is idempotent when not found"
+  ansible.builtin.assert:
+    that:
+      - not net_absent_idem.changed
+    fail_msg: "Absent should be idempotent when network not found: {{ net_absent_idem }}"
+  tags: [network]

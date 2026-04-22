@@ -76,3 +76,108 @@
       - not fw_idem.changed
     fail_msg: "Firewall create is not idempotent: {{ fw_idem }}"
   tags: [firewall]
+
+# =========================================================================
+# RULE UPDATE — change an existing rule's attribute (triggers delete+recreate)
+# =========================================================================
+- name: "[firewall] Update allow-ssh rule cidr (triggers rule delete+recreate)"
+  civo.cloud.civo_firewall:
+    name: "{{ test_prefix }}-fw"
+    region: "{{ region }}"
+    network: "{{ test_prefix }}-network"
+    rules:
+      - label: allow-ssh
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "22"
+        cidr: "10.0.0.0/8"
+      - label: allow-https
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "443"
+        cidr: "0.0.0.0/0"
+    state: present
+  register: fw_rule_update
+  tags: [firewall]
+
+- name: "[firewall] Assert rule update changed"
+  ansible.builtin.assert:
+    that:
+      - fw_rule_update.changed
+    fail_msg: "Firewall rule update should have changed: {{ fw_rule_update }}"
+  tags: [firewall]
+
+- name: "[firewall] Rule update idempotency"
+  civo.cloud.civo_firewall:
+    name: "{{ test_prefix }}-fw"
+    region: "{{ region }}"
+    network: "{{ test_prefix }}-network"
+    rules:
+      - label: allow-ssh
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "22"
+        cidr: "10.0.0.0/8"
+      - label: allow-https
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "443"
+        cidr: "0.0.0.0/0"
+    state: present
+  register: fw_rule_update_idem
+  tags: [firewall]
+
+- name: "[firewall] Assert rule update idempotent"
+  ansible.builtin.assert:
+    that:
+      - not fw_rule_update_idem.changed
+    fail_msg: "Firewall rule update is not idempotent: {{ fw_rule_update_idem }}"
+  tags: [firewall]
+
+# =========================================================================
+# PURGE RULES — remove a labelled rule not in the desired list
+# =========================================================================
+- name: "[firewall] Purge allow-ssh (keep only allow-https)"
+  civo.cloud.civo_firewall:
+    name: "{{ test_prefix }}-fw"
+    region: "{{ region }}"
+    network: "{{ test_prefix }}-network"
+    rules:
+      - label: allow-https
+        direction: ingress
+        action: allow
+        protocol: tcp
+        port: "443"
+        cidr: "0.0.0.0/0"
+    purge_rules: true
+    state: present
+  register: fw_purge
+  tags: [firewall]
+
+- name: "[firewall] Assert purge changed (allow-ssh was removed)"
+  ansible.builtin.assert:
+    that:
+      - fw_purge.changed
+    fail_msg: "Firewall purge should have changed: {{ fw_purge }}"
+  tags: [firewall]
+
+- name: "[firewall] READ rules after purge"
+  civo.cloud.civo_firewall_info:
+    name: "{{ test_prefix }}-fw"
+    region: "{{ region }}"
+    rules: true
+  register: fw_after_purge
+  tags: [firewall]
+
+- name: "[firewall] Assert allow-ssh is gone after purge"
+  ansible.builtin.assert:
+    that:
+      - fw_after_purge.firewalls[0].rules | selectattr('label', 'defined')
+                                          | selectattr('label', 'equalto', 'allow-ssh')
+                                          | list | length == 0
+    fail_msg: "allow-ssh rule should have been purged: {{ fw_after_purge.firewalls[0].rules }}"
+  tags: [firewall]

@@ -150,7 +150,7 @@ def main():
 
     create_args = ["network", "create", name]
     if cidr:
-        create_args += ["--cidr", cidr]
+        create_args += ["--cidr-v4", cidr]
 
     run_civo_command(module, create_args, api_key, region, binary)
 
