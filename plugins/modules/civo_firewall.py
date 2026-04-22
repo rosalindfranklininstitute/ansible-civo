@@ -197,6 +197,9 @@ def _rule_matches(desired, existing_rule):
     # Port comparison — the CLI returns start_port/end_port fields.
     # A single-port rule like "22" maps to start_port="22", end_port="22".
     # A range rule like "8000-9000" maps to start_port="8000", end_port="9000".
+    # A portless rule (e.g. ICMP) has no port field and must only match
+    # existing rules that also have no ports — otherwise an ICMP rule would
+    # incorrectly match any TCP rule with the same direction/action/cidr.
     desired_port = str(desired.get("port", "")) if desired.get("port") else ""
     if desired_port:
         if "-" in desired_port:
@@ -207,6 +210,10 @@ def _rule_matches(desired, existing_rule):
             str(existing_rule.get("start_port", "")) != desired_start
             or str(existing_rule.get("end_port", "")) != desired_end
         ):
+            return False
+    else:
+        # Desired rule has no port — existing rule must also be portless.
+        if existing_rule.get("start_port") or existing_rule.get("end_port"):
             return False
     return True
 
