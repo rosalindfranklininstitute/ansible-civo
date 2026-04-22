@@ -8,7 +8,7 @@ DOCUMENTATION = r"""
 module: civo_instance
 short_description: Manage Civo compute instances
 description:
-  - Create, update, start, stop, or delete Civo compute instances.
+  - Create, update, start, stop, reboot, or delete Civo compute instances.
   - Supports in-place updates for I(firewall), I(tags), and I(size) (resize)
     when an instance already exists.
   - Uses the C(civo) CLI binary on the control node.
@@ -69,7 +69,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -81,8 +81,14 @@ options:
       - C(absent) deletes the instance.
       - C(started) ensures the instance is running (creates if needed).
       - C(stopped) ensures the instance is stopped.
+      - C(rebooted) sends a graceful (ACPI) reboot signal.  Always reports
+        C(changed=True).  Use I(wait) to block until the instance returns to
+        C(ACTIVE).
+      - C(hard_rebooted) performs a hard power-cycle reboot.  Always reports
+        C(changed=True).  Use with care — data loss may occur if the instance
+        OS does not flush write buffers before the power cut.
     type: str
-    choices: [present, absent, started, stopped]
+    choices: [present, absent, started, stopped, rebooted, hard_rebooted]
     default: present
   civo_binary:
     description: Path to the C(civo) CLI binary.
@@ -123,6 +129,20 @@ EXAMPLES = r"""
     hostname: web-01.example.com
     state: stopped
 
+- name: Gracefully reboot an instance (ACPI signal, equivalent to OS reboot)
+  civo.cloud.civo_instance:
+    region: LON1
+    hostname: web-01.example.com
+    state: rebooted
+    wait: true
+
+- name: Hard-reboot an instance (power cycle — use when soft reboot hangs)
+  civo.cloud.civo_instance:
+    region: LON1
+    hostname: web-01.example.com
+    state: hard_rebooted
+    wait: true
+
 - name: Delete an instance
   civo.cloud.civo_instance:
     region: LON1
@@ -133,7 +153,7 @@ EXAMPLES = r"""
 RETURN = r"""
 instance:
   description: Details of the managed instance.
-  returned: when state is C(present) or C(started) or C(stopped)
+  returned: when state is C(present), C(started), C(stopped), C(rebooted), or C(hard_rebooted)
   type: dict
   contains:
     id:
@@ -192,11 +212,14 @@ instance:
       sample: "25"
 """
 
+import time
+
 from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
     common_argument_spec,
     find_resource_by_name,
+    is_uuid,
     run_civo_command,
     wait_for_active,
 )
@@ -210,15 +233,16 @@ def _update_instance(module, hostname, existing, api_key, region, binary):
     desired_fw = module.params.get("firewall")
     if desired_fw:
         current_fw_id = existing.get("firewall_id", "")
-        # desired_fw may be a name or UUID; compare against existing UUID/name
-        # If it looks like a name (not a UUID), resolve it to its ID first.
-        fw_match = desired_fw in (current_fw_id,)
-        if not fw_match:
-            # Try to resolve the desired firewall name to an ID
+        # Resolve desired_fw to an ID. If it's already a UUID use it directly;
+        # otherwise look it up by name so we always compare ID to ID.
+        if is_uuid(desired_fw):
+            desired_fw_id = desired_fw
+        else:
             fw_obj = find_resource_by_name(module, "firewall", desired_fw, api_key, region, binary)
-            if fw_obj and fw_obj.get("id") == current_fw_id:
-                fw_match = True
-        if not fw_match:
+            if fw_obj is None:
+                module.fail_json(msg=f"Firewall '{desired_fw}' not found in region '{region}'")
+            desired_fw_id = fw_obj["id"]
+        if desired_fw_id != current_fw_id:
             if not module.check_mode:
                 run_civo_command(
                     module,
@@ -265,7 +289,7 @@ def main():
     argument_spec["state"] = {
         "type": "str",
         "default": "present",
-        "choices": ["present", "absent", "started", "stopped"],
+        "choices": ["present", "absent", "started", "stopped", "rebooted", "hard_rebooted"],
     }
     argument_spec.update(
         hostname={"type": "str", "required": True},
@@ -293,18 +317,21 @@ def main():
     timeout = module.params["timeout"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "instance", hostname, api_key, region, binary)
+    before = existing or {}
 
     # ------------------------------------------------------------------ absent
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Instance '{hostname}' not found")
+            module.exit_json(changed=False, msg=f"Instance '{hostname}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would delete instance '{hostname}'")
+            module.exit_json(
+                changed=True, msg=f"Would delete instance '{hostname}'", diff={"before": before, "after": {}}
+            )
         run_civo_command(module, ["instance", "remove", hostname], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"Instance '{hostname}' deleted")
+        module.exit_json(changed=True, msg=f"Instance '{hostname}' deleted", diff={"before": before, "after": {}})
 
     # ------------------------------------------------------------------ stopped
     if state == "stopped":
@@ -312,9 +339,13 @@ def main():
             module.fail_json(msg=f"Instance '{hostname}' not found; cannot stop")
         current_status = existing.get("status", "").upper()
         if current_status == "SHUTOFF":
-            module.exit_json(changed=False, instance=existing)
+            module.exit_json(changed=False, instance=existing, diff={"before": before, "after": before})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would stop instance '{hostname}'")
+            module.exit_json(
+                changed=True,
+                msg=f"Would stop instance '{hostname}'",
+                diff={"before": before, "after": {**before, "status": "SHUTOFF"}},
+            )
         # Use --wait so the CLI blocks until the instance is fully stopped,
         # then re-fetch to return the current state.
         stop_args = ["instance", "stop", hostname]
@@ -322,12 +353,44 @@ def main():
             stop_args.append("--wait")
         run_civo_command(module, stop_args, api_key, region, binary)
         instance = find_resource_by_name(module, "instance", hostname, api_key, region, binary) or existing
-        module.exit_json(changed=True, instance=instance)
+        module.exit_json(changed=True, instance=instance, diff={"before": before, "after": instance})
+
+    # -------------------------------------------------------- rebooted / hard_rebooted
+    if state in ("rebooted", "hard_rebooted"):
+        if existing is None:
+            module.fail_json(msg=f"Instance '{hostname}' not found; cannot reboot")
+        hard = state == "hard_rebooted"
+        reboot_label = "hard-reboot" if hard else "soft-reboot"
+        if module.check_mode:
+            module.exit_json(
+                changed=True,
+                msg=f"Would {reboot_label} instance '{hostname}'",
+                instance=existing,
+                diff={"before": before, "after": {**before, "status": "ACTIVE"}},
+            )
+        cli_cmd = "reboot" if hard else "soft-reboot"
+        run_civo_command(module, ["instance", cli_cmd, hostname], api_key, region, binary)
+        if do_wait:
+            # The reboot takes a moment to initiate; give it time to leave ACTIVE
+            # before we start polling so wait_for_active doesn't return immediately.
+            time.sleep(15)
+            existing = wait_for_active(module, "instance", hostname, api_key, region, binary=binary, timeout=timeout)
+        else:
+            existing = find_resource_by_name(module, "instance", hostname, api_key, region, binary) or existing
+        module.exit_json(changed=True, instance=existing, diff={"before": before, "after": existing})
 
     # ----------------------------------------------------------- present/started
     if existing is None:
+        after_preview = {
+            "hostname": hostname,
+            "size": module.params["size"],
+            "diskimage_id": module.params["diskimage"],
+            "region": region,
+        }
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would create instance '{hostname}'")
+            module.exit_json(
+                changed=True, msg=f"Would create instance '{hostname}'", diff={"before": {}, "after": after_preview}
+            )
 
         create_args = [
             "instance",
@@ -369,7 +432,7 @@ def main():
         else:
             instance = find_resource_by_name(module, "instance", hostname, api_key, region, binary) or {}
 
-        module.exit_json(changed=True, instance=instance)
+        module.exit_json(changed=True, instance=instance, diff={"before": {}, "after": instance})
 
     # Instance exists — apply updates
     current_status = existing.get("status", "").upper()
@@ -377,7 +440,11 @@ def main():
     # Ensure it is running if state=started
     if state == "started" and current_status == "SHUTOFF":
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would start instance '{hostname}'")
+            module.exit_json(
+                changed=True,
+                msg=f"Would start instance '{hostname}'",
+                diff={"before": before, "after": {**before, "status": "ACTIVE"}},
+            )
         run_civo_command(module, ["instance", "start", hostname], api_key, region, binary)
         if do_wait:
             existing = wait_for_active(
@@ -391,7 +458,7 @@ def main():
             )
         else:
             existing = find_resource_by_name(module, "instance", hostname, api_key, region, binary) or existing
-        module.exit_json(changed=True, instance=existing)
+        module.exit_json(changed=True, instance=existing, diff={"before": before, "after": existing})
 
     # Apply drift corrections (firewall, tags, size)
     changed = _update_instance(module, hostname, existing, api_key, region, binary)
@@ -399,7 +466,7 @@ def main():
     if changed and not module.check_mode:
         existing = find_resource_by_name(module, "instance", hostname, api_key, region, binary) or existing
 
-    module.exit_json(changed=changed, instance=existing)
+    module.exit_json(changed=changed, instance=existing, diff={"before": before, "after": existing})
 
 
 if __name__ == "__main__":
