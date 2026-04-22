@@ -76,15 +76,15 @@
           ansible.builtin.include_tasks:
             file: tasks/reserved_ip_assign.yml
             apply:
-              tags: [reserved_ip]
-          tags: [always, reserved_ip]
+              tags: [reserved_ip_assign]
+          tags: [reserved_ip_assign]
 
         - name: Include volume attach tests
           ansible.builtin.include_tasks:
             file: tasks/volume_attach.yml
             apply:
-              tags: [volume]
-          tags: [always, volume]
+              tags: [volume_attach]
+          tags: [volume_attach]
 
         - name: Include object store tests
           ansible.builtin.include_tasks:
@@ -164,3 +164,6 @@
         - name: Cleanup all test resources
           ansible.builtin.include_tasks:
             file: tasks/cleanup.yml
+            apply:
+              tags: [always]
+          tags: [always]
