@@ -58,7 +58,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -189,23 +189,33 @@ def main():
     timeout = module.params["timeout"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "database", name, api_key, region, binary)
+    before = existing or {}
 
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Database '{name}' not found")
+            module.exit_json(changed=False, msg=f"Database '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would delete database '{name}'")
+            module.exit_json(changed=True, msg=f"Would delete database '{name}'", diff={"before": before, "after": {}})
         run_civo_command(module, ["database", "delete", name], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"Database '{name}' deleted")
+        module.exit_json(changed=True, msg=f"Database '{name}' deleted", diff={"before": before, "after": {}})
 
     if existing:
-        module.exit_json(changed=False, database=existing)
+        module.exit_json(changed=False, database=existing, diff={"before": before, "after": before})
 
+    after_preview = {
+        "name": name,
+        "size": module.params["size"],
+        "software": module.params["engine"],
+        "software_version": module.params["version"],
+        "nodes": str(module.params["nodes"]),
+    }
     if module.check_mode:
-        module.exit_json(changed=True, msg=f"Would create database '{name}'")
+        module.exit_json(
+            changed=True, msg=f"Would create database '{name}'", diff={"before": {}, "after": after_preview}
+        )
 
     # The Civo CLI uses --software / --software-version (not --engine / --version)
     create_args = [
@@ -241,7 +251,7 @@ def main():
     else:
         database = find_resource_by_name(module, "database", name, api_key, region, binary) or {}
 
-    module.exit_json(changed=True, database=database)
+    module.exit_json(changed=True, database=database, diff={"before": {}, "after": database})
 
 
 if __name__ == "__main__":

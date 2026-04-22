@@ -24,7 +24,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -106,7 +106,7 @@ def main():
     binary = module.params["civo_binary"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     if hostname:
         result = find_resource_by_name(module, "instance", hostname, api_key, region, binary)

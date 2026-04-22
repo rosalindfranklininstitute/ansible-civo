@@ -29,7 +29,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier (e.g. C(LON1), C(NYC1), C(FRA1), C(PHX1)).
@@ -137,17 +137,20 @@ def main():
     binary = module.params["civo_binary"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "loadbalancer", name, api_key, region, binary)
+    before = existing or {}
 
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Load balancer '{name}' not found")
+            module.exit_json(changed=False, msg=f"Load balancer '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would delete load balancer '{name}'")
+            module.exit_json(
+                changed=True, msg=f"Would delete load balancer '{name}'", diff={"before": before, "after": {}}
+            )
         run_civo_command(module, ["loadbalancer", "remove", name], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"Load balancer '{name}' deleted")
+        module.exit_json(changed=True, msg=f"Load balancer '{name}' deleted", diff={"before": before, "after": {}})
 
     # state == present -- load balancers cannot be created via CLI; just return current state
     if existing is None:
@@ -158,8 +161,9 @@ def main():
                 "Note: load balancers are created automatically by the Kubernetes "
                 "cloud-controller-manager; they cannot be created via the Civo CLI."
             ),
+            diff={"before": {}, "after": {}},
         )
-    module.exit_json(changed=False, loadbalancer=existing)
+    module.exit_json(changed=False, loadbalancer=existing, diff={"before": before, "after": before})
 
 
 if __name__ == "__main__":

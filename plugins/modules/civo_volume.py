@@ -43,7 +43,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -165,24 +165,28 @@ def main():
     desired_size = module.params["size_gb"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "volume", name, api_key, region, binary)
+    before = existing or {}
 
     # ------------------------------------------------------------------ absent
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Volume '{name}' not found")
+            module.exit_json(changed=False, msg=f"Volume '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would delete volume '{name}'")
+            module.exit_json(changed=True, msg=f"Would delete volume '{name}'", diff={"before": before, "after": {}})
         run_civo_command(module, ["volume", "remove", name], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"Volume '{name}' deleted")
+        module.exit_json(changed=True, msg=f"Volume '{name}' deleted", diff={"before": before, "after": {}})
 
     # Ensure the volume exists
     created = False
     if existing is None:
+        after_preview = {"name": name, "size_gigabytes": f"{desired_size} GB", "network_id": module.params["network"]}
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would create volume '{name}'")
+            module.exit_json(
+                changed=True, msg=f"Would create volume '{name}'", diff={"before": {}, "after": after_preview}
+            )
         create_args = [
             "volume",
             "create",
@@ -231,12 +235,13 @@ def main():
             # For safety just check if instance_id is set; the CLI is idempotent
             volume = find_resource_by_name(module, "volume", name, api_key, region, binary) or {}
             if volume.get("instance_id") == current_instance_id:
-                module.exit_json(changed=changed, volume=volume)
+                module.exit_json(changed=changed, volume=volume, diff={"before": before, "after": volume})
 
         if module.check_mode:
             module.exit_json(
                 changed=True,
                 msg=f"Would attach volume '{name}' to '{instance}'",
+                diff={"before": before, "after": {**before, "instance_id": instance}},
             )
         run_civo_command(
             module,
@@ -246,18 +251,22 @@ def main():
             binary,
         )
         volume = find_resource_by_name(module, "volume", name, api_key, region, binary) or {}
-        module.exit_json(changed=True, volume=volume)
+        module.exit_json(changed=True, volume=volume, diff={"before": before, "after": volume})
 
     # ---------------------------------------------------------------- detached
     if state == "detached":
         current_instance_id = existing.get("instance_id", "")
         if not current_instance_id:
-            module.exit_json(changed=changed, volume=existing)
+            module.exit_json(changed=changed, volume=existing, diff={"before": before, "after": before})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would detach volume '{name}'")
+            module.exit_json(
+                changed=True,
+                msg=f"Would detach volume '{name}'",
+                diff={"before": before, "after": {**before, "instance_id": ""}},
+            )
         run_civo_command(module, ["volume", "detach", name], api_key, region, binary)
         volume = find_resource_by_name(module, "volume", name, api_key, region, binary) or {}
-        module.exit_json(changed=True, volume=volume)
+        module.exit_json(changed=True, volume=volume, diff={"before": before, "after": volume})
 
     # ----------------------------------------------------------------- present
     volume = (
@@ -265,7 +274,7 @@ def main():
         if changed and not module.check_mode
         else existing
     )
-    module.exit_json(changed=changed, volume=volume or existing)
+    module.exit_json(changed=changed, volume=volume or existing, diff={"before": before, "after": volume or existing})
 
 
 if __name__ == "__main__":

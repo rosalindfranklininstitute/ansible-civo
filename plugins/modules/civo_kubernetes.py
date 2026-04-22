@@ -85,7 +85,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -337,17 +337,18 @@ def main():
     timeout = module.params["timeout"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "kubernetes", name, api_key, region, binary)
+    before = {k: v for k, v in (existing or {}).items() if k != "kubeconfig"}
 
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Cluster '{name}' not found")
+            module.exit_json(changed=False, msg=f"Cluster '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would delete cluster '{name}'")
+            module.exit_json(changed=True, msg=f"Would delete cluster '{name}'", diff={"before": before, "after": {}})
         run_civo_command(module, ["kubernetes", "remove", name], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"Cluster '{name}' deleted")
+        module.exit_json(changed=True, msg=f"Cluster '{name}' deleted", diff={"before": before, "after": {}})
 
     if existing:
         # ---- upgrade version if requested ----
@@ -359,6 +360,7 @@ def main():
                     module.exit_json(
                         changed=True,
                         msg=f"Would upgrade cluster '{name}' from {current_version} to {upgrade_version}",
+                        diff={"before": before, "after": {**before, "kubernetes_version": upgrade_version}},
                     )
                 run_civo_command(
                     module,
@@ -380,10 +382,11 @@ def main():
                 else:
                     existing = find_resource_by_name(module, "kubernetes", name, api_key, region, binary) or existing
                 existing["kubeconfig"] = _get_kubeconfig(module, name, api_key, region, binary)
-                module.exit_json(changed=True, cluster=existing)
+                after = {k: v for k, v in existing.items() if k != "kubeconfig"}
+                module.exit_json(changed=True, cluster=existing, diff={"before": before, "after": after})
             # already at the desired version — fall through to no-change path
             existing["kubeconfig"] = _get_kubeconfig(module, name, api_key, region, binary)
-            module.exit_json(changed=False, cluster=existing)
+            module.exit_json(changed=False, cluster=existing, diff={"before": before, "after": before})
 
         # ---- scale in place if node_count changed ----
         desired_count = module.params["node_count"]
@@ -401,6 +404,7 @@ def main():
                         f"Would scale pool '{pool_id}' in cluster '{name}' "
                         f"from {current_count} to {desired_count} nodes"
                     ),
+                    diff={"before": before, "after": {**before, "nodes": str(desired_count)}},
                 )
             run_civo_command(
                 module,
@@ -427,13 +431,22 @@ def main():
                     )
             existing = find_resource_by_name(module, "kubernetes", name, api_key, region, binary) or existing
             existing["kubeconfig"] = _get_kubeconfig(module, name, api_key, region, binary)
-            module.exit_json(changed=True, cluster=existing)
+            after = {k: v for k, v in existing.items() if k != "kubeconfig"}
+            module.exit_json(changed=True, cluster=existing, diff={"before": before, "after": after})
 
         existing["kubeconfig"] = _get_kubeconfig(module, name, api_key, region, binary)
-        module.exit_json(changed=False, cluster=existing)
+        module.exit_json(changed=False, cluster=existing, diff={"before": before, "after": before})
 
+    after_preview = {
+        "name": name,
+        "nodes": str(module.params["node_count"]),
+        "kubernetes_version": module.params.get("version") or "latest",
+        "cni": module.params["cni"],
+    }
     if module.check_mode:
-        module.exit_json(changed=True, msg=f"Would create cluster '{name}'")
+        module.exit_json(
+            changed=True, msg=f"Would create cluster '{name}'", diff={"before": {}, "after": after_preview}
+        )
 
     create_args = [
         "kubernetes",
@@ -471,7 +484,8 @@ def main():
         cluster = find_resource_by_name(module, "kubernetes", name, api_key, region, binary) or {}
 
     cluster["kubeconfig"] = _get_kubeconfig(module, name, api_key, region, binary)
-    module.exit_json(changed=True, cluster=cluster)
+    after = {k: v for k, v in cluster.items() if k != "kubeconfig"}
+    module.exit_json(changed=True, cluster=cluster, diff={"before": {}, "after": after})
 
 
 if __name__ == "__main__":

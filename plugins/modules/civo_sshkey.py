@@ -36,7 +36,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -139,18 +139,19 @@ def main():
     new_name = module.params.get("new_name")
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "sshkey", name, api_key, region, binary)
+    before = existing or {}
 
     # ------------------------------------------------------------------ absent
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"SSH key '{name}' not found")
+            module.exit_json(changed=False, msg=f"SSH key '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would remove SSH key '{name}'")
+            module.exit_json(changed=True, msg=f"Would remove SSH key '{name}'", diff={"before": before, "after": {}})
         run_civo_command(module, ["sshkey", "remove", name], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"SSH key '{name}' removed")
+        module.exit_json(changed=True, msg=f"SSH key '{name}' removed", diff={"before": before, "after": {}})
 
     # ----------------------------------------------------------------- present
     created = False
@@ -161,7 +162,11 @@ def main():
         if not os.path.isfile(key_path):
             module.fail_json(msg=f"public_key_file not found: {key_path}")
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would upload SSH key '{name}' from {key_path}")
+            module.exit_json(
+                changed=True,
+                msg=f"Would upload SSH key '{name}' from {key_path}",
+                diff={"before": {}, "after": {"name": name}},
+            )
         run_civo_command(
             module,
             ["sshkey", "create", name, "--key", key_path],
@@ -182,6 +187,7 @@ def main():
                 module.exit_json(
                     changed=True,
                     msg=f"Would rename SSH key '{name}' to '{new_name}'",
+                    diff={"before": before, "after": {**before, "name": new_name}},
                 )
             run_civo_command(
                 module,
@@ -196,7 +202,7 @@ def main():
             # Already renamed / target exists — report the target key
             existing = target
 
-    module.exit_json(changed=changed, sshkey=existing)
+    module.exit_json(changed=changed, sshkey=existing, diff={"before": before, "after": existing})
 
 
 if __name__ == "__main__":

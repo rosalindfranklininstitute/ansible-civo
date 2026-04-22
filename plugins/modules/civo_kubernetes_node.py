@@ -42,7 +42,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -224,14 +224,16 @@ def main():
     binary = module.params["civo_binary"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     if state == "recycle":
+        node_state = {"cluster": cluster, "node": node}
         if module.check_mode:
             module.exit_json(
                 changed=True,
                 msg=f"Would recycle node '{node}' in cluster '{cluster}'",
                 node=node,
+                diff={"before": node_state, "after": node_state},
             )
         run_civo_command(
             module,
@@ -244,6 +246,7 @@ def main():
             changed=True,
             msg=f"Node '{node}' recycled successfully",
             node=node,
+            diff={"before": node_state, "after": node_state},
         )
 
     # state == "absent"
@@ -251,11 +254,13 @@ def main():
     if not instance_id:
         module.fail_json(msg=f"Could not determine instance ID for node '{node}' in cluster '{cluster}'")
 
+    node_state = {"cluster": cluster, "node": node, "pool_id": resolved_pool_id, "instance_id": instance_id}
     if module.check_mode:
         module.exit_json(
             changed=True,
             msg=f"Would delete node '{node}' (instance {instance_id}) from pool '{resolved_pool_id}'",
             node=node,
+            diff={"before": node_state, "after": {}},
         )
 
     run_civo_command(
@@ -278,6 +283,7 @@ def main():
         changed=True,
         msg=f"Node '{node}' (instance {instance_id}) deleted from pool '{resolved_pool_id}'",
         node=node,
+        diff={"before": node_state, "after": {}},
     )
 
 

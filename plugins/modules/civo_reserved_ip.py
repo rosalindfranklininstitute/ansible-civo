@@ -27,7 +27,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -129,24 +129,29 @@ def main():
     binary = module.params["civo_binary"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "ip", name, api_key, region, binary)
+    before = existing or {}
 
     # ------------------------------------------------------------------ absent
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Reserved IP '{name}' not found")
+            module.exit_json(changed=False, msg=f"Reserved IP '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would release reserved IP '{name}'")
+            module.exit_json(
+                changed=True, msg=f"Would release reserved IP '{name}'", diff={"before": before, "after": {}}
+            )
         run_civo_command(module, ["ip", "delete", name], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"Reserved IP '{name}' released")
+        module.exit_json(changed=True, msg=f"Reserved IP '{name}' released", diff={"before": before, "after": {}})
 
     # Ensure reservation exists
     created = False
     if existing is None:
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would reserve IP '{name}'")
+            module.exit_json(
+                changed=True, msg=f"Would reserve IP '{name}'", diff={"before": {}, "after": {"name": name}}
+            )
         run_civo_command(module, ["ip", "reserve", "--name", name], api_key, region, binary)
         existing = find_resource_by_name(module, "ip", name, api_key, region, binary) or {}
         created = True
@@ -171,12 +176,13 @@ def main():
                 already_correct = True
 
         if already_correct:
-            module.exit_json(changed=created, reserved_ip=existing)
+            module.exit_json(changed=created, reserved_ip=existing, diff={"before": before, "after": existing})
 
         if module.check_mode:
             module.exit_json(
                 changed=True,
                 msg=f"Would assign IP '{name}' to '{instance}'",
+                diff={"before": before, "after": {**existing, "assigned_to": instance}},
             )
         run_civo_command(
             module,
@@ -186,7 +192,7 @@ def main():
             binary,
         )
         ip = find_resource_by_name(module, "ip", name, api_key, region, binary) or {}
-        module.exit_json(changed=True, reserved_ip=ip)
+        module.exit_json(changed=True, reserved_ip=ip, diff={"before": before, "after": ip})
 
     # --------------------------------------------------------------- unassigned
     if state == "unassigned":
@@ -194,15 +200,19 @@ def main():
         is_assigned = assigned_to != "No resource" and assigned_to != ""
         if not is_assigned:
             # Already unassigned
-            module.exit_json(changed=created, reserved_ip=existing)
+            module.exit_json(changed=created, reserved_ip=existing, diff={"before": before, "after": existing})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would unassign IP '{name}'")
+            module.exit_json(
+                changed=True,
+                msg=f"Would unassign IP '{name}'",
+                diff={"before": before, "after": {**existing, "assigned_to": "No resource"}},
+            )
         run_civo_command(module, ["ip", "unassign", name], api_key, region, binary)
         ip = find_resource_by_name(module, "ip", name, api_key, region, binary) or {}
-        module.exit_json(changed=True, reserved_ip=ip)
+        module.exit_json(changed=True, reserved_ip=ip, diff={"before": before, "after": ip})
 
     # ----------------------------------------------------------------- present
-    module.exit_json(changed=created, reserved_ip=existing)
+    module.exit_json(changed=created, reserved_ip=existing, diff={"before": before, "after": existing})
 
 
 if __name__ == "__main__":

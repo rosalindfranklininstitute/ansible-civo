@@ -58,7 +58,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -231,18 +231,20 @@ def main():
     binary = module.params["civo_binary"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     pools = _list_pools(module, cluster, api_key, region, binary)
     existing = _find_pool(pools, pool_id, pool_name)
+    before = existing or {}
 
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg="Pool not found; nothing to delete")
+            module.exit_json(changed=False, msg="Pool not found; nothing to delete", diff={"before": {}, "after": {}})
         if module.check_mode:
             module.exit_json(
                 changed=True,
                 msg=f"Would delete pool '{existing['id']}' from cluster '{cluster}'",
+                diff={"before": before, "after": {}},
             )
         run_civo_command(
             module,
@@ -254,6 +256,7 @@ def main():
         module.exit_json(
             changed=True,
             msg=f"Pool '{existing['id']}' deleted from cluster '{cluster}'",
+            diff={"before": before, "after": {}},
         )
 
     # state == "present"
@@ -263,6 +266,7 @@ def main():
             module.exit_json(
                 changed=True,
                 msg=f"Would create pool in cluster '{cluster}' with {node_count} x {node_size} nodes",
+                diff={"before": {}, "after": {"size": node_size, "count": node_count}},
             )
         create_args = [
             "kubernetes",
@@ -311,7 +315,7 @@ def main():
                     break
             new_pool = new_pool or {}
 
-        module.exit_json(changed=True, pool=new_pool)
+        module.exit_json(changed=True, pool=new_pool, diff={"before": {}, "after": new_pool or {}})
 
     # Pool already exists — check if scale is needed
     if existing["count"] != node_count:
@@ -322,6 +326,7 @@ def main():
                     f"Would scale pool '{existing['id']}' in cluster '{cluster}' "
                     f"from {existing['count']} to {node_count} nodes"
                 ),
+                diff={"before": before, "after": {**before, "count": node_count}},
             )
         run_civo_command(
             module,
@@ -337,9 +342,9 @@ def main():
         else:
             pools = _list_pools(module, cluster, api_key, region, binary)
             existing = _find_pool(pools, existing["id"], pool_name) or existing
-        module.exit_json(changed=True, pool=existing)
+        module.exit_json(changed=True, pool=existing, diff={"before": before, "after": existing})
 
-    module.exit_json(changed=False, pool=existing)
+    module.exit_json(changed=False, pool=existing, diff={"before": before, "after": before})
 
 
 if __name__ == "__main__":

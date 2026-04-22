@@ -29,7 +29,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier (e.g. C(LON1), C(NYC1), C(FRA1), C(PHX1)).
@@ -123,24 +123,30 @@ def main():
     binary = module.params["civo_binary"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "network", name, api_key, region, binary)
+    before = existing or {}
 
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Network '{name}' not found")
+            module.exit_json(changed=False, msg=f"Network '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would delete network '{name}'")
+            module.exit_json(changed=True, msg=f"Would delete network '{name}'", diff={"before": before, "after": {}})
         run_civo_command(module, ["network", "remove", name], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"Network '{name}' deleted")
+        module.exit_json(changed=True, msg=f"Network '{name}' deleted", diff={"before": before, "after": {}})
 
     # state == present — CIDR is immutable, so no update path needed
     if existing:
-        module.exit_json(changed=False, network=existing)
+        module.exit_json(changed=False, network=existing, diff={"before": before, "after": before})
 
+    after_preview = {"name": name, "region": region}
+    if cidr:
+        after_preview["cidr"] = cidr
     if module.check_mode:
-        module.exit_json(changed=True, msg=f"Would create network '{name}'")
+        module.exit_json(
+            changed=True, msg=f"Would create network '{name}'", diff={"before": {}, "after": after_preview}
+        )
 
     create_args = ["network", "create", name]
     if cidr:
@@ -149,7 +155,7 @@ def main():
     run_civo_command(module, create_args, api_key, region, binary)
 
     network = find_resource_by_name(module, "network", name, api_key, region, binary)
-    module.exit_json(changed=True, network=network or {})
+    module.exit_json(changed=True, network=network or {}, diff={"before": {}, "after": network or {}})
 
 
 if __name__ == "__main__":

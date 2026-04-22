@@ -57,7 +57,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -164,15 +164,18 @@ def main():
     purge_credentials = module.params["purge_credentials"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "objectstore", name, api_key, region, binary)
+    before = existing or {}
 
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Object store '{name}' not found")
+            module.exit_json(changed=False, msg=f"Object store '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would delete object store '{name}'")
+            module.exit_json(
+                changed=True, msg=f"Would delete object store '{name}'", diff={"before": before, "after": {}}
+            )
 
         # Resolve linked credential before the store is deleted (show returns accesskey).
         cred_name_to_delete = None
@@ -198,6 +201,38 @@ def main():
                         cred_name_to_delete = cred.get("name")
                         break
 
+                # Safety check: refuse to purge a credential that is shared with other stores.
+                if cred_name_to_delete:
+                    _rc3, stores_data, _stderr3 = run_civo_command(
+                        module, ["objectstore", "ls"], api_key, region, binary, check_rc=False
+                    )
+                    all_stores = stores_data if isinstance(stores_data, list) else []
+                    sharing = []
+                    for other in all_stores:
+                        other_name = other.get("name", "")
+                        if not other_name or other_name == name:
+                            continue
+                        # Fetch the other store's detail to check its access key
+                        _rc4, other_show, _se4 = run_civo_command(
+                            module, ["objectstore", "show", other_name], api_key, region, binary, check_rc=False
+                        )
+                        other_list = (
+                            other_show if isinstance(other_show, list) else ([other_show] if other_show else [])
+                        )
+                        for oitem in other_list:
+                            if isinstance(oitem, dict):
+                                okey = oitem.get("accesskey") or oitem.get("access_key")
+                                if okey and okey == store_access_key:
+                                    sharing.append(other_name)
+                    if sharing:
+                        module.fail_json(
+                            msg=(
+                                f"Refusing to purge credential '{cred_name_to_delete}': "
+                                f"it is also used by object store(s): {sharing}. "
+                                "Delete those stores first, or set purge_credentials=false."
+                            )
+                        )
+
         run_civo_command(module, ["objectstore", "delete", name], api_key, region, binary)
 
         if purge_credentials and cred_name_to_delete:
@@ -211,15 +246,21 @@ def main():
             module.exit_json(
                 changed=True,
                 msg=f"Object store '{name}' deleted; credential '{cred_name_to_delete}' purged",
+                diff={"before": before, "after": {}},
             )
 
-        module.exit_json(changed=True, msg=f"Object store '{name}' deleted")
+        module.exit_json(changed=True, msg=f"Object store '{name}' deleted", diff={"before": before, "after": {}})
 
     if existing:
-        module.exit_json(changed=False, objectstore=existing)
+        module.exit_json(changed=False, objectstore=existing, diff={"before": before, "after": before})
 
+    after_preview = {"name": name}
+    if module.params.get("max_size_gb") is not None:
+        after_preview["max_size"] = str(module.params["max_size_gb"])
     if module.check_mode:
-        module.exit_json(changed=True, msg=f"Would create object store '{name}'")
+        module.exit_json(
+            changed=True, msg=f"Would create object store '{name}'", diff={"before": {}, "after": after_preview}
+        )
 
     create_args = ["objectstore", "create", name]
     # Explicit is-not-None guard so that 0 (unlimited) is correctly passed through
@@ -243,7 +284,7 @@ def main():
     else:
         store = find_resource_by_name(module, "objectstore", name, api_key, region, binary) or {}
 
-    module.exit_json(changed=True, objectstore=store)
+    module.exit_json(changed=True, objectstore=store, diff={"before": {}, "after": store})
 
 
 if __name__ == "__main__":

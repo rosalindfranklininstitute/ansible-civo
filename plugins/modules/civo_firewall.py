@@ -70,7 +70,7 @@ options:
   api_key:
     description:
       - Civo API token.
-      - Falls back to the C(CIVO_TOKEN) environment variable when not set.
+      - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
     description: Civo region identifier.
@@ -319,26 +319,27 @@ def main():
     binary = module.params["civo_binary"]
 
     if not api_key:
-        module.fail_json(msg="api_key is required (or set the CIVO_TOKEN environment variable)")
+        module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     existing = find_resource_by_name(module, "firewall", name, api_key, region, binary)
+    before = existing or {}
 
     if state == "absent":
         if existing is None:
-            module.exit_json(changed=False, msg=f"Firewall '{name}' not found")
+            module.exit_json(changed=False, msg=f"Firewall '{name}' not found", diff={"before": {}, "after": {}})
         if module.check_mode:
-            module.exit_json(changed=True, msg=f"Would delete firewall '{name}'")
+            module.exit_json(changed=True, msg=f"Would delete firewall '{name}'", diff={"before": before, "after": {}})
         run_civo_command(module, ["firewall", "remove", existing["id"]], api_key, region, binary)
-        module.exit_json(changed=True, msg=f"Firewall '{name}' deleted")
+        module.exit_json(changed=True, msg=f"Firewall '{name}' deleted", diff={"before": before, "after": {}})
 
     changed = False
     if existing is None:
         if module.check_mode:
-            # Still check rules so we report accurately in check mode
-            bool(rules)
+            after_preview = {"name": name, "network": network, "rules_count": str(len(rules))}
             module.exit_json(
                 changed=True,
                 msg=f"Would create firewall '{name}' with {len(rules)} rules",
+                diff={"before": {}, "after": after_preview},
             )
         create_args = ["firewall", "create", name, "--network", network]
         run_civo_command(module, create_args, api_key, region, binary)
@@ -360,7 +361,7 @@ def main():
         changed = changed or rules_changed
 
     firewall = find_resource_by_name(module, "firewall", name, api_key, region, binary) or {}
-    module.exit_json(changed=changed, firewall=firewall)
+    module.exit_json(changed=changed, firewall=firewall, diff={"before": before, "after": firewall})
 
 
 if __name__ == "__main__":
