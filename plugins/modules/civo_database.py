@@ -11,9 +11,9 @@ description:
   - Create or delete Civo managed database clusters (MySQL or PostgreSQL).
   - Uses the C(civo) CLI binary on the control node.
   - >-
-    Note: C(--software) is the CLI flag for the engine type and
-    C(--software-version) for the version string - the module maps the
-    user-facing I(engine)/I(version) parameters to the correct flags.
+    Note: C(--software) is the CLI flag for the engine type and C(--version)
+    for the version string — the module maps the user-facing I(engine)/I(version)
+    parameters to those flags.
 version_added: "0.0.1"
 author:
   - The Rosalind Franklin Institute
@@ -27,13 +27,17 @@ options:
     type: str
     default: g3.db.small
   engine:
-    description: Database engine type.
+    description:
+      - Database engine type.
+      - Currently only C(postgresql) is supported by Civo.
+      - Run C(civo database versions) to see available engines and versions in your region.
     type: str
-    choices: [mysql, postgresql]
+    choices: [postgresql]
     default: postgresql
   version:
     description:
-      - Engine version string (e.g. C("17") for PostgreSQL).
+      - Engine version string.
+      - Run C(civo database versions) to list available versions for your region.
     type: str
     default: "17"
   nodes:
@@ -79,12 +83,12 @@ seealso:
 """
 
 EXAMPLES = r"""
-- name: Create a MySQL database
+- name: Create a PostgreSQL database
   civo.cloud.civo_database:
     region: LON1
     name: myapp-db
-    engine: mysql
-    version: "8.0"
+    engine: postgresql
+    version: "17"
     size: g3.db.small
     nodes: 1
     network: my-network
@@ -94,14 +98,6 @@ EXAMPLES = r"""
 - name: Print database endpoint
   ansible.builtin.debug:
     msg: "DB endpoint: {{ db.database.endpoint }}"
-
-- name: Create a PostgreSQL database
-  civo.cloud.civo_database:
-    region: LON1
-    name: myapp-pg
-    engine: postgresql
-    version: "14"
-    size: g3.db.small
 
 - name: Delete a database
   civo.cloud.civo_database:
@@ -169,7 +165,7 @@ def main():
     argument_spec.update(
         name={"type": "str", "required": True},
         size={"type": "str", "default": "g3.db.small"},
-        engine={"type": "str", "default": "postgresql", "choices": ["mysql", "postgresql"]},
+        engine={"type": "str", "default": "postgresql", "choices": ["postgresql"]},
         version={"type": "str", "default": "17"},
         nodes={"type": "int", "default": 1},
         network={"type": "str", "default": "default"},
@@ -217,7 +213,7 @@ def main():
             changed=True, msg=f"Would create database '{name}'", diff={"before": {}, "after": after_preview}
         )
 
-    # The Civo CLI uses --software / --software-version (not --engine / --version)
+    # The Civo CLI uses --software / --version (not --engine / --software-version)
     create_args = [
         "database",
         "create",
