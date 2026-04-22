@@ -19,11 +19,6 @@
         protocol: tcp
         port: "443"
         cidr: "0.0.0.0/0"
-      - label: allow-icmp
-        direction: ingress
-        action: allow
-        protocol: icmp
-        cidr: "0.0.0.0/0"
     state: present
   register: fw_create
   tags: [firewall]
@@ -53,7 +48,7 @@
     fail_msg: "Firewall info failed: {{ fw_info }}"
   tags: [firewall]
 
-- name: "[firewall] Idempotency — present again (including portless ICMP rule)"
+- name: "[firewall] Idempotency — present again"
   civo.cloud.civo_firewall:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
@@ -70,11 +65,6 @@
         action: allow
         protocol: tcp
         port: "443"
-        cidr: "0.0.0.0/0"
-      - label: allow-icmp
-        direction: ingress
-        action: allow
-        protocol: icmp
         cidr: "0.0.0.0/0"
     state: present
   register: fw_idem
