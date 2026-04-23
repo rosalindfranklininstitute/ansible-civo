@@ -16,6 +16,12 @@ civo.cloud Ansible Collection
 
 .. toctree::
    :maxdepth: 1
+   :caption: Contributing
+
+   guide_development
+
+.. toctree::
+   :maxdepth: 1
    :caption: About
 
    changelog

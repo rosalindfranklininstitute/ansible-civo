@@ -4,10 +4,10 @@ Installation
 Requirements
 ------------
 
-* Ansible >= 2.15
+* Ansible >= 2.17
 * The ``civo`` CLI binary installed and available on ``PATH``
   (see `Civo CLI installation <https://github.com/civo/cli#installation>`_)
-* A Civo API token (export as ``CIVO_TOKEN``)
+* A Civo API token (obtain from `Civo dashboard → Security <https://dashboard.civo.com/security>`_)
 
 Install from GitHub
 -------------------
@@ -17,15 +17,15 @@ Install from GitHub
    ansible-galaxy collection install \
      git+https://github.com/rosalindfranklininstitute/ansible-civo.git
 
-Or pin to a specific tag:
+Pin to a specific tag:
 
 .. code-block:: bash
 
    ansible-galaxy collection install \
-     git+https://github.com/rosalindfranklininstitute/ansible-civo.git,v0.0.1
+     git+https://github.com/rosalindfranklininstitute/ansible-civo.git,v0.0.3
 
-Installing via ``requirements.yml``
--------------------------------------
+Via ``requirements.yml``
+------------------------
 
 .. code-block:: yaml
 
@@ -35,8 +35,6 @@ Installing via ``requirements.yml``
        type: git
        version: main
 
-Then install with:
-
 .. code-block:: bash
 
    ansible-galaxy collection install -r requirements.yml
@@ -44,11 +42,44 @@ Then install with:
 Authentication
 --------------
 
-Set the ``CIVO_TOKEN`` environment variable before running any play:
+Authentication is resolved in the following priority order:
 
-.. code-block:: bash
+1. **Module parameter** — pass ``api_key`` directly to a task (vault-encrypt it):
 
-   export CIVO_TOKEN="your-api-token"
+   .. code-block:: yaml
 
-Alternatively pass ``api_key`` directly to each module task (not recommended
-for production — prefer the environment variable or a vault-encrypted variable).
+      - name: Create a network
+        civo.cloud.civo_network:
+          api_key: "{{ vault_civo_token }}"
+          name: my-network
+          region: LON1
+          state: present
+
+2. **Environment variable** — recommended for CI and local use:
+
+   .. code-block:: bash
+
+      export CIVO_TOKEN="your-api-token"
+
+3. **Civo CLI config** — the active key from ``~/.civo.json``, populated by
+   ``civo apikey add`` / ``civo apikey current``.
+
+Regions
+-------
+
+Pass ``region`` to any module to target a supported Civo region:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40
+
+   * - Region code
+     - Location
+   * - ``LON1``
+     - London, UK
+   * - ``NYC1``
+     - New York, USA
+   * - ``FRA1``
+     - Frankfurt, Germany
+   * - ``PHX1``
+     - Phoenix, USA

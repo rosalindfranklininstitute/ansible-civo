@@ -1,9 +1,6 @@
 Quick-start guide
 =================
 
-This guide walks you through the most common use-cases for the
-``civo.cloud`` collection.
-
 Prerequisites
 -------------
 
@@ -11,8 +8,8 @@ Prerequisites
 * ``CIVO_TOKEN`` exported in your shell.
 * ``civo`` CLI binary on ``PATH``.
 
-Create a network and firewall, then launch an instance
-------------------------------------------------------
+Network, firewall and instance
+--------------------------------
 
 .. code-block:: yaml
 
@@ -24,28 +21,27 @@ Create a network and firewall, then launch an instance
      tasks:
        - name: Create a private network
          civo.cloud.civo_network:
-           name: my-network
+           name: prod-network
            region: LON1
            state: present
-         register: net
 
        - name: Create a firewall with SSH + HTTPS rules
          civo.cloud.civo_firewall:
-           name: my-firewall
+           name: prod-fw
            region: LON1
-           network: my-network
+           network: prod-network
            rules:
              - label: allow-ssh
                direction: ingress
                action: allow
                protocol: tcp
-               port_range: "22"
+               port: "22"
                cidr: "0.0.0.0/0"
              - label: allow-https
                direction: ingress
                action: allow
                protocol: tcp
-               port_range: "443"
+               port: "443"
                cidr: "0.0.0.0/0"
            state: present
 
@@ -55,8 +51,8 @@ Create a network and firewall, then launch an instance
            region: LON1
            size: g4s.small
            diskimage: ubuntu-noble
-           network: my-network
-           firewall: my-firewall
+           network: prod-network
+           firewall: prod-fw
            public_ip: create
            wait: true
            state: present
@@ -66,8 +62,8 @@ Create a network and firewall, then launch an instance
          ansible.builtin.debug:
            msg: "Instance public IP: {{ inst.instance.public_ip }}"
 
-Provision a Kubernetes cluster
--------------------------------
+Kubernetes cluster
+------------------
 
 .. code-block:: yaml
 
@@ -77,6 +73,7 @@ Provision a Kubernetes cluster
        region: LON1
        node_size: g4s.kube.medium
        node_count: 3
+       network: prod-network
        cni: flannel
        wait: true
        state: present
@@ -85,11 +82,120 @@ Provision a Kubernetes cluster
    - name: Save kubeconfig
      ansible.builtin.copy:
        content: "{{ k8s.cluster.kubeconfig }}"
-       dest: "~/.kube/civo-config"
+       dest: "~/.kube/civo-prod.yaml"
        mode: "0600"
 
-Using the dispatcher role
---------------------------
+   - name: Scale a node pool
+     civo.cloud.civo_kubernetes_pool:
+       cluster: my-cluster
+       region: LON1
+       pool_id: "{{ pool_id }}"
+       count: 5
+       state: present
+
+   - name: Recycle a node
+     civo.cloud.civo_kubernetes_node:
+       cluster: my-cluster
+       region: LON1
+       node: "{{ node_hostname }}"
+       state: recycle
+
+Volume — create, resize and attach
+------------------------------------
+
+.. code-block:: yaml
+
+   - name: Create a data volume
+     civo.cloud.civo_volume:
+       name: data-vol
+       region: LON1
+       size_gb: 50
+       network: default
+       state: present
+
+   - name: Resize the volume
+     civo.cloud.civo_volume:
+       name: data-vol
+       region: LON1
+       size_gb: 100
+       state: present
+
+   - name: Attach volume to an instance
+     civo.cloud.civo_volume:
+       name: data-vol
+       region: LON1
+       instance: web-01
+       state: attached
+
+Reserved IP
+-----------
+
+.. code-block:: yaml
+
+   - name: Reserve a public IP
+     civo.cloud.civo_reserved_ip:
+       name: web-ip
+       region: LON1
+       state: present
+     register: rip
+
+   - name: Assign it to an instance
+     civo.cloud.civo_reserved_ip:
+       name: web-ip
+       region: LON1
+       instance: web-01
+       state: assigned
+
+Managed database
+----------------
+
+.. code-block:: yaml
+
+   - name: Create a PostgreSQL database
+     civo.cloud.civo_database:
+       name: myapp-db
+       region: LON1
+       engine: postgresql
+       version: "17"
+       size: g3.db.small
+       nodes: 1
+       network: prod-network
+       wait: true
+       state: present
+     register: db
+
+Object store
+------------
+
+.. code-block:: yaml
+
+   - name: Create an S3-compatible object store
+     civo.cloud.civo_objectstore:
+       name: my-bucket
+       region: LON1
+       max_size_gb: 500
+       wait: true
+       state: present
+     register: bucket
+
+Load balancers
+--------------
+
+Load balancers are provisioned automatically by the Kubernetes
+cloud-controller-manager when a ``Service`` of type ``LoadBalancer`` is
+deployed.  The Civo CLI does not expose a ``create`` command for them, so
+``civo_loadbalancer`` can only query (``state=present``) or delete
+(``state=absent``) existing load balancers.
+
+.. code-block:: yaml
+
+   - name: Look up a load balancer
+     civo.cloud.civo_loadbalancer_info:
+       region: LON1
+     register: lbs
+
+Dispatcher role
+---------------
 
 The ``roles/civo`` dispatcher role lets you drive any resource through a
 single ``include_role`` call:
@@ -98,10 +204,10 @@ single ``include_role`` call:
 
    - name: Ensure network exists via role
      ansible.builtin.include_role:
-       name: civo.cloud.civo          # role shipped inside this collection
+       name: civo.cloud.civo
      vars:
        civo_resource: network
-       civo_name: my-network
+       civo_name: prod-network
        civo_region: LON1
        civo_state: present
 
@@ -109,7 +215,7 @@ Check mode
 ----------
 
 All modules support Ansible check mode.  Run with ``--check`` to preview
-changes without touching any real resources:
+changes without making any real API calls:
 
 .. code-block:: bash
 
