@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_quota_info
+module: quota_info
 short_description: Return current Civo account quota and usage
 description:
   - Returns the quota limits and current usage for a Civo account in a given
@@ -34,7 +34,7 @@ options:
 
 EXAMPLES = r"""
 - name: Get account quota and usage
-  civo.cloud.civo_quota_info:
+  civo.cloud.quota_info:
     region: LON1
   register: quota
 

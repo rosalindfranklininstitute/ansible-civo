@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_snapshot_info
+module: snapshot_info
 short_description: Gather information about Civo instance snapshots
 description:
   - Returns details of one or all snapshots belonging to a Civo compute instance.
@@ -38,18 +38,18 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_snapshot
+  - module: civo.cloud.snapshot
 """
 
 EXAMPLES = r"""
 - name: List all snapshots for an instance
-  civo.cloud.civo_snapshot_info:
+  civo.cloud.snapshot_info:
     instance: web-01
     region: LON1
   register: snaps
 
 - name: Get a specific snapshot
-  civo.cloud.civo_snapshot_info:
+  civo.cloud.snapshot_info:
     instance: web-01
     name: web-01-snap
     region: LON1

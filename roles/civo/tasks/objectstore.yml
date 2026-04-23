@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo object store
-  civo.cloud.civo_objectstore:
+  civo.cloud.objectstore:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     name: "{{ civo_name }}"

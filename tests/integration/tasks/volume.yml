@@ -2,7 +2,7 @@
 # Volume integration tests: create / read / idempotency / resize / attach / destroy
 
 - name: "[volume] Create test volume"
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
     size_gb: 5
@@ -20,7 +20,7 @@
   tags: [volume]
 
 - name: "[volume] READ — info by name"
-  civo.cloud.civo_volume_info:
+  civo.cloud.volume_info:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
   register: vol_info
@@ -35,7 +35,7 @@
   tags: [volume]
 
 - name: "[volume] Idempotency"
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
     size_gb: 5
@@ -52,7 +52,7 @@
   tags: [volume]
 
 - name: "[volume] Wait for volume to become available before resize"
-  civo.cloud.civo_volume_info:
+  civo.cloud.volume_info:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
   register: vol_wait
@@ -62,7 +62,7 @@
   tags: [volume]
 
 - name: "[volume] Resize volume (update in place)"
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
     size_gb: 10

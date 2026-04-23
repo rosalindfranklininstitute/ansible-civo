@@ -2,7 +2,7 @@
 # Reserved IP assignment to instance
 
 - name: "[reserved_ip] Assign to instance"
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     name: "{{ test_prefix }}-ip"
     region: "{{ region }}"
     instance: "{{ test_prefix }}-vm"
@@ -18,7 +18,7 @@
   tags: [reserved_ip]
 
 - name: "[reserved_ip] Idempotency of assignment"
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     name: "{{ test_prefix }}-ip"
     region: "{{ region }}"
     instance: "{{ test_prefix }}-vm"

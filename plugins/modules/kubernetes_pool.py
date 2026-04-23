@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_kubernetes_pool
+module: kubernetes_pool
 short_description: Manage node pools in a Civo Kubernetes cluster
 description:
   - Create, scale, or delete additional node pools in an existing Civo
@@ -15,7 +15,7 @@ description:
     C(node_count) if it already exists.
   - C(state=absent) deletes the pool.
   - The default pool created with the cluster is B(not) managed by this module;
-    use M(civo.cloud.civo_kubernetes) with C(node_count) for that.
+    use M(civo.cloud.kubernetes) with C(node_count) for that.
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
@@ -75,14 +75,14 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_kubernetes
-  - module: civo.cloud.civo_kubernetes_pool_info
-  - module: civo.cloud.civo_kubernetes_node
+  - module: civo.cloud.kubernetes
+  - module: civo.cloud.kubernetes_pool_info
+  - module: civo.cloud.kubernetes_node
 """
 
 EXAMPLES = r"""
 - name: Add a GPU node pool to an existing cluster
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     region: LON1
     cluster: my-cluster
     name: gpu-pool
@@ -92,14 +92,14 @@ EXAMPLES = r"""
   register: pool
 
 - name: Scale the pool to 4 nodes
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     region: LON1
     cluster: my-cluster
     pool_id: "{{ pool.pool.id }}"
     node_count: 4
 
 - name: Delete the pool
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     region: LON1
     cluster: my-cluster
     pool_id: "{{ pool.pool.id }}"

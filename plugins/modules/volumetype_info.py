@@ -6,12 +6,12 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_volumetype_info
+module: volumetype_info
 short_description: List available Civo volume types
 description:
   - Returns all volume types available in a Civo account.
   - The C(name) field of each volume type is the value accepted by the
-    C(volume_type) parameter of C(civo.cloud.civo_volume) (when that option is
+    C(volume_type) parameter of C(civo.cloud.volume) (when that option is
     added); currently useful for discovery and documentation purposes.
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
@@ -32,12 +32,12 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_volume
+  - module: civo.cloud.volume
 """
 
 EXAMPLES = r"""
 - name: List all volume types
-  civo.cloud.civo_volumetype_info:
+  civo.cloud.volumetype_info:
     region: LON1
   register: vtypes
 

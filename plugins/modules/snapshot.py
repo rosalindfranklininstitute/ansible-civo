@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_snapshot
+module: snapshot
 short_description: Manage Civo instance snapshots
 description:
   - Create, delete, or restore point-in-time snapshots of Civo compute instances.
@@ -75,13 +75,13 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_snapshot_info
-  - module: civo.cloud.civo_instance
+  - module: civo.cloud.snapshot_info
+  - module: civo.cloud.instance
 """
 
 EXAMPLES = r"""
 - name: Create a snapshot of an instance
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: web-01-snap
     instance: web-01
     description: "Pre-upgrade snapshot"
@@ -90,7 +90,7 @@ EXAMPLES = r"""
   register: snap
 
 - name: Restore snapshot to a new instance
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: web-01-snap
     instance: web-01
     hostname: web-01-restored
@@ -98,7 +98,7 @@ EXAMPLES = r"""
     state: restored
 
 - name: Restore snapshot overwriting the original instance
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: web-01-snap
     instance: web-01
     overwrite_existing: true
@@ -106,7 +106,7 @@ EXAMPLES = r"""
     state: restored
 
 - name: Delete a snapshot
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: web-01-snap
     instance: web-01
     region: LON1

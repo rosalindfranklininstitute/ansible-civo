@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_firewall
+module: firewall
 short_description: Manage Civo firewalls and firewall rules
 description:
   - Create or delete Civo firewalls.
@@ -87,13 +87,13 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_network
-  - module: civo.cloud.civo_instance
+  - module: civo.cloud.network
+  - module: civo.cloud.instance
 """
 
 EXAMPLES = r"""
 - name: Create a firewall with SSH, HTTP, and HTTPS rules
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     region: LON1
     name: web-fw
     network: my-network
@@ -116,7 +116,7 @@ EXAMPLES = r"""
     purge_rules: true
 
 - name: Delete a firewall
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     region: LON1
     name: web-fw
     state: absent

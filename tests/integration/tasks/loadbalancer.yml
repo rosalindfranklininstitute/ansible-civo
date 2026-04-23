@@ -2,7 +2,7 @@
 # Load balancer integration tests (read-only — LBs are created by K8s CCM)
 
 - name: "[loadbalancer] List all load balancers (read-only)"
-  civo.cloud.civo_loadbalancer_info:
+  civo.cloud.loadbalancer_info:
     region: "{{ region }}"
   register: lb_list
   tags: [loadbalancer]
@@ -16,7 +16,7 @@
   tags: [loadbalancer]
 
 - name: "[loadbalancer] Lookup a non-existent LB by name"
-  civo.cloud.civo_loadbalancer_info:
+  civo.cloud.loadbalancer_info:
     region: "{{ region }}"
     name: "does-not-exist-lb"
   register: lb_missing
@@ -30,7 +30,7 @@
   tags: [loadbalancer]
 
 - name: "[loadbalancer] state=present on non-existent LB (no-op)"
-  civo.cloud.civo_loadbalancer:
+  civo.cloud.loadbalancer:
     region: "{{ region }}"
     name: "does-not-exist-lb"
     state: present
@@ -45,7 +45,7 @@
   tags: [loadbalancer]
 
 - name: "[loadbalancer] state=absent on non-existent LB (no-op)"
-  civo.cloud.civo_loadbalancer:
+  civo.cloud.loadbalancer:
     region: "{{ region }}"
     name: "does-not-exist-lb"
     state: absent

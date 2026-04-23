@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_kubernetes
+module: kubernetes
 short_description: Manage Civo Kubernetes clusters
 description:
   - Create, scale, upgrade, or delete Civo Kubernetes (k3s) clusters.
@@ -102,15 +102,15 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_network
-  - module: civo.cloud.civo_firewall
-  - module: civo.cloud.civo_kubernetes_pool
-  - module: civo.cloud.civo_kubernetes_node
+  - module: civo.cloud.network
+  - module: civo.cloud.firewall
+  - module: civo.cloud.kubernetes_pool
+  - module: civo.cloud.kubernetes_node
 """
 
 EXAMPLES = r"""
 - name: Create a 3-node Kubernetes cluster
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     region: LON1
     name: my-cluster
     node_size: g4s.kube.medium
@@ -127,27 +127,27 @@ EXAMPLES = r"""
     mode: "0600"
 
 - name: Scale the default (only) pool to 5 nodes
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     region: LON1
     name: my-cluster
     node_count: 5
 
 - name: Scale a specific pool when the cluster has multiple pools
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     region: LON1
     name: my-cluster
     node_count: 2
     pool_id: "aaaa-bbbb-cccc"
 
 - name: Upgrade the cluster to a newer Kubernetes version
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     region: LON1
     name: my-cluster
     upgrade_version: "1.29.2-k3s1"
     wait: true
 
 - name: Delete a cluster
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     region: LON1
     name: my-cluster
     state: absent

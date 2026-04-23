@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_firewall_info
+module: firewall_info
 short_description: Gather information about Civo firewalls
 description:
   - Returns details of one or all Civo firewalls in a region.
@@ -43,17 +43,17 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_firewall
+  - module: civo.cloud.firewall
 """
 
 EXAMPLES = r"""
 - name: Get all firewalls
-  civo.cloud.civo_firewall_info:
+  civo.cloud.firewall_info:
     region: LON1
   register: fws
 
 - name: Get a specific firewall with its rules
-  civo.cloud.civo_firewall_info:
+  civo.cloud.firewall_info:
     region: LON1
     name: web-fw
     rules: true

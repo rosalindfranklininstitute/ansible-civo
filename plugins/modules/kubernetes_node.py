@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_kubernetes_node
+module: kubernetes_node
 short_description: Recycle or delete a node in a Civo Kubernetes cluster
 description:
   - Manages individual nodes (instances) within a Civo Kubernetes cluster.
@@ -30,7 +30,7 @@ options:
     description: >-
       Hostname of the node to act on
       (e.g. C(k3s-my-cluster-abc12-1)).
-      Obtain available node names from M(civo.cloud.civo_kubernetes_pool_info)
+      Obtain available node names from M(civo.cloud.kubernetes_pool_info)
       or C(civo kubernetes node-pool instance-ls CLUSTER).
     required: true
     type: str
@@ -61,21 +61,21 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_kubernetes
-  - module: civo.cloud.civo_kubernetes_pool
-  - module: civo.cloud.civo_kubernetes_pool_info
+  - module: civo.cloud.kubernetes
+  - module: civo.cloud.kubernetes_pool
+  - module: civo.cloud.kubernetes_pool_info
 """
 
 EXAMPLES = r"""
 - name: Recycle a node (replace with a fresh instance)
-  civo.cloud.civo_kubernetes_node:
+  civo.cloud.kubernetes_node:
     region: LON1
     cluster: my-cluster
     node: k3s-my-cluster-abc12-1
     state: recycle
 
 - name: Delete a node from its pool (reduces pool size by 1)
-  civo.cloud.civo_kubernetes_node:
+  civo.cloud.kubernetes_node:
     region: LON1
     cluster: my-cluster
     node: k3s-my-cluster-abc12-1

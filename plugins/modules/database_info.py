@@ -6,10 +6,10 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_network_info
-short_description: Gather information about Civo private networks
+module: database_info
+short_description: Gather information about Civo managed databases
 description:
-  - Returns details of one or all Civo private networks in a region.
+  - Returns details of one or all Civo managed databases in a region.
   - When I(name) is given, returns a single-item list (or empty list if not found).
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
@@ -18,8 +18,8 @@ author:
 options:
   name:
     description:
-      - Name of the network to look up.
-      - When omitted, all networks in the region are returned.
+      - Name of the database to look up.
+      - When omitted, all databases in the region are returned.
     type: str
   api_key:
     description:
@@ -27,7 +27,7 @@ options:
       - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
-    description: Civo region identifier (e.g. C(LON1), C(NYC1)).
+    description: Civo region identifier.
     type: str
     default: LON1
   civo_binary:
@@ -35,51 +35,53 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_network
+  - module: civo.cloud.database
 """
 
 EXAMPLES = r"""
-- name: Get all networks
-  civo.cloud.civo_network_info:
+- name: Get all databases
+  civo.cloud.database_info:
     region: LON1
-  register: nets
+  register: dbs
 
-- name: Print network names
-  ansible.builtin.debug:
-    msg: "{{ nets.networks | map(attribute='label') | list }}"
-
-- name: Get a specific network
-  civo.cloud.civo_network_info:
+- name: Get a specific database
+  civo.cloud.database_info:
     region: LON1
-    name: my-network
-  register: net
+    name: myapp-db
+  register: db
 
-- name: Print network ID
+- name: Print database status
   ansible.builtin.debug:
-    msg: "{{ net.networks[0].id }}"
+    msg: "{{ db.databases[0].status }}"
 """
 
 RETURN = r"""
-networks:
-  description: List of network dicts matching the query.
+databases:
+  description: List of database dicts matching the query.
   returned: always
   type: list
   elements: dict
   contains:
     id:
-      description: Network UUID.
+      description: Database UUID.
       type: str
-    label:
-      description: Network name/label.
+    name:
+      description: Database name.
       type: str
     status:
-      description: Network status.
+      description: Database status.
       type: str
-    default:
-      description: Whether this is the account-default network.
+    software:
+      description: Database engine (e.g. C(PostgreSQL)).
       type: str
-    region:
-      description: Region the network belongs to.
+    software_version:
+      description: Engine version string.
+      type: str
+    size:
+      description: Database node size slug.
+      type: str
+    nodes:
+      description: Number of database nodes.
       type: str
 """
 
@@ -94,7 +96,6 @@ from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
 
 def main():
     argument_spec = common_argument_spec()
-    # _info modules have no state parameter
     argument_spec.pop("state", None)
     argument_spec.update(
         name={"type": "str"},
@@ -111,13 +112,13 @@ def main():
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     if name:
-        result = find_resource_by_name(module, "network", name, api_key, region, binary)
-        networks = [result] if result else []
+        result = find_resource_by_name(module, "database", name, api_key, region, binary)
+        databases = [result] if result else []
     else:
-        _rc, data, _stderr = run_civo_command(module, ["network", "ls"], api_key, region, binary, check_rc=False)
-        networks = data if isinstance(data, list) else []
+        _rc, data, _stderr = run_civo_command(module, ["database", "ls"], api_key, region, binary, check_rc=False)
+        databases = data if isinstance(data, list) else []
 
-    module.exit_json(changed=False, networks=networks)
+    module.exit_json(changed=False, databases=databases)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 # Reserved IP integration tests: create / read / idempotency / assign / destroy
 
 - name: "[reserved_ip] Reserve a test IP"
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     name: "{{ test_prefix }}-ip"
     region: "{{ region }}"
     state: present
@@ -18,7 +18,7 @@
   tags: [reserved_ip]
 
 - name: "[reserved_ip] READ — info by name"
-  civo.cloud.civo_reserved_ip_info:
+  civo.cloud.reserved_ip_info:
     name: "{{ test_prefix }}-ip"
     region: "{{ region }}"
   register: rip_info
@@ -33,7 +33,7 @@
   tags: [reserved_ip]
 
 - name: "[reserved_ip] Idempotency"
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     name: "{{ test_prefix }}-ip"
     region: "{{ region }}"
     state: present

@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_loadbalancer
+module: loadbalancer
 short_description: Manage Civo load balancers
 description:
   - Query or delete Civo load balancers.
@@ -17,7 +17,7 @@ description:
     C(LoadBalancer) is deployed. The only supported state transitions via the
     CLI are C(absent) (delete) and reading the current state.
   - To read load balancer details without mutating state, prefer
-    M(civo.cloud.civo_loadbalancer_info).
+    M(civo.cloud.loadbalancer_info).
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
@@ -52,15 +52,15 @@ notes:
   - Load balancers are provisioned automatically by the Kubernetes
     cloud-controller-manager and cannot be created via the Civo CLI. This
     module can only query (C(state=present)) or delete (C(state=absent)) them.
-  - Use M(civo.cloud.civo_loadbalancer_info) for read-only queries.
+  - Use M(civo.cloud.loadbalancer_info) for read-only queries.
 seealso:
-  - module: civo.cloud.civo_loadbalancer_info
-  - module: civo.cloud.civo_kubernetes
+  - module: civo.cloud.loadbalancer_info
+  - module: civo.cloud.kubernetes
 """
 
 EXAMPLES = r"""
 - name: Look up a load balancer created by Kubernetes
-  civo.cloud.civo_loadbalancer:
+  civo.cloud.loadbalancer:
     region: LON1
     name: my-lb
     state: present
@@ -71,7 +71,7 @@ EXAMPLES = r"""
     msg: "LB public IP: {{ lb.loadbalancer.public_ip }}"
 
 - name: Delete a load balancer
-  civo.cloud.civo_loadbalancer:
+  civo.cloud.loadbalancer:
     region: LON1
     name: my-lb
     state: absent

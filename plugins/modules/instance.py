@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_instance
+module: instance
 short_description: Manage Civo compute instances
 description:
   - Create, update, start, stop, reboot, or delete Civo compute instances.
@@ -96,13 +96,13 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_network
-  - module: civo.cloud.civo_firewall
+  - module: civo.cloud.network
+  - module: civo.cloud.firewall
 """
 
 EXAMPLES = r"""
 - name: Create an instance
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     region: LON1
     hostname: web-01.example.com
     size: g4s.small
@@ -119,33 +119,33 @@ EXAMPLES = r"""
     msg: "Public IP: {{ vm.instance.public_ip }}"
 
 - name: Resize an instance
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     region: LON1
     hostname: web-01.example.com
     size: g4s.medium
 
 - name: Stop an instance
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     region: LON1
     hostname: web-01.example.com
     state: stopped
 
 - name: Gracefully reboot an instance (ACPI signal, equivalent to OS reboot)
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     region: LON1
     hostname: web-01.example.com
     state: rebooted
     wait: true
 
 - name: Hard-reboot an instance (power cycle — use when soft reboot hangs)
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     region: LON1
     hostname: web-01.example.com
     state: hard_rebooted
     wait: true
 
 - name: Delete an instance
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     region: LON1
     hostname: web-01.example.com
     state: absent

@@ -20,13 +20,13 @@ Network, firewall and instance
 
      tasks:
        - name: Create a private network
-         civo.cloud.civo_network:
+         civo.cloud.network:
            name: prod-network
            region: LON1
            state: present
 
        - name: Create a firewall with SSH + HTTPS rules
-         civo.cloud.civo_firewall:
+         civo.cloud.firewall:
            name: prod-fw
            region: LON1
            network: prod-network
@@ -46,7 +46,7 @@ Network, firewall and instance
            state: present
 
        - name: Launch an instance
-         civo.cloud.civo_instance:
+         civo.cloud.instance:
            hostname: web-01
            region: LON1
            size: g4s.small
@@ -68,7 +68,7 @@ Kubernetes cluster
 .. code-block:: yaml
 
    - name: Create a Kubernetes cluster
-     civo.cloud.civo_kubernetes:
+     civo.cloud.kubernetes:
        name: my-cluster
        region: LON1
        node_size: g4s.kube.medium
@@ -86,7 +86,7 @@ Kubernetes cluster
        mode: "0600"
 
    - name: Scale a node pool
-     civo.cloud.civo_kubernetes_pool:
+     civo.cloud.kubernetes_pool:
        cluster: my-cluster
        region: LON1
        pool_id: "{{ pool_id }}"
@@ -94,7 +94,7 @@ Kubernetes cluster
        state: present
 
    - name: Recycle a node
-     civo.cloud.civo_kubernetes_node:
+     civo.cloud.kubernetes_node:
        cluster: my-cluster
        region: LON1
        node: "{{ node_hostname }}"
@@ -106,7 +106,7 @@ Volume — create, resize and attach
 .. code-block:: yaml
 
    - name: Create a data volume
-     civo.cloud.civo_volume:
+     civo.cloud.volume:
        name: data-vol
        region: LON1
        size_gb: 50
@@ -114,14 +114,14 @@ Volume — create, resize and attach
        state: present
 
    - name: Resize the volume
-     civo.cloud.civo_volume:
+     civo.cloud.volume:
        name: data-vol
        region: LON1
        size_gb: 100
        state: present
 
    - name: Attach volume to an instance
-     civo.cloud.civo_volume:
+     civo.cloud.volume:
        name: data-vol
        region: LON1
        instance: web-01
@@ -133,14 +133,14 @@ Reserved IP
 .. code-block:: yaml
 
    - name: Reserve a public IP
-     civo.cloud.civo_reserved_ip:
+     civo.cloud.reserved_ip:
        name: web-ip
        region: LON1
        state: present
      register: rip
 
    - name: Assign it to an instance
-     civo.cloud.civo_reserved_ip:
+     civo.cloud.reserved_ip:
        name: web-ip
        region: LON1
        instance: web-01
@@ -152,7 +152,7 @@ Managed database
 .. code-block:: yaml
 
    - name: Create a PostgreSQL database
-     civo.cloud.civo_database:
+     civo.cloud.database:
        name: myapp-db
        region: LON1
        engine: postgresql
@@ -170,7 +170,7 @@ Object store
 .. code-block:: yaml
 
    - name: Create an S3-compatible object store
-     civo.cloud.civo_objectstore:
+     civo.cloud.objectstore:
        name: my-bucket
        region: LON1
        max_size_gb: 500
@@ -190,7 +190,7 @@ deployed.  The Civo CLI does not expose a ``create`` command for them, so
 .. code-block:: yaml
 
    - name: Look up a load balancer
-     civo.cloud.civo_loadbalancer_info:
+     civo.cloud.loadbalancer_info:
        region: LON1
      register: lbs
 

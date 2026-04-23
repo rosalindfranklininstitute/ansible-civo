@@ -7,7 +7,7 @@
 # CREATE
 # =========================================================================
 - name: "[snapshot] Create snapshot"
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: "{{ test_prefix }}-snap"
     instance: "{{ test_prefix }}-vm"
     description: "Integration test snapshot"
@@ -31,7 +31,7 @@
 # IDEMPOTENCY
 # =========================================================================
 - name: "[snapshot] Create idempotency (snapshot already exists)"
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: "{{ test_prefix }}-snap"
     instance: "{{ test_prefix }}-vm"
     region: "{{ region }}"
@@ -50,7 +50,7 @@
 # INFO
 # =========================================================================
 - name: "[snapshot] List all snapshots for test instance"
-  civo.cloud.civo_snapshot_info:
+  civo.cloud.snapshot_info:
     instance: "{{ test_prefix }}-vm"
     region: "{{ region }}"
   register: snap_list
@@ -64,7 +64,7 @@
   tags: [snapshot]
 
 - name: "[snapshot] Filter info by name"
-  civo.cloud.civo_snapshot_info:
+  civo.cloud.snapshot_info:
     instance: "{{ test_prefix }}-vm"
     name: "{{ test_prefix }}-snap"
     region: "{{ region }}"
@@ -83,7 +83,7 @@
 # RESTORE
 # =========================================================================
 - name: "[snapshot] Restore snapshot to new instance"
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: "{{ test_prefix }}-snap"
     instance: "{{ test_prefix }}-vm"
     hostname: "{{ test_prefix }}-vm-restored"
@@ -103,7 +103,7 @@
 # DELETE
 # =========================================================================
 - name: "[snapshot] Delete snapshot"
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: "{{ test_prefix }}-snap"
     instance: "{{ test_prefix }}-vm"
     region: "{{ region }}"
@@ -119,7 +119,7 @@
   tags: [snapshot]
 
 - name: "[snapshot] Delete idempotency (already absent)"
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: "{{ test_prefix }}-snap"
     instance: "{{ test_prefix }}-vm"
     region: "{{ region }}"

@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_volume
+module: volume
 short_description: Manage Civo block storage volumes
 description:
   - Create, resize, attach, detach, or delete Civo persistent volumes.
@@ -64,37 +64,37 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_instance
+  - module: civo.cloud.instance
 """
 
 EXAMPLES = r"""
 - name: Create a 50 GB volume
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     region: LON1
     name: data-vol
     size_gb: 50
 
 - name: Attach volume to an instance
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     region: LON1
     name: data-vol
     instance: web-01.example.com
     state: attached
 
 - name: Resize volume to 100 GB
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     region: LON1
     name: data-vol
     size_gb: 100
 
 - name: Detach volume
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     region: LON1
     name: data-vol
     state: detached
 
 - name: Delete a volume
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     region: LON1
     name: data-vol
     state: absent

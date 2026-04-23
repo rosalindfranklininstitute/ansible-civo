@@ -4,7 +4,7 @@
 # (volumes on custom networks stay "creating" due to a Civo bug).
 
 - name: "[instance] Create test instance"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     size: "{{ instance_size }}"
@@ -27,7 +27,7 @@
   tags: [instance]
 
 - name: "[instance] READ — info by hostname"
-  civo.cloud.civo_instance_info:
+  civo.cloud.instance_info:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
   register: inst_info
@@ -42,7 +42,7 @@
   tags: [instance]
 
 - name: "[instance] Idempotency"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     size: "{{ instance_size }}"
@@ -62,7 +62,7 @@
   tags: [instance]
 
 - name: "[instance] Stop instance"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     state: stopped
@@ -79,7 +79,7 @@
   tags: [instance]
 
 - name: "[instance] Stop idempotency (already stopped)"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     state: stopped
@@ -94,7 +94,7 @@
   tags: [instance]
 
 - name: "[instance] Start instance"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     state: started
@@ -112,7 +112,7 @@
   tags: [instance]
 
 - name: "[instance] Start idempotency (already active)"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     state: started
@@ -128,7 +128,7 @@
   tags: [instance]
 
 - name: "[instance] Graceful reboot (state=rebooted)"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     state: rebooted

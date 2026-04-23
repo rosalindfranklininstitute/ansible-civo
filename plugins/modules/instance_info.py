@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_instance_info
+module: instance_info
 short_description: Gather information about Civo compute instances
 description:
   - Returns details of one or all Civo compute instances in a region.
@@ -36,17 +36,17 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_instance
+  - module: civo.cloud.instance
 """
 
 EXAMPLES = r"""
 - name: Get all instances
-  civo.cloud.civo_instance_info:
+  civo.cloud.instance_info:
     region: LON1
   register: vms
 
 - name: Get a specific instance
-  civo.cloud.civo_instance_info:
+  civo.cloud.instance_info:
     region: LON1
     hostname: web-01.example.com
   register: vm

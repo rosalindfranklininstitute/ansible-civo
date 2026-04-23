@@ -8,7 +8,7 @@
 # region. Run `civo kubernetes versions` to get the current list and update
 # these values if the test fails with "version not found".
 - name: "[kubernetes_upgrade] Create cluster on older version for upgrade test"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s-upgrade"
     region: "{{ region }}"
     node_size: "{{ k8s_node_size }}"
@@ -32,7 +32,7 @@
   tags: [kubernetes, kubernetes_upgrade]
 
 - name: "[kubernetes_upgrade] Upgrade cluster to newer version"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s-upgrade"
     region: "{{ region }}"
     upgrade_version: "1.32.5-k3s1"
@@ -51,7 +51,7 @@
   tags: [kubernetes, kubernetes_upgrade]
 
 - name: "[kubernetes_upgrade] Idempotency — upgrade to same version again"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s-upgrade"
     region: "{{ region }}"
     upgrade_version: "1.32.5-k3s1"
@@ -68,7 +68,7 @@
   tags: [kubernetes, kubernetes_upgrade]
 
 - name: "[kubernetes_upgrade] Destroy upgrade test cluster"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s-upgrade"
     region: "{{ region }}"
     state: absent

@@ -6,10 +6,10 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_volume_info
-short_description: Gather information about Civo block storage volumes
+module: reserved_ip_info
+short_description: Gather information about Civo reserved IP addresses
 description:
-  - Returns details of one or all Civo volumes in a region.
+  - Returns details of one or all Civo reserved IPs in a region.
   - When I(name) is given, returns a single-item list (or empty list if not found).
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
@@ -18,8 +18,8 @@ author:
 options:
   name:
     description:
-      - Name of the volume to look up.
-      - When omitted, all volumes in the region are returned.
+      - Name/label of the reserved IP to look up.
+      - When omitted, all reserved IPs in the region are returned.
     type: str
   api_key:
     description:
@@ -35,47 +35,44 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_volume
+  - module: civo.cloud.reserved_ip
 """
 
 EXAMPLES = r"""
-- name: Get all volumes
-  civo.cloud.civo_volume_info:
+- name: Get all reserved IPs
+  civo.cloud.reserved_ip_info:
     region: LON1
-  register: vols
+  register: ips
 
-- name: Get a specific volume
-  civo.cloud.civo_volume_info:
+- name: Get a specific reserved IP
+  civo.cloud.reserved_ip_info:
     region: LON1
-    name: data-vol
-  register: vol
+    name: web-ip
+  register: ip
 
-- name: Print volume size
+- name: Print IP address
   ansible.builtin.debug:
-    msg: "{{ vol.volumes[0].size_gigabytes }}"
+    msg: "{{ ip.reserved_ips[0].address }}"
 """
 
 RETURN = r"""
-volumes:
-  description: List of volume dicts matching the query.
+reserved_ips:
+  description: List of reserved IP dicts matching the query.
   returned: always
   type: list
   elements: dict
   contains:
     id:
-      description: Volume UUID.
+      description: Reserved IP UUID.
       type: str
     name:
-      description: Volume name.
+      description: Label for the IP.
       type: str
-    size_gigabytes:
-      description: Volume size (e.g. C("10 GB")).
+    address:
+      description: The reserved IP address.
       type: str
-    status:
-      description: Volume status (C(available), C(creating), etc.).
-      type: str
-    network_id:
-      description: Network name or UUID the volume belongs to.
+    assigned_to:
+      description: Resource the IP is assigned to, or C(No resource).
       type: str
 """
 
@@ -106,13 +103,13 @@ def main():
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     if name:
-        result = find_resource_by_name(module, "volume", name, api_key, region, binary)
-        volumes = [result] if result else []
+        result = find_resource_by_name(module, "ip", name, api_key, region, binary)
+        reserved_ips = [result] if result else []
     else:
-        _rc, data, _stderr = run_civo_command(module, ["volume", "ls"], api_key, region, binary, check_rc=False)
-        volumes = data if isinstance(data, list) else []
+        _rc, data, _stderr = run_civo_command(module, ["ip", "ls"], api_key, region, binary, check_rc=False)
+        reserved_ips = data if isinstance(data, list) else []
 
-    module.exit_json(changed=False, volumes=volumes)
+    module.exit_json(changed=False, reserved_ips=reserved_ips)
 
 
 if __name__ == "__main__":

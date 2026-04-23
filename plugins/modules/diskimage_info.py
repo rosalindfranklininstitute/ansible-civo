@@ -6,13 +6,13 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_diskimage_info
+module: diskimage_info
 short_description: List available Civo disk images (VM templates)
 description:
   - Returns all disk images available in a Civo region, or filters to a
     single image by name or ID.
   - Disk image names are the values accepted by the C(diskimage) parameter
-    of M(civo.cloud.civo_instance) (e.g. C(debian-11), C(ubuntu-jammy)).
+    of M(civo.cloud.instance) (e.g. C(debian-11), C(ubuntu-jammy)).
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
@@ -42,12 +42,12 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_instance
+  - module: civo.cloud.instance
 """
 
 EXAMPLES = r"""
 - name: List all available disk images
-  civo.cloud.civo_diskimage_info:
+  civo.cloud.diskimage_info:
     region: LON1
   register: images
 
@@ -56,19 +56,19 @@ EXAMPLES = r"""
     msg: "{{ images.diskimages | map(attribute='name') | list }}"
 
 - name: Look up a specific image by name
-  civo.cloud.civo_diskimage_info:
+  civo.cloud.diskimage_info:
     region: LON1
     name: debian-11
   register: debian11
 
 - name: List only Ubuntu images
-  civo.cloud.civo_diskimage_info:
+  civo.cloud.diskimage_info:
     region: LON1
     distribution: ubuntu
   register: ubuntu_images
 
 - name: Use the image ID when creating an instance
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     region: LON1
     hostname: web-01
     diskimage: "{{ debian11.diskimages[0].name }}"

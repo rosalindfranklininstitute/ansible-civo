@@ -6,10 +6,10 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_reserved_ip_info
-short_description: Gather information about Civo reserved IP addresses
+module: objectstore_info
+short_description: Gather information about Civo object stores
 description:
-  - Returns details of one or all Civo reserved IPs in a region.
+  - Returns details of one or all Civo object stores in a region.
   - When I(name) is given, returns a single-item list (or empty list if not found).
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
@@ -18,8 +18,8 @@ author:
 options:
   name:
     description:
-      - Name/label of the reserved IP to look up.
-      - When omitted, all reserved IPs in the region are returned.
+      - Name of the object store to look up.
+      - When omitted, all object stores in the region are returned.
     type: str
   api_key:
     description:
@@ -35,44 +35,47 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_reserved_ip
+  - module: civo.cloud.objectstore
 """
 
 EXAMPLES = r"""
-- name: Get all reserved IPs
-  civo.cloud.civo_reserved_ip_info:
+- name: Get all object stores
+  civo.cloud.objectstore_info:
     region: LON1
-  register: ips
+  register: stores
 
-- name: Get a specific reserved IP
-  civo.cloud.civo_reserved_ip_info:
+- name: Get a specific object store
+  civo.cloud.objectstore_info:
     region: LON1
-    name: web-ip
-  register: ip
+    name: my-bucket
+  register: store
 
-- name: Print IP address
+- name: Print endpoint
   ansible.builtin.debug:
-    msg: "{{ ip.reserved_ips[0].address }}"
+    msg: "{{ store.objectstores[0].objectstore_endpoint }}"
 """
 
 RETURN = r"""
-reserved_ips:
-  description: List of reserved IP dicts matching the query.
+objectstores:
+  description: List of object store dicts matching the query.
   returned: always
   type: list
   elements: dict
   contains:
     id:
-      description: Reserved IP UUID.
+      description: Object store UUID (may be truncated in CLI output).
       type: str
     name:
-      description: Label for the IP.
+      description: Object store name.
       type: str
-    address:
-      description: The reserved IP address.
+    status:
+      description: Object store status.
       type: str
-    assigned_to:
-      description: Resource the IP is assigned to, or C(No resource).
+    max_size:
+      description: Maximum size quota in GB.
+      type: str
+    objectstore_endpoint:
+      description: S3-compatible endpoint hostname.
       type: str
 """
 
@@ -103,13 +106,13 @@ def main():
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     if name:
-        result = find_resource_by_name(module, "ip", name, api_key, region, binary)
-        reserved_ips = [result] if result else []
+        result = find_resource_by_name(module, "objectstore", name, api_key, region, binary)
+        objectstores = [result] if result else []
     else:
-        _rc, data, _stderr = run_civo_command(module, ["ip", "ls"], api_key, region, binary, check_rc=False)
-        reserved_ips = data if isinstance(data, list) else []
+        _rc, data, _stderr = run_civo_command(module, ["objectstore", "ls"], api_key, region, binary, check_rc=False)
+        objectstores = data if isinstance(data, list) else []
 
-    module.exit_json(changed=False, reserved_ips=reserved_ips)
+    module.exit_json(changed=False, objectstores=objectstores)
 
 
 if __name__ == "__main__":

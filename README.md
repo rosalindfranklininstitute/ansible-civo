@@ -27,7 +27,7 @@ export CIVO_TOKEN="your-api-token"
 
 ```yaml
 - name: Create a network
-  civo.cloud.civo_network:
+  civo.cloud.network:
     name: prod-network
     region: LON1
     state: present

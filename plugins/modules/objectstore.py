@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_objectstore
+module: objectstore
 short_description: Manage Civo S3-compatible object stores
 description:
   - Create or delete Civo object store buckets.
@@ -74,12 +74,12 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_network
+  - module: civo.cloud.network
 """
 
 EXAMPLES = r"""
 - name: Create an object store with a 500 GB limit
-  civo.cloud.civo_objectstore:
+  civo.cloud.objectstore:
     region: LON1
     name: my-bucket
     max_size_gb: 500
@@ -91,7 +91,7 @@ EXAMPLES = r"""
     msg: "Endpoint: {{ bucket.objectstore.endpoint }}"
 
 - name: Delete an object store and its auto-created credential
-  civo.cloud.civo_objectstore:
+  civo.cloud.objectstore:
     region: LON1
     name: my-bucket
     state: absent

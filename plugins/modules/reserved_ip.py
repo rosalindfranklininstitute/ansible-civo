@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_reserved_ip
+module: reserved_ip
 short_description: Manage Civo reserved (static) public IP addresses
 description:
   - Reserve, assign, reassign, or release Civo public IP addresses.
@@ -48,32 +48,32 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_instance
+  - module: civo.cloud.instance
 """
 
 EXAMPLES = r"""
 - name: Reserve a public IP
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     region: LON1
     name: web-ip
     state: present
   register: rip
 
 - name: Assign the reserved IP to an instance
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     region: LON1
     name: web-ip
     instance: web-01.example.com
     state: assigned
 
 - name: Unassign the reserved IP
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     region: LON1
     name: web-ip
     state: unassigned
 
 - name: Release a reserved IP
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     region: LON1
     name: web-ip
     state: absent

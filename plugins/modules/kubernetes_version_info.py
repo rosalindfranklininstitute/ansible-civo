@@ -6,14 +6,14 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_kubernetes_version_info
+module: kubernetes_version_info
 short_description: List available Civo Kubernetes versions
 description:
   - Returns all Kubernetes versions available for new clusters in a Civo
     region, including maturity level and whether each is the default.
   - Version strings returned by this module are the values accepted by the
     C(version) and C(upgrade_version) parameters of
-    M(civo.cloud.civo_kubernetes).
+    M(civo.cloud.kubernetes).
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
@@ -39,12 +39,12 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_kubernetes
+  - module: civo.cloud.kubernetes
 """
 
 EXAMPLES = r"""
 - name: List all available Kubernetes versions
-  civo.cloud.civo_kubernetes_version_info:
+  civo.cloud.kubernetes_version_info:
     region: LON1
   register: k8s_versions
 
@@ -53,7 +53,7 @@ EXAMPLES = r"""
     msg: "{{ k8s_versions.kubernetes_versions | map(attribute='version') | list }}"
 
 - name: Get only stable versions
-  civo.cloud.civo_kubernetes_version_info:
+  civo.cloud.kubernetes_version_info:
     region: LON1
     maturity: stable
   register: stable_versions
@@ -66,7 +66,7 @@ EXAMPLES = r"""
          | map(attribute='version') | first }}
 
 - name: Create cluster on latest stable version
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     region: LON1
     name: my-cluster
     version: "{{ stable_versions.kubernetes_versions[0].version }}"
@@ -84,7 +84,7 @@ kubernetes_versions:
     version:
       description: >-
         Full version string.  Use this value for the C(version) or
-        C(upgrade_version) parameters of M(civo.cloud.civo_kubernetes).
+        C(upgrade_version) parameters of M(civo.cloud.kubernetes).
       type: str
       sample: "1.32.5-k3s1"
     label:

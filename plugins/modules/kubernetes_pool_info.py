@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_kubernetes_pool_info
+module: kubernetes_pool_info
 short_description: Query node pools in a Civo Kubernetes cluster
 description:
   - Returns information about node pools in an existing Civo Kubernetes
@@ -44,20 +44,20 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_kubernetes_pool
-  - module: civo.cloud.civo_kubernetes_node
-  - module: civo.cloud.civo_kubernetes_info
+  - module: civo.cloud.kubernetes_pool
+  - module: civo.cloud.kubernetes_node
+  - module: civo.cloud.kubernetes_info
 """
 
 EXAMPLES = r"""
 - name: List all pools in a cluster
-  civo.cloud.civo_kubernetes_pool_info:
+  civo.cloud.kubernetes_pool_info:
     region: LON1
     cluster: my-cluster
   register: pools
 
 - name: List pools and include node instance details
-  civo.cloud.civo_kubernetes_pool_info:
+  civo.cloud.kubernetes_pool_info:
     region: LON1
     cluster: my-cluster
     instances: true

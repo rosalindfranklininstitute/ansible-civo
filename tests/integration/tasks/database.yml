@@ -2,7 +2,7 @@
 # Database integration tests: create / read / idempotency / destroy
 
 - name: "[database] Create test database"
-  civo.cloud.civo_database:
+  civo.cloud.database:
     name: "{{ test_prefix }}-db"
     region: "{{ region }}"
     size: "{{ db_size }}"
@@ -25,7 +25,7 @@
   tags: [database]
 
 - name: "[database] READ — info by name"
-  civo.cloud.civo_database_info:
+  civo.cloud.database_info:
     name: "{{ test_prefix }}-db"
     region: "{{ region }}"
   register: db_info
@@ -40,7 +40,7 @@
   tags: [database]
 
 - name: "[database] Idempotency"
-  civo.cloud.civo_database:
+  civo.cloud.database:
     name: "{{ test_prefix }}-db"
     region: "{{ region }}"
     size: "{{ db_size }}"

@@ -6,7 +6,7 @@ galaxy_info:
     Dispatcher role for the civo.cloud collection — manages Civo cloud
     resources (instances, Kubernetes, networks, firewalls, volumes, load
     balancers, reserved IPs, databases, and object stores) via the
-    civo.cloud.civo_* modules.
+    civo.cloud.* modules.
   company: The Rosalind Franklin Institute
   license: GPL-3.0-or-later
   min_ansible_version: "2.15"

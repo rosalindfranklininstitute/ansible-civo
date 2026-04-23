@@ -49,7 +49,7 @@ Authentication is resolved in the following priority order:
    .. code-block:: yaml
 
       - name: Create a network
-        civo.cloud.civo_network:
+        civo.cloud.network:
           api_key: "{{ vault_civo_token }}"
           name: my-network
           region: LON1

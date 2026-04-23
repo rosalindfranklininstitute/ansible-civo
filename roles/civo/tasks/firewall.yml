@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo firewall
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     name: "{{ civo_name }}"

@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_size_info
+module: size_info
 short_description: List available Civo instance / Kubernetes / database sizes
 description:
   - Returns all sizes (plan types) available in a Civo region.
@@ -38,19 +38,19 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_instance
-  - module: civo.cloud.civo_kubernetes
-  - module: civo.cloud.civo_database
+  - module: civo.cloud.instance
+  - module: civo.cloud.kubernetes
+  - module: civo.cloud.database
 """
 
 EXAMPLES = r"""
 - name: List all sizes
-  civo.cloud.civo_size_info:
+  civo.cloud.size_info:
     region: LON1
   register: all_sizes
 
 - name: List only instance sizes
-  civo.cloud.civo_size_info:
+  civo.cloud.size_info:
     region: LON1
     resource_type: instance
   register: instance_sizes
@@ -60,13 +60,13 @@ EXAMPLES = r"""
     msg: "{{ instance_sizes.sizes | map(attribute='name') | list }}"
 
 - name: List only Kubernetes node sizes
-  civo.cloud.civo_size_info:
+  civo.cloud.size_info:
     region: LON1
     resource_type: kubernetes
   register: k8s_sizes
 
 - name: List database sizes
-  civo.cloud.civo_size_info:
+  civo.cloud.size_info:
     region: LON1
     resource_type: database
   register: db_sizes

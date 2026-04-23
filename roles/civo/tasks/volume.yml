@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo volume
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     name: "{{ civo_name }}"

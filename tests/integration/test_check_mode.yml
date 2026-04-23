@@ -30,13 +30,13 @@
     # Pre-flight: confirm none of the probe resources exist
     # =========================================================================
     - name: "[preflight] Confirm probe network does not exist"
-      civo.cloud.civo_network_info:
+      civo.cloud.network_info:
         name: "{{ probe_prefix }}-network"
         region: "{{ region }}"
       register: pf_net
 
     - name: "[preflight] Confirm probe instance does not exist"
-      civo.cloud.civo_instance_info:
+      civo.cloud.instance_info:
         hostname: "{{ probe_prefix }}-vm"
         region: "{{ region }}"
       register: pf_inst
@@ -55,7 +55,7 @@
     # civo_network
     # =========================================================================
     - name: "[network] Check-mode create"
-      civo.cloud.civo_network:
+      civo.cloud.network:
         name: "{{ probe_prefix }}-network"
         region: "{{ region }}"
         state: present
@@ -69,7 +69,7 @@
         fail_msg: "Expected changed=True in check mode for network create: {{ cm_net_create }}"
 
     - name: "[network] Check-mode absent on nonexistent"
-      civo.cloud.civo_network:
+      civo.cloud.network:
         name: "{{ probe_prefix }}-network"
         region: "{{ region }}"
         state: absent
@@ -83,7 +83,7 @@
         fail_msg: "Expected changed=False for absent nonexistent network: {{ cm_net_absent }}"
 
     - name: "[network] Confirm no network was created"
-      civo.cloud.civo_network_info:
+      civo.cloud.network_info:
         name: "{{ probe_prefix }}-network"
         region: "{{ region }}"
       register: post_net
@@ -98,7 +98,7 @@
     # civo_firewall
     # =========================================================================
     - name: "[firewall] Check-mode create"
-      civo.cloud.civo_firewall:
+      civo.cloud.firewall:
         name: "{{ probe_prefix }}-fw"
         region: "{{ region }}"
         network: default
@@ -120,7 +120,7 @@
         fail_msg: "Expected changed=True in check mode for firewall create: {{ cm_fw_create }}"
 
     - name: "[firewall] Check-mode absent on nonexistent"
-      civo.cloud.civo_firewall:
+      civo.cloud.firewall:
         name: "{{ probe_prefix }}-fw"
         region: "{{ region }}"
         state: absent
@@ -137,7 +137,7 @@
     # civo_reserved_ip
     # =========================================================================
     - name: "[reserved_ip] Check-mode create"
-      civo.cloud.civo_reserved_ip:
+      civo.cloud.reserved_ip:
         name: "{{ probe_prefix }}-ip"
         region: "{{ region }}"
         state: present
@@ -151,7 +151,7 @@
         fail_msg: "Expected changed=True in check mode for reserved_ip create: {{ cm_rip_create }}"
 
     - name: "[reserved_ip] Check-mode absent on nonexistent"
-      civo.cloud.civo_reserved_ip:
+      civo.cloud.reserved_ip:
         name: "{{ probe_prefix }}-ip"
         region: "{{ region }}"
         state: absent
@@ -168,7 +168,7 @@
     # civo_volume
     # =========================================================================
     - name: "[volume] Check-mode create"
-      civo.cloud.civo_volume:
+      civo.cloud.volume:
         name: "{{ probe_prefix }}-vol"
         region: "{{ region }}"
         size_gb: 5
@@ -184,7 +184,7 @@
         fail_msg: "Expected changed=True in check mode for volume create: {{ cm_vol_create }}"
 
     - name: "[volume] Check-mode absent on nonexistent"
-      civo.cloud.civo_volume:
+      civo.cloud.volume:
         name: "{{ probe_prefix }}-vol"
         region: "{{ region }}"
         state: absent
@@ -201,7 +201,7 @@
     # civo_instance
     # =========================================================================
     - name: "[instance] Check-mode create"
-      civo.cloud.civo_instance:
+      civo.cloud.instance:
         hostname: "{{ probe_prefix }}-vm"
         region: "{{ region }}"
         size: g4s.xsmall
@@ -217,7 +217,7 @@
         fail_msg: "Expected changed=True in check mode for instance create: {{ cm_inst_create }}"
 
     - name: "[instance] Check-mode absent on nonexistent"
-      civo.cloud.civo_instance:
+      civo.cloud.instance:
         hostname: "{{ probe_prefix }}-vm"
         region: "{{ region }}"
         state: absent
@@ -231,7 +231,7 @@
         fail_msg: "Expected changed=False for absent nonexistent instance: {{ cm_inst_absent }}"
 
     - name: "[instance] Confirm no instance was created"
-      civo.cloud.civo_instance_info:
+      civo.cloud.instance_info:
         hostname: "{{ probe_prefix }}-vm"
         region: "{{ region }}"
       register: post_inst
@@ -246,7 +246,7 @@
     # civo_objectstore
     # =========================================================================
     - name: "[objectstore] Check-mode create"
-      civo.cloud.civo_objectstore:
+      civo.cloud.objectstore:
         name: "{{ probe_prefix }}-bucket"
         region: "{{ region }}"
         max_size_gb: 500
@@ -261,7 +261,7 @@
         fail_msg: "Expected changed=True in check mode for objectstore create: {{ cm_obs_create }}"
 
     - name: "[objectstore] Check-mode absent on nonexistent"
-      civo.cloud.civo_objectstore:
+      civo.cloud.objectstore:
         name: "{{ probe_prefix }}-bucket"
         region: "{{ region }}"
         state: absent
@@ -278,7 +278,7 @@
     # civo_database
     # =========================================================================
     - name: "[database] Check-mode create"
-      civo.cloud.civo_database:
+      civo.cloud.database:
         name: "{{ probe_prefix }}-db"
         region: "{{ region }}"
         size: g3.db.small
@@ -295,7 +295,7 @@
         fail_msg: "Expected changed=True in check mode for database create: {{ cm_db_create }}"
 
     - name: "[database] Check-mode absent on nonexistent"
-      civo.cloud.civo_database:
+      civo.cloud.database:
         name: "{{ probe_prefix }}-db"
         region: "{{ region }}"
         state: absent
@@ -312,7 +312,7 @@
     # civo_kubernetes
     # =========================================================================
     - name: "[kubernetes] Check-mode create"
-      civo.cloud.civo_kubernetes:
+      civo.cloud.kubernetes:
         name: "{{ probe_prefix }}-k8s"
         region: "{{ region }}"
         node_size: g4s.kube.xsmall
@@ -330,7 +330,7 @@
         fail_msg: "Expected changed=True in check mode for kubernetes create: {{ cm_k8s_create }}"
 
     - name: "[kubernetes] Check-mode absent on nonexistent"
-      civo.cloud.civo_kubernetes:
+      civo.cloud.kubernetes:
         name: "{{ probe_prefix }}-k8s"
         region: "{{ region }}"
         state: absent
@@ -352,7 +352,7 @@
         creates: /tmp/ansible_check_mode_key
 
     - name: "[sshkey] Check-mode upload"
-      civo.cloud.civo_sshkey:
+      civo.cloud.sshkey:
         name: "{{ probe_prefix }}-sshkey"
         region: "{{ region }}"
         public_key_file: /tmp/ansible_check_mode_key.pub
@@ -367,7 +367,7 @@
         fail_msg: "Expected changed=True in check mode for sshkey upload: {{ cm_sshkey_create }}"
 
     - name: "[sshkey] Check-mode absent on nonexistent"
-      civo.cloud.civo_sshkey:
+      civo.cloud.sshkey:
         name: "{{ probe_prefix }}-sshkey"
         region: "{{ region }}"
         state: absent

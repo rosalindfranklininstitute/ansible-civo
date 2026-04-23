@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_database
+module: database
 short_description: Manage Civo managed databases
 description:
   - Create or delete Civo managed database clusters (MySQL or PostgreSQL).
@@ -79,13 +79,13 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_network
-  - module: civo.cloud.civo_firewall
+  - module: civo.cloud.network
+  - module: civo.cloud.firewall
 """
 
 EXAMPLES = r"""
 - name: Create a PostgreSQL database
-  civo.cloud.civo_database:
+  civo.cloud.database:
     region: LON1
     name: myapp-db
     engine: postgresql
@@ -101,7 +101,7 @@ EXAMPLES = r"""
     msg: "DB endpoint: {{ db.database.endpoint }}"
 
 - name: Delete a database
-  civo.cloud.civo_database:
+  civo.cloud.database:
     region: LON1
     name: myapp-db
     state: absent

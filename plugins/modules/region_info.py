@@ -6,77 +6,75 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_sshkey_info
-short_description: List SSH keys stored in a Civo account
+module: region_info
+short_description: List available Civo regions
 description:
-  - Returns all SSH keys registered with a Civo account, or filters to a
-    single key by name.
+  - Returns all regions available in a Civo account.
+  - The C(code) field of each region is the value accepted by the C(region)
+    parameter of all other C(civo.cloud) modules.
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
   - The Rosalind Franklin Institute (@rosalindfranklininstitute)
 options:
-  name:
-    description: >-
-      Name of a specific SSH key to return (exact match).
-      When omitted, all keys are returned.
-    type: str
   api_key:
     description:
       - Civo API token.
       - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
-    description: Civo region identifier.
+    description: >-
+      Civo region identifier used to authenticate the CLI call.
+      The result always contains all regions regardless of this value.
     type: str
     default: LON1
   civo_binary:
     description: Path to the C(civo) CLI binary.
     type: str
     default: civo
-seealso:
-  - module: civo.cloud.civo_sshkey
 """
 
 EXAMPLES = r"""
-- name: List all SSH keys
-  civo.cloud.civo_sshkey_info:
-  register: keys
+- name: List all Civo regions
+  civo.cloud.region_info:
+  register: regions
 
-- name: Show key names
+- name: Show region codes
   ansible.builtin.debug:
-    msg: "{{ keys.sshkeys | map(attribute='name') | list }}"
+    msg: "{{ regions.regions | map(attribute='code') | list }}"
 
-- name: Look up a specific key by name
-  civo.cloud.civo_sshkey_info:
-    name: my-laptop-key
-  register: my_key
-
-- name: Assert the key exists
-  ansible.builtin.assert:
-    that:
-      - my_key.sshkeys | length == 1
+- name: Find the current (default) region
+  ansible.builtin.debug:
+    msg: "{{ regions.regions | selectattr('current', 'equalto', 'Yes') | map(attribute='code') | list }}"
 """
 
 RETURN = r"""
-sshkeys:
-  description: List of SSH key dicts matching the query.
+regions:
+  description: List of all available Civo regions.
   returned: always
   type: list
   elements: dict
   contains:
-    id:
-      description: SSH key UUID.
+    code:
+      description: >-
+        Region code — use this as the C(region) parameter in other modules
+        (e.g. C(LON1), C(NYC1)).
       type: str
-      sample: "a1b2c3d4-0000-0000-0000-000000000000"
+      sample: "lon1"
     name:
-      description: SSH key label.
+      description: Human-readable region name.
       type: str
-      sample: "my-laptop-key"
-    fingerprint:
-      description: MD5 fingerprint of the public key.
+      sample: "lon1"
+    country:
+      description: Country where the region is located.
       type: str
-      sample: "12:34:56:78:90:ab:cd:ef:12:34:56:78:90:ab:cd:ef"
+      sample: "United Kingdom"
+    current:
+      description: >-
+        Whether this is the currently configured default region
+        (C("Yes") or C("No")).
+      type: str
+      sample: "Yes"
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -90,11 +88,9 @@ from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
 def main():
     spec = common_argument_spec()
     del spec["state"]
-    spec.update(name={"type": "str"})
 
     module = AnsibleModule(argument_spec=spec, supports_check_mode=True)
 
-    name = module.params.get("name") or ""
     api_key = module.params["api_key"]
     region = module.params["region"]
     binary = module.params["civo_binary"]
@@ -102,13 +98,10 @@ def main():
     if not api_key:
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
-    _rc, data, _stderr = run_civo_command(module, ["sshkey", "ls"], api_key, region, binary, check_rc=False)
-    keys = data if isinstance(data, list) else []
+    _rc, data, _stderr = run_civo_command(module, ["region", "ls"], api_key, region, binary, check_rc=False)
+    regions = data if isinstance(data, list) else []
 
-    if name:
-        keys = [k for k in keys if k.get("name") == name]
-
-    module.exit_json(changed=False, sshkeys=keys)
+    module.exit_json(changed=False, regions=regions)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 # Tags are not applied here so cleanup always runs regardless of --tags.
 
 - name: "[snapshot] Delete test snapshot"
-  civo.cloud.civo_snapshot:
+  civo.cloud.snapshot:
     name: "{{ test_prefix }}-snap"
     instance: "{{ test_prefix }}-vm"
     region: "{{ region }}"
@@ -12,14 +12,14 @@
   failed_when: false
 
 - name: "[snapshot] Destroy restored instance (if created)"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm-restored"
     region: "{{ region }}"
     state: absent
   failed_when: false
 
 - name: "[kubernetes] Destroy cluster"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     state: absent
@@ -27,7 +27,7 @@
   ignore_errors: true
 
 - name: "[database] Destroy database"
-  civo.cloud.civo_database:
+  civo.cloud.database:
     name: "{{ test_prefix }}-db"
     region: "{{ region }}"
     state: absent
@@ -35,7 +35,7 @@
   ignore_errors: true
 
 - name: "[objectstore] Destroy object store and purge its credential"
-  civo.cloud.civo_objectstore:
+  civo.cloud.objectstore:
     name: "{{ test_prefix }}-bucket"
     region: "{{ region }}"
     state: absent
@@ -44,7 +44,7 @@
   ignore_errors: true
 
 - name: "[volume] Detach volume"
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
     state: detached
@@ -52,7 +52,7 @@
   ignore_errors: true
 
 - name: "[reserved_ip] Unassign reserved IP"
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     name: "{{ test_prefix }}-ip"
     region: "{{ region }}"
     state: unassigned
@@ -60,7 +60,7 @@
   ignore_errors: true
 
 - name: "[instance] Destroy instance"
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     state: absent
@@ -68,7 +68,7 @@
   ignore_errors: true
 
 - name: "[volume] Destroy volume"
-  civo.cloud.civo_volume:
+  civo.cloud.volume:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
     state: absent
@@ -76,7 +76,7 @@
   ignore_errors: true
 
 - name: "[reserved_ip] Release reserved IP"
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     name: "{{ test_prefix }}-ip"
     region: "{{ region }}"
     state: absent
@@ -84,7 +84,7 @@
   ignore_errors: true
 
 - name: "[firewall] Destroy firewall"
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
     state: absent
@@ -92,7 +92,7 @@
   ignore_errors: true
 
 - name: "[network] Destroy network"
-  civo.cloud.civo_network:
+  civo.cloud.network:
     name: "{{ test_prefix }}-network"
     region: "{{ region }}"
     state: absent
@@ -100,7 +100,7 @@
   ignore_errors: true
 
 - name: "[network] Destroy cidr network (if left from failed run)"
-  civo.cloud.civo_network:
+  civo.cloud.network:
     name: "{{ test_prefix }}-network-cidr"
     region: "{{ region }}"
     state: absent
@@ -108,7 +108,7 @@
   ignore_errors: true
 
 - name: "[sshkey] Delete test SSH key (original name)"
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     name: "{{ test_prefix }}-sshkey"
     region: "{{ region }}"
     state: absent
@@ -116,7 +116,7 @@
   ignore_errors: true
 
 - name: "[sshkey] Delete test SSH key (renamed)"
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     name: "{{ test_prefix }}-sshkey-renamed"
     region: "{{ region }}"
     state: absent
@@ -127,7 +127,7 @@
 # Post-destroy verification
 # -------------------------------------------------------------------------
 - name: "[cleanup] Verify no test networks remain"
-  civo.cloud.civo_network_info:
+  civo.cloud.network_info:
     region: "{{ region }}"
   register: sweep_nets
 
@@ -144,7 +144,7 @@
   failed_when: false
 
 - name: "[cleanup] Verify no test instances remain"
-  civo.cloud.civo_instance_info:
+  civo.cloud.instance_info:
     region: "{{ region }}"
   register: sweep_insts
 

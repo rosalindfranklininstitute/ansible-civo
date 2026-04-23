@@ -2,7 +2,7 @@
 # Kubernetes core integration tests: create / read / idempotency / scale
 
 - name: "[kubernetes] Create test cluster"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     node_size: "{{ k8s_node_size }}"
@@ -25,7 +25,7 @@
   tags: [kubernetes]
 
 - name: "[kubernetes] READ — info by name with kubeconfig"
-  civo.cloud.civo_kubernetes_info:
+  civo.cloud.kubernetes_info:
     name: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     kubeconfig: true
@@ -42,7 +42,7 @@
   tags: [kubernetes]
 
 - name: "[kubernetes] Idempotency"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     node_size: "{{ k8s_node_size }}"
@@ -65,7 +65,7 @@
 # Scale node pool
 # -----------------------------------------------------------------------
 - name: "[kubernetes] Scale cluster to 2 nodes"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     node_size: "{{ k8s_node_size }}"
@@ -86,7 +86,7 @@
   tags: [kubernetes, kubernetes_scale]
 
 - name: "[kubernetes] Scale idempotency (same node count)"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     node_size: "{{ k8s_node_size }}"
@@ -106,7 +106,7 @@
 
 # Scale back to 1 to minimise cost
 - name: "[kubernetes] Scale cluster back to 1 node"
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     name: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     node_size: "{{ k8s_node_size }}"

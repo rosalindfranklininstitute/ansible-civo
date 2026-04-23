@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo load balancer
-  civo.cloud.civo_loadbalancer:
+  civo.cloud.loadbalancer:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     name: "{{ civo_name }}"

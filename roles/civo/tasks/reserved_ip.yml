@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo reserved IP
-  civo.cloud.civo_reserved_ip:
+  civo.cloud.reserved_ip:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     name: "{{ civo_name }}"

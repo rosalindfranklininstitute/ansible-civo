@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo Kubernetes cluster
-  civo.cloud.civo_kubernetes:
+  civo.cloud.kubernetes:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     name: "{{ civo_name }}"

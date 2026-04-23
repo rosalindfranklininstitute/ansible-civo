@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_sshkey
+module: sshkey
 short_description: Manage Civo SSH keys
 description:
   - Upload, rename, or remove SSH public keys stored in a Civo account.
@@ -55,34 +55,34 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_sshkey_info
-  - module: civo.cloud.civo_instance
+  - module: civo.cloud.sshkey_info
+  - module: civo.cloud.instance
 """
 
 EXAMPLES = r"""
 - name: Upload an SSH public key
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     name: my-laptop-key
     public_key_file: ~/.ssh/id_ed25519.pub
 
 - name: Remove an SSH key
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     name: my-laptop-key
     state: absent
 
 - name: Rename an existing SSH key
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     name: my-laptop-key
     new_name: laptop-ed25519
     state: present
 
 - name: Upload key and use it when creating an instance
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     name: deploy-key
     public_key_file: /home/ci/.ssh/id_rsa.pub
 
 - name: Create instance using the uploaded key
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     hostname: web-01
     size: g3.xsmall
     diskimage: debian-11

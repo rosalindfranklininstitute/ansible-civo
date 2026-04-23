@@ -8,7 +8,7 @@
 # Get pool info so we know the pool ID and a node hostname to work with
 # -------------------------------------------------------------------------
 - name: "[kubernetes_node] List pools with instance details"
-  civo.cloud.civo_kubernetes_pool_info:
+  civo.cloud.kubernetes_pool_info:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     instances: true
@@ -39,7 +39,7 @@
 # Scale pool up to 2 so we have a spare node to delete and still keep one
 # -------------------------------------------------------------------------
 - name: "[kubernetes_node] Scale pool to 2 nodes so we have one to delete"
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     pool_id: "{{ kn_pool_id }}"
@@ -51,7 +51,7 @@
   tags: [kubernetes, kubernetes_node]
 
 - name: "[kubernetes_node] Refresh pool info after scale-up"
-  civo.cloud.civo_kubernetes_pool_info:
+  civo.cloud.kubernetes_pool_info:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     pool_id: "{{ kn_pool_id }}"
@@ -68,7 +68,7 @@
 # Recycle the first node
 # -------------------------------------------------------------------------
 - name: "[kubernetes_node] Recycle first node"
-  civo.cloud.civo_kubernetes_node:
+  civo.cloud.kubernetes_node:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     node: "{{ kn_node_hostname }}"
@@ -88,7 +88,7 @@
 # Delete the second node (reduces pool size from 2 to 1)
 # -------------------------------------------------------------------------
 - name: "[kubernetes_node] Delete second node (reduces pool size)"
-  civo.cloud.civo_kubernetes_node:
+  civo.cloud.kubernetes_node:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     node: "{{ kn_node_to_delete }}"
@@ -105,7 +105,7 @@
   tags: [kubernetes, kubernetes_node]
 
 - name: "[kubernetes_node] Wait for pool to shrink back to 1 node"
-  civo.cloud.civo_kubernetes_pool_info:
+  civo.cloud.kubernetes_pool_info:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     pool_id: "{{ kn_pool_id }}"

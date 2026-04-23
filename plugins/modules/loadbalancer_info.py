@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_loadbalancer_info
+module: loadbalancer_info
 short_description: Gather information about Civo load balancers
 description:
   - Returns details of one or all Civo load balancers in a region.
@@ -38,7 +38,7 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_kubernetes
+  - module: civo.cloud.kubernetes
 notes:
   - Load balancers are provisioned automatically by the Kubernetes
     cloud-controller-manager and cannot be managed directly through the Civo
@@ -48,12 +48,12 @@ notes:
 
 EXAMPLES = r"""
 - name: List all load balancers
-  civo.cloud.civo_loadbalancer_info:
+  civo.cloud.loadbalancer_info:
     region: LON1
   register: lbs
 
 - name: Get a specific load balancer
-  civo.cloud.civo_loadbalancer_info:
+  civo.cloud.loadbalancer_info:
     region: LON1
     name: my-lb
   register: lb

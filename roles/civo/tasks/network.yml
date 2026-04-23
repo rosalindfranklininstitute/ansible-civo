@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo network
-  civo.cloud.civo_network:
+  civo.cloud.network:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     name: "{{ civo_name }}"

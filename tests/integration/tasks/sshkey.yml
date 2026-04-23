@@ -14,7 +14,7 @@
   tags: [sshkey]
 
 - name: "[sshkey_info] List all SSH keys before test"
-  civo.cloud.civo_sshkey_info:
+  civo.cloud.sshkey_info:
     region: "{{ region }}"
   register: keys_before
   tags: [sshkey]
@@ -23,7 +23,7 @@
 # CREATE
 # =========================================================================
 - name: "[sshkey] Upload test SSH key"
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     region: "{{ region }}"
     name: "{{ test_prefix }}-sshkey"
     public_key_file: /tmp/ansible_test_sshkey.pub
@@ -45,7 +45,7 @@
 # READ
 # =========================================================================
 - name: "[sshkey_info] List all SSH keys (should include new key)"
-  civo.cloud.civo_sshkey_info:
+  civo.cloud.sshkey_info:
     region: "{{ region }}"
   register: keys_after
   tags: [sshkey]
@@ -59,7 +59,7 @@
   tags: [sshkey]
 
 - name: "[sshkey_info] Look up key by name"
-  civo.cloud.civo_sshkey_info:
+  civo.cloud.sshkey_info:
     region: "{{ region }}"
     name: "{{ test_prefix }}-sshkey"
   register: key_lookup
@@ -78,7 +78,7 @@
 # IDEMPOTENCY
 # =========================================================================
 - name: "[sshkey] Re-upload same key (idempotent)"
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     region: "{{ region }}"
     name: "{{ test_prefix }}-sshkey"
     public_key_file: /tmp/ansible_test_sshkey.pub
@@ -97,7 +97,7 @@
 # RENAME
 # =========================================================================
 - name: "[sshkey] Rename key"
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     region: "{{ region }}"
     name: "{{ test_prefix }}-sshkey"
     new_name: "{{ test_prefix }}-sshkey-renamed"
@@ -117,7 +117,7 @@
 # DELETE
 # =========================================================================
 - name: "[sshkey] Delete renamed key"
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     region: "{{ region }}"
     name: "{{ test_prefix }}-sshkey-renamed"
     state: absent
@@ -132,7 +132,7 @@
   tags: [sshkey]
 
 - name: "[sshkey] Delete non-existent key (idempotent)"
-  civo.cloud.civo_sshkey:
+  civo.cloud.sshkey:
     region: "{{ region }}"
     name: "{{ test_prefix }}-sshkey-renamed"
     state: absent

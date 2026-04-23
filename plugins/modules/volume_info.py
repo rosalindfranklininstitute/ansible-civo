@@ -6,10 +6,10 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_database_info
-short_description: Gather information about Civo managed databases
+module: volume_info
+short_description: Gather information about Civo block storage volumes
 description:
-  - Returns details of one or all Civo managed databases in a region.
+  - Returns details of one or all Civo volumes in a region.
   - When I(name) is given, returns a single-item list (or empty list if not found).
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
@@ -18,8 +18,8 @@ author:
 options:
   name:
     description:
-      - Name of the database to look up.
-      - When omitted, all databases in the region are returned.
+      - Name of the volume to look up.
+      - When omitted, all volumes in the region are returned.
     type: str
   api_key:
     description:
@@ -35,53 +35,47 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_database
+  - module: civo.cloud.volume
 """
 
 EXAMPLES = r"""
-- name: Get all databases
-  civo.cloud.civo_database_info:
+- name: Get all volumes
+  civo.cloud.volume_info:
     region: LON1
-  register: dbs
+  register: vols
 
-- name: Get a specific database
-  civo.cloud.civo_database_info:
+- name: Get a specific volume
+  civo.cloud.volume_info:
     region: LON1
-    name: myapp-db
-  register: db
+    name: data-vol
+  register: vol
 
-- name: Print database status
+- name: Print volume size
   ansible.builtin.debug:
-    msg: "{{ db.databases[0].status }}"
+    msg: "{{ vol.volumes[0].size_gigabytes }}"
 """
 
 RETURN = r"""
-databases:
-  description: List of database dicts matching the query.
+volumes:
+  description: List of volume dicts matching the query.
   returned: always
   type: list
   elements: dict
   contains:
     id:
-      description: Database UUID.
+      description: Volume UUID.
       type: str
     name:
-      description: Database name.
+      description: Volume name.
+      type: str
+    size_gigabytes:
+      description: Volume size (e.g. C("10 GB")).
       type: str
     status:
-      description: Database status.
+      description: Volume status (C(available), C(creating), etc.).
       type: str
-    software:
-      description: Database engine (e.g. C(PostgreSQL)).
-      type: str
-    software_version:
-      description: Engine version string.
-      type: str
-    size:
-      description: Database node size slug.
-      type: str
-    nodes:
-      description: Number of database nodes.
+    network_id:
+      description: Network name or UUID the volume belongs to.
       type: str
 """
 
@@ -112,13 +106,13 @@ def main():
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     if name:
-        result = find_resource_by_name(module, "database", name, api_key, region, binary)
-        databases = [result] if result else []
+        result = find_resource_by_name(module, "volume", name, api_key, region, binary)
+        volumes = [result] if result else []
     else:
-        _rc, data, _stderr = run_civo_command(module, ["database", "ls"], api_key, region, binary, check_rc=False)
-        databases = data if isinstance(data, list) else []
+        _rc, data, _stderr = run_civo_command(module, ["volume", "ls"], api_key, region, binary, check_rc=False)
+        volumes = data if isinstance(data, list) else []
 
-    module.exit_json(changed=False, databases=databases)
+    module.exit_json(changed=False, volumes=volumes)
 
 
 if __name__ == "__main__":

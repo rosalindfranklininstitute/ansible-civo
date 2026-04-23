@@ -7,7 +7,7 @@
 # DISK IMAGE INFO
 # =========================================================================
 - name: "[diskimage_info] List all disk images"
-  civo.cloud.civo_diskimage_info:
+  civo.cloud.diskimage_info:
     region: "{{ region }}"
   register: all_images
   tags: [catalog, diskimage_info]
@@ -23,7 +23,7 @@
   tags: [catalog, diskimage_info]
 
 - name: "[diskimage_info] Filter by name (debian-11)"
-  civo.cloud.civo_diskimage_info:
+  civo.cloud.diskimage_info:
     region: "{{ region }}"
     name: debian-11
   register: debian11
@@ -39,7 +39,7 @@
   tags: [catalog, diskimage_info]
 
 - name: "[diskimage_info] Filter by non-existent name"
-  civo.cloud.civo_diskimage_info:
+  civo.cloud.diskimage_info:
     region: "{{ region }}"
     name: "does-not-exist-image-xyz"
   register: no_image
@@ -53,7 +53,7 @@
   tags: [catalog, diskimage_info]
 
 - name: "[diskimage_info] Filter by distribution (ubuntu)"
-  civo.cloud.civo_diskimage_info:
+  civo.cloud.diskimage_info:
     region: "{{ region }}"
     distribution: ubuntu
   register: ubuntu_images
@@ -71,7 +71,7 @@
 # KUBERNETES VERSION INFO
 # =========================================================================
 - name: "[k8s_version_info] List all Kubernetes versions"
-  civo.cloud.civo_kubernetes_version_info:
+  civo.cloud.kubernetes_version_info:
     region: "{{ region }}"
   register: all_k8s_versions
   tags: [catalog, kubernetes_version_info]
@@ -96,7 +96,7 @@
   tags: [catalog, kubernetes_version_info]
 
 - name: "[k8s_version_info] Filter to stable versions only"
-  civo.cloud.civo_kubernetes_version_info:
+  civo.cloud.kubernetes_version_info:
     region: "{{ region }}"
     maturity: stable
   register: stable_k8s_versions
@@ -111,7 +111,7 @@
   tags: [catalog, kubernetes_version_info]
 
 - name: "[k8s_version_info] Filter to deprecated versions"
-  civo.cloud.civo_kubernetes_version_info:
+  civo.cloud.kubernetes_version_info:
     region: "{{ region }}"
     maturity: deprecated
   register: deprecated_k8s_versions
@@ -128,7 +128,7 @@
   tags: [catalog, kubernetes_version_info]
   block:
     - name: "[k8s_version_info] Get development versions"
-      civo.cloud.civo_kubernetes_version_info:
+      civo.cloud.kubernetes_version_info:
         region: "{{ region }}"
         maturity: development
       register: dev_k8s_versions
@@ -151,7 +151,7 @@
 # REGION INFO
 # =========================================================================
 - name: "[region_info] List all regions"
-  civo.cloud.civo_region_info:
+  civo.cloud.region_info:
     region: "{{ region }}"
   register: all_regions
   tags: [catalog, region_info]
@@ -179,7 +179,7 @@
 # SIZE INFO
 # =========================================================================
 - name: "[size_info] List all sizes"
-  civo.cloud.civo_size_info:
+  civo.cloud.size_info:
     region: "{{ region }}"
   register: all_sizes
   tags: [catalog, size_info]
@@ -195,7 +195,7 @@
   tags: [catalog, size_info]
 
 - name: "[size_info] Filter to instance sizes"
-  civo.cloud.civo_size_info:
+  civo.cloud.size_info:
     region: "{{ region }}"
     resource_type: instance
   register: instance_sizes
@@ -210,7 +210,7 @@
   tags: [catalog, size_info]
 
 - name: "[size_info] Filter to kubernetes sizes"
-  civo.cloud.civo_size_info:
+  civo.cloud.size_info:
     region: "{{ region }}"
     resource_type: kubernetes
   register: k8s_sizes
@@ -225,7 +225,7 @@
   tags: [catalog, size_info]
 
 - name: "[size_info] Filter to database sizes"
-  civo.cloud.civo_size_info:
+  civo.cloud.size_info:
     region: "{{ region }}"
     resource_type: database
   register: db_sizes
@@ -258,7 +258,7 @@
 # QUOTA INFO
 # =========================================================================
 - name: "[quota_info] Get account quota"
-  civo.cloud.civo_quota_info:
+  civo.cloud.quota_info:
     region: "{{ region }}"
   register: quota
   tags: [catalog, quota_info]
@@ -287,7 +287,7 @@
 # VOLUME TYPE INFO
 # =========================================================================
 - name: "[volumetype_info] List all volume types"
-  civo.cloud.civo_volumetype_info:
+  civo.cloud.volumetype_info:
     region: "{{ region }}"
   register: vtypes
   tags: [catalog, volumetype_info]

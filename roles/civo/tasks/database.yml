@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo managed database
-  civo.cloud.civo_database:
+  civo.cloud.database:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     name: "{{ civo_name }}"

@@ -2,7 +2,7 @@
 # List-all (no name filter) smoke tests for every _info module
 
 - name: "[network_info] List all networks"
-  civo.cloud.civo_network_info:
+  civo.cloud.network_info:
     region: "{{ region }}"
   register: all_nets
   tags: [info]
@@ -14,7 +14,7 @@
   tags: [info]
 
 - name: "[firewall_info] List all firewalls"
-  civo.cloud.civo_firewall_info:
+  civo.cloud.firewall_info:
     region: "{{ region }}"
   register: all_fws
   tags: [info]
@@ -26,7 +26,7 @@
   tags: [info]
 
 - name: "[instance_info] List all instances"
-  civo.cloud.civo_instance_info:
+  civo.cloud.instance_info:
     region: "{{ region }}"
   register: all_insts
   tags: [info]
@@ -38,7 +38,7 @@
   tags: [info]
 
 - name: "[volume_info] List all volumes"
-  civo.cloud.civo_volume_info:
+  civo.cloud.volume_info:
     region: "{{ region }}"
   register: all_vols
   tags: [info]
@@ -50,7 +50,7 @@
   tags: [info]
 
 - name: "[reserved_ip_info] List all reserved IPs"
-  civo.cloud.civo_reserved_ip_info:
+  civo.cloud.reserved_ip_info:
     region: "{{ region }}"
   register: all_ips
   tags: [info]
@@ -62,7 +62,7 @@
   tags: [info]
 
 - name: "[objectstore_info] List all object stores"
-  civo.cloud.civo_objectstore_info:
+  civo.cloud.objectstore_info:
     region: "{{ region }}"
   register: all_obs
   tags: [info]
@@ -74,7 +74,7 @@
   tags: [info]
 
 - name: "[database_info] List all databases"
-  civo.cloud.civo_database_info:
+  civo.cloud.database_info:
     region: "{{ region }}"
   register: all_dbs
   tags: [info]
@@ -86,7 +86,7 @@
   tags: [info]
 
 - name: "[kubernetes_info] List all clusters"
-  civo.cloud.civo_kubernetes_info:
+  civo.cloud.kubernetes_info:
     region: "{{ region }}"
   register: all_k8s
   tags: [info]
@@ -98,7 +98,7 @@
   tags: [info]
 
 - name: "[loadbalancer_info] List all load balancers"
-  civo.cloud.civo_loadbalancer_info:
+  civo.cloud.loadbalancer_info:
     region: "{{ region }}"
   register: all_lbs
   tags: [info]

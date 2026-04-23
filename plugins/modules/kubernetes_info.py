@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_kubernetes_info
+module: kubernetes_info
 short_description: Gather information about Civo Kubernetes clusters
 description:
   - Returns details of one or all Civo Kubernetes clusters in a region.
@@ -42,17 +42,17 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_kubernetes
+  - module: civo.cloud.kubernetes
 """
 
 EXAMPLES = r"""
 - name: Get all Kubernetes clusters
-  civo.cloud.civo_kubernetes_info:
+  civo.cloud.kubernetes_info:
     region: LON1
   register: clusters
 
 - name: Get a specific cluster with kubeconfig
-  civo.cloud.civo_kubernetes_info:
+  civo.cloud.kubernetes_info:
     region: LON1
     name: my-cluster
     kubeconfig: true

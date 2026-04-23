@@ -1,6 +1,6 @@
 ---
 - name: Manage Civo instance
-  civo.cloud.civo_instance:
+  civo.cloud.instance:
     api_key: "{{ civo_api_key }}"
     region: "{{ civo_region }}"
     hostname: "{{ civo_name }}"

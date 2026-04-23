@@ -2,7 +2,7 @@
 # Network integration tests: create / read / idempotency / destroy
 
 - name: "[network] Create test network"
-  civo.cloud.civo_network:
+  civo.cloud.network:
     name: "{{ test_prefix }}-network"
     region: "{{ region }}"
     state: present
@@ -19,7 +19,7 @@
   tags: [network]
 
 - name: "[network] READ — info by name"
-  civo.cloud.civo_network_info:
+  civo.cloud.network_info:
     name: "{{ test_prefix }}-network"
     region: "{{ region }}"
   register: net_info
@@ -34,7 +34,7 @@
   tags: [network]
 
 - name: "[network] Idempotency — present again"
-  civo.cloud.civo_network:
+  civo.cloud.network:
     name: "{{ test_prefix }}-network"
     region: "{{ region }}"
     state: present
@@ -49,7 +49,7 @@
   tags: [network]
 
 - name: "[network] Wait for network to become Active"
-  civo.cloud.civo_network_info:
+  civo.cloud.network_info:
     name: "{{ test_prefix }}-network"
     region: "{{ region }}"
   register: net_wait
@@ -62,7 +62,7 @@
 # CIDR parameter (covers the cidr branch in civo_network)
 # =========================================================================
 - name: "[network] Create second network with explicit CIDR"
-  civo.cloud.civo_network:
+  civo.cloud.network:
     name: "{{ test_prefix }}-network-cidr"
     region: "{{ region }}"
     cidr: "172.16.100.0/24"
@@ -79,7 +79,7 @@
   tags: [network]
 
 - name: "[network] Delete cidr network"
-  civo.cloud.civo_network:
+  civo.cloud.network:
     name: "{{ test_prefix }}-network-cidr"
     region: "{{ region }}"
     state: absent
@@ -97,7 +97,7 @@
 # ABSENT idempotency (not-found path)
 # =========================================================================
 - name: "[network] Absent idempotency — network does not exist"
-  civo.cloud.civo_network:
+  civo.cloud.network:
     name: "{{ test_prefix }}-network-cidr"
     region: "{{ region }}"
     state: absent

@@ -8,7 +8,7 @@
 # READ — list pools before we add one (baseline)
 # -------------------------------------------------------------------------
 - name: "[kubernetes_pool] List pools before adding a second pool"
-  civo.cloud.civo_kubernetes_pool_info:
+  civo.cloud.kubernetes_pool_info:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
   register: kp_pools_before
@@ -25,7 +25,7 @@
 # CREATE — add a second pool
 # -------------------------------------------------------------------------
 - name: "[kubernetes_pool] Create second node pool"
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     name: "{{ test_prefix }}-pool2"
@@ -55,7 +55,7 @@
 # READ — verify the new pool appears in pool_info
 # -------------------------------------------------------------------------
 - name: "[kubernetes_pool] Read pool info for the new pool"
-  civo.cloud.civo_kubernetes_pool_info:
+  civo.cloud.kubernetes_pool_info:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     pool_id: "{{ kp_pool2_id }}"
@@ -75,7 +75,7 @@
 # Idempotency — present with same node_count
 # -------------------------------------------------------------------------
 - name: "[kubernetes_pool] Idempotency — present with same count"
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     pool_id: "{{ kp_pool2_id }}"
@@ -96,7 +96,7 @@
 # Scale — increase to 2 nodes
 # -------------------------------------------------------------------------
 - name: "[kubernetes_pool] Scale second pool to 2 nodes"
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     pool_id: "{{ kp_pool2_id }}"
@@ -119,7 +119,7 @@
 # DELETE — remove the second pool
 # -------------------------------------------------------------------------
 - name: "[kubernetes_pool] Delete second pool"
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     pool_id: "{{ kp_pool2_id }}"
@@ -135,7 +135,7 @@
   tags: [kubernetes, kubernetes_pool]
 
 - name: "[kubernetes_pool] Idempotency of delete"
-  civo.cloud.civo_kubernetes_pool:
+  civo.cloud.kubernetes_pool:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     pool_id: "{{ kp_pool2_id }}"
@@ -154,7 +154,7 @@
 # READ with instances — after delete only the original pool should remain
 # -------------------------------------------------------------------------
 - name: "[kubernetes_pool] List pools after delete"
-  civo.cloud.civo_kubernetes_pool_info:
+  civo.cloud.kubernetes_pool_info:
     cluster: "{{ test_prefix }}-k8s"
     region: "{{ region }}"
     instances: true

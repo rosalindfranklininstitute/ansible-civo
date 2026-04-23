@@ -2,7 +2,7 @@
 # Firewall integration tests: create / read / idempotency / destroy
 
 - name: "[firewall] Create test firewall"
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
     network: "{{ test_prefix }}-network"
@@ -32,7 +32,7 @@
   tags: [firewall]
 
 - name: "[firewall] READ — info with rules"
-  civo.cloud.civo_firewall_info:
+  civo.cloud.firewall_info:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
     rules: true
@@ -49,7 +49,7 @@
   tags: [firewall]
 
 - name: "[firewall] Idempotency — present again"
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
     network: "{{ test_prefix }}-network"
@@ -81,7 +81,7 @@
 # RULE UPDATE — change an existing rule's attribute (triggers delete+recreate)
 # =========================================================================
 - name: "[firewall] Update allow-ssh rule cidr (triggers rule delete+recreate)"
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
     network: "{{ test_prefix }}-network"
@@ -110,7 +110,7 @@
   tags: [firewall]
 
 - name: "[firewall] Rule update idempotency"
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
     network: "{{ test_prefix }}-network"
@@ -142,7 +142,7 @@
 # PURGE RULES — remove a labelled rule not in the desired list
 # =========================================================================
 - name: "[firewall] Purge allow-ssh (keep only allow-https)"
-  civo.cloud.civo_firewall:
+  civo.cloud.firewall:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
     network: "{{ test_prefix }}-network"
@@ -166,7 +166,7 @@
   tags: [firewall]
 
 - name: "[firewall] READ rules after purge"
-  civo.cloud.civo_firewall_info:
+  civo.cloud.firewall_info:
     name: "{{ test_prefix }}-fw"
     region: "{{ region }}"
     rules: true

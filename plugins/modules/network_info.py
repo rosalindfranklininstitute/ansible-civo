@@ -6,10 +6,10 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_objectstore_info
-short_description: Gather information about Civo object stores
+module: network_info
+short_description: Gather information about Civo private networks
 description:
-  - Returns details of one or all Civo object stores in a region.
+  - Returns details of one or all Civo private networks in a region.
   - When I(name) is given, returns a single-item list (or empty list if not found).
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
@@ -18,8 +18,8 @@ author:
 options:
   name:
     description:
-      - Name of the object store to look up.
-      - When omitted, all object stores in the region are returned.
+      - Name of the network to look up.
+      - When omitted, all networks in the region are returned.
     type: str
   api_key:
     description:
@@ -27,7 +27,7 @@ options:
       - Falls back to the C(CIVO_TOKEN) environment variable, then to the active key in C(~/.civo.json) (the civo CLI config), when not set.
     type: str
   region:
-    description: Civo region identifier.
+    description: Civo region identifier (e.g. C(LON1), C(NYC1)).
     type: str
     default: LON1
   civo_binary:
@@ -35,47 +35,51 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_objectstore
+  - module: civo.cloud.network
 """
 
 EXAMPLES = r"""
-- name: Get all object stores
-  civo.cloud.civo_objectstore_info:
+- name: Get all networks
+  civo.cloud.network_info:
     region: LON1
-  register: stores
+  register: nets
 
-- name: Get a specific object store
-  civo.cloud.civo_objectstore_info:
-    region: LON1
-    name: my-bucket
-  register: store
-
-- name: Print endpoint
+- name: Print network names
   ansible.builtin.debug:
-    msg: "{{ store.objectstores[0].objectstore_endpoint }}"
+    msg: "{{ nets.networks | map(attribute='label') | list }}"
+
+- name: Get a specific network
+  civo.cloud.network_info:
+    region: LON1
+    name: my-network
+  register: net
+
+- name: Print network ID
+  ansible.builtin.debug:
+    msg: "{{ net.networks[0].id }}"
 """
 
 RETURN = r"""
-objectstores:
-  description: List of object store dicts matching the query.
+networks:
+  description: List of network dicts matching the query.
   returned: always
   type: list
   elements: dict
   contains:
     id:
-      description: Object store UUID (may be truncated in CLI output).
+      description: Network UUID.
       type: str
-    name:
-      description: Object store name.
+    label:
+      description: Network name/label.
       type: str
     status:
-      description: Object store status.
+      description: Network status.
       type: str
-    max_size:
-      description: Maximum size quota in GB.
+    default:
+      description: Whether this is the account-default network.
       type: str
-    objectstore_endpoint:
-      description: S3-compatible endpoint hostname.
+    region:
+      description: Region the network belongs to.
       type: str
 """
 
@@ -90,6 +94,7 @@ from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
 
 def main():
     argument_spec = common_argument_spec()
+    # _info modules have no state parameter
     argument_spec.pop("state", None)
     argument_spec.update(
         name={"type": "str"},
@@ -106,13 +111,13 @@ def main():
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     if name:
-        result = find_resource_by_name(module, "objectstore", name, api_key, region, binary)
-        objectstores = [result] if result else []
+        result = find_resource_by_name(module, "network", name, api_key, region, binary)
+        networks = [result] if result else []
     else:
-        _rc, data, _stderr = run_civo_command(module, ["objectstore", "ls"], api_key, region, binary, check_rc=False)
-        objectstores = data if isinstance(data, list) else []
+        _rc, data, _stderr = run_civo_command(module, ["network", "ls"], api_key, region, binary, check_rc=False)
+        networks = data if isinstance(data, list) else []
 
-    module.exit_json(changed=False, objectstores=objectstores)
+    module.exit_json(changed=False, networks=networks)
 
 
 if __name__ == "__main__":

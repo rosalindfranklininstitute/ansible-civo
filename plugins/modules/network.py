@@ -6,7 +6,7 @@
 
 DOCUMENTATION = r"""
 ---
-module: civo_network
+module: network
 short_description: Manage Civo private networks
 description:
   - Create or delete Civo private networks.
@@ -46,13 +46,13 @@ options:
     type: str
     default: civo
 seealso:
-  - module: civo.cloud.civo_firewall
-  - module: civo.cloud.civo_instance
+  - module: civo.cloud.firewall
+  - module: civo.cloud.instance
 """
 
 EXAMPLES = r"""
 - name: Create a private network
-  civo.cloud.civo_network:
+  civo.cloud.network:
     region: LON1
     name: my-network
     cidr: 192.168.10.0/24
@@ -64,7 +64,7 @@ EXAMPLES = r"""
     msg: "Network ID: {{ net.network.id }}"
 
 - name: Delete a network
-  civo.cloud.civo_network:
+  civo.cloud.network:
     region: LON1
     name: my-network
     state: absent
