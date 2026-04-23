@@ -3,6 +3,21 @@
 # Every task uses ignore_errors: true so cleanup always completes.
 # Tags are not applied here so cleanup always runs regardless of --tags.
 
+- name: "[snapshot] Delete test snapshot"
+  civo.cloud.civo_snapshot:
+    name: "{{ test_prefix }}-snap"
+    instance: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: absent
+  ignore_errors: true
+
+- name: "[snapshot] Destroy restored instance (if created)"
+  civo.cloud.civo_instance:
+    hostname: "{{ test_prefix }}-vm-restored"
+    region: "{{ region }}"
+    state: absent
+  ignore_errors: true
+
 - name: "[kubernetes] Destroy cluster"
   civo.cloud.civo_kubernetes:
     name: "{{ test_prefix }}-k8s"

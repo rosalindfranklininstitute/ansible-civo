@@ -149,6 +149,13 @@
               tags: [loadbalancer]
           tags: [always, loadbalancer]
 
+        - name: Include snapshot tests (requires instance_snapshot account feature)
+          ansible.builtin.include_tasks:
+            file: tasks/snapshot.yml
+            apply:
+              tags: [snapshot]
+          tags: [snapshot]
+
         - name: Include info (list-all) tests
           ansible.builtin.include_tasks:
             file: tasks/info_all.yml

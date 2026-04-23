@@ -1,0 +1,135 @@
+---
+# Snapshot integration tests: create / info / idempotency / restore / delete
+#
+# The test instance ({{ test_prefix }}-vm) must already exist.
+
+# =========================================================================
+# CREATE
+# =========================================================================
+- name: "[snapshot] Create snapshot"
+  civo.cloud.civo_snapshot:
+    name: "{{ test_prefix }}-snap"
+    instance: "{{ test_prefix }}-vm"
+    description: "Integration test snapshot"
+    region: "{{ region }}"
+    wait: true
+    timeout: 300
+    state: present
+  register: snap_create
+  tags: [snapshot]
+
+- name: "[snapshot] Assert created"
+  ansible.builtin.assert:
+    that:
+      - snap_create.changed
+      - snap_create.snapshot.id is defined
+      - snap_create.snapshot.name == test_prefix + '-snap'
+    fail_msg: "Snapshot creation failed: {{ snap_create }}"
+  tags: [snapshot]
+
+# =========================================================================
+# IDEMPOTENCY
+# =========================================================================
+- name: "[snapshot] Create idempotency (snapshot already exists)"
+  civo.cloud.civo_snapshot:
+    name: "{{ test_prefix }}-snap"
+    instance: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: present
+  register: snap_idem
+  tags: [snapshot]
+
+- name: "[snapshot] Assert idempotent"
+  ansible.builtin.assert:
+    that:
+      - not snap_idem.changed
+    fail_msg: "Snapshot create is not idempotent: {{ snap_idem }}"
+  tags: [snapshot]
+
+# =========================================================================
+# INFO
+# =========================================================================
+- name: "[snapshot] List all snapshots for test instance"
+  civo.cloud.civo_snapshot_info:
+    instance: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+  register: snap_list
+  tags: [snapshot]
+
+- name: "[snapshot] Assert our snapshot appears in list"
+  ansible.builtin.assert:
+    that:
+      - snap_list.snapshots | selectattr('name', 'equalto', test_prefix + '-snap') | list | length == 1
+    fail_msg: "Snapshot not found in list: {{ snap_list.snapshots | map(attribute='name') | list }}"
+  tags: [snapshot]
+
+- name: "[snapshot] Filter info by name"
+  civo.cloud.civo_snapshot_info:
+    instance: "{{ test_prefix }}-vm"
+    name: "{{ test_prefix }}-snap"
+    region: "{{ region }}"
+  register: snap_info_named
+  tags: [snapshot]
+
+- name: "[snapshot] Assert named filter returns one snapshot"
+  ansible.builtin.assert:
+    that:
+      - snap_info_named.snapshots | length == 1
+      - snap_info_named.snapshots[0].id == snap_create.snapshot.id
+    fail_msg: "Named snapshot info failed: {{ snap_info_named }}"
+  tags: [snapshot]
+
+# =========================================================================
+# RESTORE
+# =========================================================================
+- name: "[snapshot] Restore snapshot to new instance"
+  civo.cloud.civo_snapshot:
+    name: "{{ test_prefix }}-snap"
+    instance: "{{ test_prefix }}-vm"
+    hostname: "{{ test_prefix }}-vm-restored"
+    region: "{{ region }}"
+    state: restored
+  register: snap_restore
+  tags: [snapshot]
+
+- name: "[snapshot] Assert restore triggered"
+  ansible.builtin.assert:
+    that:
+      - snap_restore.changed
+    fail_msg: "Snapshot restore did not report changed: {{ snap_restore }}"
+  tags: [snapshot]
+
+# =========================================================================
+# DELETE
+# =========================================================================
+- name: "[snapshot] Delete snapshot"
+  civo.cloud.civo_snapshot:
+    name: "{{ test_prefix }}-snap"
+    instance: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: absent
+  register: snap_delete
+  tags: [snapshot]
+
+- name: "[snapshot] Assert deleted"
+  ansible.builtin.assert:
+    that:
+      - snap_delete.changed
+    fail_msg: "Snapshot delete failed: {{ snap_delete }}"
+  tags: [snapshot]
+
+- name: "[snapshot] Delete idempotency (already absent)"
+  civo.cloud.civo_snapshot:
+    name: "{{ test_prefix }}-snap"
+    instance: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+    state: absent
+  register: snap_delete_idem
+  tags: [snapshot]
+
+- name: "[snapshot] Assert delete idempotent"
+  ansible.builtin.assert:
+    that:
+      - not snap_delete_idem.changed
+    fail_msg: "Snapshot delete is not idempotent: {{ snap_delete_idem }}"
+  tags: [snapshot]

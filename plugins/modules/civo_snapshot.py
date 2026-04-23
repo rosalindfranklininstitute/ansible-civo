@@ -10,8 +10,7 @@ module: civo_snapshot
 short_description: Manage Civo instance snapshots
 description:
   - Create, delete, or restore point-in-time snapshots of Civo compute instances.
-  - Snapshots are available on CivoStack Enterprise Private Regions.
-  - Uses the C(civo) CLI binary on the control node.
+  - Uses the C(civo instance snapshot) CLI commands on the control node.
 version_added: "0.0.4"
 author:
   - The Rosalind Franklin Institute (@rosalindfranklininstitute)
@@ -22,22 +21,23 @@ options:
     type: str
   instance:
     description:
-      - Hostname or ID of the instance to snapshot.
-      - Required when I(state=present) and the snapshot does not already exist.
+      - Hostname or ID of the instance the snapshot belongs to.
+      - Required for all states — the snapshot CLI scopes operations per instance.
+    required: true
     type: str
   description:
     description: Human-readable description for the snapshot or restore operation.
     type: str
   hostname:
     description:
-      - Hostname to assign to the restored instance.
-      - When omitted the CLI assigns a default name.
+      - Hostname to assign to the newly restored instance.
+      - When omitted alongside I(overwrite_existing=false) the CLI assigns a default name.
       - Used only when I(state=restored).
     type: str
   overwrite_existing:
     description:
-      - When C(true) the restore replaces the original instance in place.
-      - When C(false) (default) a new instance is created alongside the original.
+      - When C(true) the restore replaces the original instance in-place.
+      - When C(false) (default) a new instance is created from the snapshot.
       - Used only when I(state=restored).
     type: bool
     default: false
@@ -62,7 +62,8 @@ options:
   state:
     description:
       - C(present) creates the snapshot if it does not already exist.
-        Idempotent — if a snapshot with I(name) already exists no action is taken.
+        Idempotent — if a snapshot with I(name) already exists on I(instance)
+        no action is taken.
       - C(absent) deletes the snapshot if it exists.
       - C(restored) restores the snapshot.  This state is not idempotent and
         always triggers a restore operation.
@@ -91,6 +92,7 @@ EXAMPLES = r"""
 - name: Restore snapshot to a new instance
   civo.cloud.civo_snapshot:
     name: web-01-snap
+    instance: web-01
     hostname: web-01-restored
     region: LON1
     state: restored
@@ -98,6 +100,7 @@ EXAMPLES = r"""
 - name: Restore snapshot overwriting the original instance
   civo.cloud.civo_snapshot:
     name: web-01-snap
+    instance: web-01
     overwrite_existing: true
     region: LON1
     state: restored
@@ -105,6 +108,7 @@ EXAMPLES = r"""
 - name: Delete a snapshot
   civo.cloud.civo_snapshot:
     name: web-01-snap
+    instance: web-01
     region: LON1
     state: absent
 """
@@ -142,39 +146,28 @@ from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
 )
 
 
-def _list_snapshots(module, api_key, region, binary):
-    """Return all snapshots as a list of dicts."""
+def _find_snapshot(module, instance, name, api_key, region, binary):
+    """Return the snapshot dict for *name* on *instance*, or None if not found."""
     rc, data, stderr = run_civo_command(
         module,
-        ["resource-snapshot", "list"],
+        ["instance", "snapshot", "show", instance, name],
         api_key,
         region,
         binary,
         check_rc=False,
     )
     if rc != 0:
-        if "not found" in stderr.lower() or "no " in stderr.lower():
-            return []
-        module.fail_json(msg=f"Failed to list snapshots: {stderr}")
-    if isinstance(data, list):
+        return None
+    if isinstance(data, dict) and data:
         return data
-    return data.get("items", []) if isinstance(data, dict) else []
+    return None
 
 
-def _find_snapshot(module, name, api_key, region, binary):
-    """Return the snapshot dict whose name matches *name*, or None."""
-    items = _list_snapshots(module, api_key, region, binary)
-    matches = [s for s in items if s.get("name") == name]
-    if len(matches) > 1:
-        module.fail_json(msg=f"Found {len(matches)} snapshots named '{name}'. Names must be unique.")
-    return matches[0] if matches else None
-
-
-def _wait_for_snapshot(module, name, api_key, region, binary, timeout):
+def _wait_for_snapshot(module, instance, name, api_key, region, binary, timeout):
     """Poll until the snapshot reaches AVAILABLE status or timeout."""
     deadline = time.time() + timeout
     while time.time() < deadline:
-        snap = _find_snapshot(module, name, api_key, region, binary)
+        snap = _find_snapshot(module, instance, name, api_key, region, binary)
         if snap:
             status = (snap.get("status") or "").upper()
             if status in ("AVAILABLE", "COMPLETE"):
@@ -194,7 +187,7 @@ def main():
     }
     argument_spec.update(
         name={"type": "str", "required": True},
-        instance={"type": "str"},
+        instance={"type": "str", "required": True},
         description={"type": "str"},
         hostname={"type": "str"},
         overwrite_existing={"type": "bool", "default": False},
@@ -205,6 +198,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     name = module.params["name"]
+    instance = module.params["instance"]
     state = module.params["state"]
     api_key = module.params["api_key"]
     region = module.params["region"]
@@ -214,7 +208,7 @@ def main():
     if not api_key:
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
-    existing = _find_snapshot(module, name, api_key, region, binary)
+    existing = _find_snapshot(module, instance, name, api_key, region, binary)
     before = existing or {}
 
     # ------------------------------------------------------------------ absent
@@ -227,22 +221,20 @@ def main():
                 msg=f"Would delete snapshot '{name}'",
                 diff={"before": before, "after": {}},
             )
-        snap_id = existing["id"]
-        run_civo_command(module, ["resource-snapshot", "delete", snap_id], api_key, region, binary)
+        run_civo_command(module, ["instance", "snapshot", "delete", instance, name], api_key, region, binary)
         module.exit_json(changed=True, msg=f"Snapshot '{name}' deleted", diff={"before": before, "after": {}})
 
     # ---------------------------------------------------------------- restored
     if state == "restored":
         if existing is None:
-            module.fail_json(msg=f"Snapshot '{name}' not found — cannot restore")
+            module.fail_json(msg=f"Snapshot '{name}' not found on instance '{instance}' — cannot restore")
         if module.check_mode:
             module.exit_json(
                 changed=True,
                 msg=f"Would restore snapshot '{name}'",
                 diff={"before": before, "after": {"restored": True}},
             )
-        snap_id = existing["id"]
-        restore_args = ["resource-snapshot", "restore", snap_id]
+        restore_args = ["instance", "snapshot", "restore", instance, name]
         if module.params.get("hostname"):
             restore_args += ["--hostname", module.params["hostname"]]
         if module.params["overwrite_existing"]:
@@ -260,10 +252,6 @@ def main():
     if existing is not None:
         module.exit_json(changed=False, snapshot=existing, diff={"before": existing, "after": existing})
 
-    instance = module.params.get("instance")
-    if not instance:
-        module.fail_json(msg="'instance' is required when state=present and the snapshot does not exist")
-
     if module.check_mode:
         module.exit_json(
             changed=True,
@@ -277,9 +265,9 @@ def main():
     run_civo_command(module, create_args, api_key, region, binary)
 
     if module.params["wait"]:
-        snap = _wait_for_snapshot(module, name, api_key, region, binary, module.params["timeout"])
+        snap = _wait_for_snapshot(module, instance, name, api_key, region, binary, module.params["timeout"])
     else:
-        snap = _find_snapshot(module, name, api_key, region, binary) or {}
+        snap = _find_snapshot(module, instance, name, api_key, region, binary) or {}
 
     module.exit_json(changed=True, snapshot=snap, diff={"before": {}, "after": snap})
 
