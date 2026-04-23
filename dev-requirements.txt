@@ -13,5 +13,5 @@ pre-commit>=3.7
 # Documentation
 sphinx>=7.3
 sphinx-rtd-theme>=2.0
-sphinx-antsibull-ext>=1.0
+# sphinx_antsibull_ext is bundled inside antsibull-docs — no separate install needed
 antsibull-docs>=2.5
