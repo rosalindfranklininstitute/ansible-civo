@@ -1,0 +1,404 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="2.24.0" name="antsibull-docs" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>civo.cloud.kubernetes_pool module – Manage node pools in a Civo Kubernetes cluster &mdash; civo.cloud 0.0.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/antsibull-minimal.css" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=47de8214"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="civo.cloud.kubernetes_pool_info module – Query node pools in a Civo Kubernetes cluster" href="kubernetes_pool_info_module.html" />
+    <link rel="prev" title="civo.cloud.kubernetes_node module – Recycle or delete a node in a Civo Kubernetes cluster" href="kubernetes_node_module.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            civo.cloud
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide_installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide_quickstart.html">Quick-start guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Civo.Cloud</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#modules">Modules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="database_module.html">civo.cloud.database module – Manage Civo managed databases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="database_info_module.html">civo.cloud.database_info module – Gather information about Civo managed databases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="diskimage_info_module.html">civo.cloud.diskimage_info module – List available Civo disk images (VM templates)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="firewall_module.html">civo.cloud.firewall module – Manage Civo firewalls and firewall rules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="firewall_info_module.html">civo.cloud.firewall_info module – Gather information about Civo firewalls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="instance_module.html">civo.cloud.instance module – Manage Civo compute instances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="instance_info_module.html">civo.cloud.instance_info module – Gather information about Civo compute instances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_module.html">civo.cloud.kubernetes module – Manage Civo Kubernetes clusters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_info_module.html">civo.cloud.kubernetes_info module – Gather information about Civo Kubernetes clusters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_node_module.html">civo.cloud.kubernetes_node module – Recycle or delete a node in a Civo Kubernetes cluster</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">civo.cloud.kubernetes_pool module – Manage node pools in a Civo Kubernetes cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_pool_info_module.html">civo.cloud.kubernetes_pool_info module – Query node pools in a Civo Kubernetes cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_version_info_module.html">civo.cloud.kubernetes_version_info module – List available Civo Kubernetes versions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="loadbalancer_module.html">civo.cloud.loadbalancer module – Manage Civo load balancers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="loadbalancer_info_module.html">civo.cloud.loadbalancer_info module – Gather information about Civo load balancers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="network_module.html">civo.cloud.network module – Manage Civo private networks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="network_info_module.html">civo.cloud.network_info module – Gather information about Civo private networks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="objectstore_module.html">civo.cloud.objectstore module – Manage Civo S3-compatible object stores</a></li>
+<li class="toctree-l4"><a class="reference internal" href="objectstore_info_module.html">civo.cloud.objectstore_info module – Gather information about Civo object stores</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quota_info_module.html">civo.cloud.quota_info module – Return current Civo account quota and usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="region_info_module.html">civo.cloud.region_info module – List available Civo regions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reserved_ip_module.html">civo.cloud.reserved_ip module – Manage Civo reserved (static) public IP addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reserved_ip_info_module.html">civo.cloud.reserved_ip_info module – Gather information about Civo reserved IP addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="size_info_module.html">civo.cloud.size_info module – List available Civo instance / Kubernetes / database sizes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snapshot_module.html">civo.cloud.snapshot module – Manage Civo instance snapshots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snapshot_info_module.html">civo.cloud.snapshot_info module – Gather information about Civo instance snapshots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sshkey_module.html">civo.cloud.sshkey module – Manage Civo SSH keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sshkey_info_module.html">civo.cloud.sshkey_info module – List SSH keys stored in a Civo account</a></li>
+<li class="toctree-l4"><a class="reference internal" href="volume_module.html">civo.cloud.volume module – Manage Civo block storage volumes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="volume_info_module.html">civo.cloud.volume_info module – Gather information about Civo block storage volumes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="volumetype_info_module.html">civo.cloud.volumetype_info module – List available Civo volume types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contributing</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide_development.html">Development guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">civo.cloud</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Civo.Cloud</a></li>
+      <li class="breadcrumb-item active">civo.cloud.kubernetes_pool module – Manage node pools in a Civo Kubernetes cluster</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/collections/civo/cloud/kubernetes_pool_module.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-civo-cloud-kubernetes-pool-module"></span><section id="civo-cloud-kubernetes-pool-module-manage-node-pools-in-a-civo-kubernetes-cluster">
+<h1>civo.cloud.kubernetes_pool module – Manage node pools in a Civo Kubernetes cluster<a class="headerlink" href="#civo-cloud-kubernetes-pool-module-manage-node-pools-in-a-civo-kubernetes-cluster" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://github.com/rosalindfranklininstitute/ansible-civo">civo.cloud collection</a> (version 0.0.3).</p>
+<p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
+To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">git+https://github.com/rosalindfranklininstitute/ansible-civo.git</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">civo.cloud.kubernetes_pool</span></code>.</p>
+</div>
+<p class="ansible-version-added">New in civo.cloud 0.0.1</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id3">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Create, scale, or delete additional node pools in an existing Civo Kubernetes cluster.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">state=present</span></code> creates the pool if it does not exist, or scales it to <code class="docutils literal notranslate"><span class="pre">node_count</span></code> if it already exists.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">state=absent</span></code> deletes the pool.</p></li>
+<li><p>The default pool created with the cluster is <strong>not</strong> managed by this module; use <a class="reference internal" href="kubernetes_module.html#ansible-collections-civo-cloud-kubernetes-module"><span class="std std-ref">civo.cloud.kubernetes</span></a> with <code class="docutils literal notranslate"><span class="pre">node_count</span></code> for that.</p></li>
+<li><p>Uses the <code class="docutils literal notranslate"><span class="pre">civo</span></code> CLI binary on the control node.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-api_key"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-api-key"><strong>api_key</strong></p>
+<a class="ansibleOptionLink" href="#parameter-api_key" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Civo API token.</p>
+<p>Falls back to the <code class="docutils literal notranslate"><span class="pre">CIVO_TOKEN</span></code> environment variable, then to the active key in <code class="docutils literal notranslate"><span class="pre">~/.civo.json</span></code> (the civo CLI config), when not set.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-civo_binary"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-civo-binary"><strong>civo_binary</strong></p>
+<a class="ansibleOptionLink" href="#parameter-civo_binary" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Path to the <code class="docutils literal notranslate"><span class="pre">civo</span></code> CLI binary.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;civo&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-cluster"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-cluster"><strong>cluster</strong></p>
+<a class="ansibleOptionLink" href="#parameter-cluster" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Name of the Kubernetes cluster to manage pools for.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-name"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-name"><strong>name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Name for the node pool. Used only during creation (<code class="docutils literal notranslate"><span class="pre">--name</span></code> flag). When omitted the Civo API generates a name automatically.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-node_count"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-node-count"><strong>node_count</strong></p>
+<a class="ansibleOptionLink" href="#parameter-node_count" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Desired number of nodes in the pool.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">1</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-node_size"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-node-size"><strong>node_size</strong></p>
+<a class="ansibleOptionLink" href="#parameter-node_size" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Instance size slug for nodes in this pool.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;g4s.kube.medium&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-pool_id"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-pool-id"><strong>pool_id</strong></p>
+<a class="ansibleOptionLink" href="#parameter-pool_id" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>ID of an existing pool to update or delete. When supplied the module locates the pool by ID rather than by name. Required for <code class="docutils literal notranslate"><span class="pre">state=absent</span></code> when more than one pool exists and the pool cannot be identified by name alone.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-region"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-region"><strong>region</strong></p>
+<a class="ansibleOptionLink" href="#parameter-region" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Civo region identifier.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;LON1&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-state"><strong>state</strong></p>
+<a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the node pool should exist.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;present&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-timeout"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-timeout"><strong>timeout</strong></p>
+<a class="ansibleOptionLink" href="#parameter-timeout" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Seconds to wait for the pool to reach the desired node count.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">600</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-wait"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-parameter-wait"><strong>wait</strong></p>
+<a class="ansibleOptionLink" href="#parameter-wait" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Wait for the pool to reach the desired node count after creation or scaling.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">true</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="kubernetes_module.html#ansible-collections-civo-cloud-kubernetes-module"><span class="std std-ref">civo.cloud.kubernetes</span></a></dt><dd><p>Manage Civo Kubernetes clusters.</p>
+</dd>
+<dt><a class="reference internal" href="kubernetes_pool_info_module.html#ansible-collections-civo-cloud-kubernetes-pool-info-module"><span class="std std-ref">civo.cloud.kubernetes_pool_info</span></a></dt><dd><p>Query node pools in a Civo Kubernetes cluster.</p>
+</dd>
+<dt><a class="reference internal" href="kubernetes_node_module.html#ansible-collections-civo-cloud-kubernetes-node-module"><span class="std std-ref">civo.cloud.kubernetes_node</span></a></dt><dd><p>Recycle or delete a node in a Civo Kubernetes cluster.</p>
+</dd>
+</dl>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add a GPU node pool to an existing cluster</span>
+<span class="w">  </span><span class="nt">civo.cloud.kubernetes_pool</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LON1</span>
+<span class="w">    </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpu-pool</span>
+<span class="w">    </span><span class="nt">node_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">g4g.kube.large</span>
+<span class="w">    </span><span class="nt">node_count</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">    </span><span class="nt">wait</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pool</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Scale the pool to 4 nodes</span>
+<span class="w">  </span><span class="nt">civo.cloud.kubernetes_pool</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LON1</span>
+<span class="w">    </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">pool_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">pool.pool.id</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">node_count</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Delete the pool</span>
+<span class="w">  </span><span class="nt">civo.cloud.kubernetes_pool</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LON1</span>
+<span class="w">    </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">pool_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">pool.pool.id</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible devel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-pool"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-return-pool"><strong>pool</strong></p>
+<a class="ansibleOptionLink" href="#return-pool" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Details of the node pool.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> when state is <code class="docutils literal notranslate"><span class="pre">present</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-pool/count"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-return-pool-count"><strong>count</strong></p>
+<a class="ansibleOptionLink" href="#return-pool/count" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Current node count in the pool.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">2</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-pool/id"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-return-pool-id"><strong>id</strong></p>
+<a class="ansibleOptionLink" href="#return-pool/id" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Pool UUID.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;aaaa-bbbb-cccc-dddd&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-pool/size"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-kubernetes-pool-module-return-pool-size"><strong>size</strong></p>
+<a class="ansibleOptionLink" href="#return-pool/size" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Instance size slug for nodes in the pool.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;g4s.kube.medium&quot;</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>The Rosalind Franklin Institute (&#64;rosalindfranklininstitute)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Link to this heading"></a></h3>
+<ul class="ansible-links">
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/rosalindfranklininstitute/ansible-civo/issues" rel="noopener external" target="_blank">Issue Tracker</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://www.rfi.ac.uk" rel="noopener external" target="_blank">Homepage</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/rosalindfranklininstitute/ansible-civo" rel="noopener external" target="_blank">Repository (Sources)</a></span></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="kubernetes_node_module.html" class="btn btn-neutral float-left" title="civo.cloud.kubernetes_node module – Recycle or delete a node in a Civo Kubernetes cluster" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="kubernetes_pool_info_module.html" class="btn btn-neutral float-right" title="civo.cloud.kubernetes_pool_info module – Query node pools in a Civo Kubernetes cluster" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The Rosalind Franklin Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="2.24.0" name="antsibull-docs" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>civo.cloud.region_info module – List available Civo regions &mdash; civo.cloud 0.0.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/antsibull-minimal.css" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=47de8214"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="civo.cloud.reserved_ip module – Manage Civo reserved (static) public IP addresses" href="reserved_ip_module.html" />
+    <link rel="prev" title="civo.cloud.quota_info module – Return current Civo account quota and usage" href="quota_info_module.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            civo.cloud
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide_installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide_quickstart.html">Quick-start guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Civo.Cloud</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#modules">Modules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="database_module.html">civo.cloud.database module – Manage Civo managed databases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="database_info_module.html">civo.cloud.database_info module – Gather information about Civo managed databases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="diskimage_info_module.html">civo.cloud.diskimage_info module – List available Civo disk images (VM templates)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="firewall_module.html">civo.cloud.firewall module – Manage Civo firewalls and firewall rules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="firewall_info_module.html">civo.cloud.firewall_info module – Gather information about Civo firewalls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="instance_module.html">civo.cloud.instance module – Manage Civo compute instances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="instance_info_module.html">civo.cloud.instance_info module – Gather information about Civo compute instances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_module.html">civo.cloud.kubernetes module – Manage Civo Kubernetes clusters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_info_module.html">civo.cloud.kubernetes_info module – Gather information about Civo Kubernetes clusters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_node_module.html">civo.cloud.kubernetes_node module – Recycle or delete a node in a Civo Kubernetes cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_pool_module.html">civo.cloud.kubernetes_pool module – Manage node pools in a Civo Kubernetes cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_pool_info_module.html">civo.cloud.kubernetes_pool_info module – Query node pools in a Civo Kubernetes cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="kubernetes_version_info_module.html">civo.cloud.kubernetes_version_info module – List available Civo Kubernetes versions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="loadbalancer_module.html">civo.cloud.loadbalancer module – Manage Civo load balancers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="loadbalancer_info_module.html">civo.cloud.loadbalancer_info module – Gather information about Civo load balancers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="network_module.html">civo.cloud.network module – Manage Civo private networks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="network_info_module.html">civo.cloud.network_info module – Gather information about Civo private networks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="objectstore_module.html">civo.cloud.objectstore module – Manage Civo S3-compatible object stores</a></li>
+<li class="toctree-l4"><a class="reference internal" href="objectstore_info_module.html">civo.cloud.objectstore_info module – Gather information about Civo object stores</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quota_info_module.html">civo.cloud.quota_info module – Return current Civo account quota and usage</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">civo.cloud.region_info module – List available Civo regions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reserved_ip_module.html">civo.cloud.reserved_ip module – Manage Civo reserved (static) public IP addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reserved_ip_info_module.html">civo.cloud.reserved_ip_info module – Gather information about Civo reserved IP addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="size_info_module.html">civo.cloud.size_info module – List available Civo instance / Kubernetes / database sizes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snapshot_module.html">civo.cloud.snapshot module – Manage Civo instance snapshots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snapshot_info_module.html">civo.cloud.snapshot_info module – Gather information about Civo instance snapshots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sshkey_module.html">civo.cloud.sshkey module – Manage Civo SSH keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sshkey_info_module.html">civo.cloud.sshkey_info module – List SSH keys stored in a Civo account</a></li>
+<li class="toctree-l4"><a class="reference internal" href="volume_module.html">civo.cloud.volume module – Manage Civo block storage volumes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="volume_info_module.html">civo.cloud.volume_info module – Gather information about Civo block storage volumes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="volumetype_info_module.html">civo.cloud.volumetype_info module – List available Civo volume types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contributing</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide_development.html">Development guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">civo.cloud</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Civo.Cloud</a></li>
+      <li class="breadcrumb-item active">civo.cloud.region_info module – List available Civo regions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/collections/civo/cloud/region_info_module.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-civo-cloud-region-info-module"></span><section id="civo-cloud-region-info-module-list-available-civo-regions">
+<h1>civo.cloud.region_info module – List available Civo regions<a class="headerlink" href="#civo-cloud-region-info-module-list-available-civo-regions" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://github.com/rosalindfranklininstitute/ansible-civo">civo.cloud collection</a> (version 0.0.3).</p>
+<p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
+To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">git+https://github.com/rosalindfranklininstitute/ansible-civo.git</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">civo.cloud.region_info</span></code>.</p>
+</div>
+<p class="ansible-version-added">New in civo.cloud 0.0.1</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id3">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id4">Return Values</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Returns all regions available in a Civo account.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">code</span></code> field of each region is the value accepted by the <code class="docutils literal notranslate"><span class="pre">region</span></code> parameter of all other <code class="docutils literal notranslate"><span class="pre">civo.cloud</span></code> modules.</p></li>
+<li><p>Uses the <code class="docutils literal notranslate"><span class="pre">civo</span></code> CLI binary on the control node.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-api_key"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-region-info-module-parameter-api-key"><strong>api_key</strong></p>
+<a class="ansibleOptionLink" href="#parameter-api_key" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Civo API token.</p>
+<p>Falls back to the <code class="docutils literal notranslate"><span class="pre">CIVO_TOKEN</span></code> environment variable, then to the active key in <code class="docutils literal notranslate"><span class="pre">~/.civo.json</span></code> (the civo CLI config), when not set.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-civo_binary"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-region-info-module-parameter-civo-binary"><strong>civo_binary</strong></p>
+<a class="ansibleOptionLink" href="#parameter-civo_binary" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Path to the <code class="docutils literal notranslate"><span class="pre">civo</span></code> CLI binary.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;civo&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-region"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-region-info-module-parameter-region"><strong>region</strong></p>
+<a class="ansibleOptionLink" href="#parameter-region" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Civo region identifier used to authenticate the CLI call. The result always contains all regions regardless of this value.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;LON1&quot;</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">List all Civo regions</span>
+<span class="w">  </span><span class="nt">civo.cloud.region_info</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regions</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Show region codes</span>
+<span class="w">  </span><span class="nt">ansible.builtin.debug</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">msg</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">regions.regions</span> <span class="o">|</span> <span class="nf">map</span><span class="o">(</span><span class="nv">attribute</span><span class="o">=</span><span class="s1">&#39;code&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">list</span> <span class="cp">}}</span><span class="s">&quot;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Find the current (default) region</span>
+<span class="w">  </span><span class="nt">ansible.builtin.debug</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">msg</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">regions.regions</span> <span class="o">|</span> <span class="nf">selectattr</span><span class="o">(</span><span class="s1">&#39;current&#39;</span><span class="o">,</span> <span class="s1">&#39;equalto&#39;</span><span class="o">,</span> <span class="s1">&#39;Yes&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">map</span><span class="o">(</span><span class="nv">attribute</span><span class="o">=</span><span class="s1">&#39;code&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">list</span> <span class="cp">}}</span><span class="s">&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible devel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-regions"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-region-info-module-return-regions"><strong>regions</strong></p>
+<a class="ansibleOptionLink" href="#return-regions" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>List of all available Civo regions.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-regions/code"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-region-info-module-return-regions-code"><strong>code</strong></p>
+<a class="ansibleOptionLink" href="#return-regions/code" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Region code — use this as the <code class="docutils literal notranslate"><span class="pre">region</span></code> parameter in other modules (e.g. <code class="docutils literal notranslate"><span class="pre">LON1</span></code>, <code class="docutils literal notranslate"><span class="pre">NYC1</span></code>).</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;lon1&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-regions/country"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-region-info-module-return-regions-country"><strong>country</strong></p>
+<a class="ansibleOptionLink" href="#return-regions/country" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Country where the region is located.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;United</span> <span class="pre">Kingdom&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-regions/current"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-region-info-module-return-regions-current"><strong>current</strong></p>
+<a class="ansibleOptionLink" href="#return-regions/current" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Whether this is the currently configured default region (<code class="docutils literal notranslate"><span class="pre">&quot;Yes&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;No&quot;</span></code>).</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Yes&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-regions/name"></div><p class="ansible-option-title" id="ansible-collections-civo-cloud-region-info-module-return-regions-name"><strong>name</strong></p>
+<a class="ansibleOptionLink" href="#return-regions/name" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Human-readable region name.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;lon1&quot;</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>The Rosalind Franklin Institute (&#64;rosalindfranklininstitute)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Link to this heading"></a></h3>
+<ul class="ansible-links">
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/rosalindfranklininstitute/ansible-civo/issues" rel="noopener external" target="_blank">Issue Tracker</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://www.rfi.ac.uk" rel="noopener external" target="_blank">Homepage</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/rosalindfranklininstitute/ansible-civo" rel="noopener external" target="_blank">Repository (Sources)</a></span></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quota_info_module.html" class="btn btn-neutral float-left" title="civo.cloud.quota_info module – Return current Civo account quota and usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reserved_ip_module.html" class="btn btn-neutral float-right" title="civo.cloud.reserved_ip module – Manage Civo reserved (static) public IP addresses" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The Rosalind Franklin Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

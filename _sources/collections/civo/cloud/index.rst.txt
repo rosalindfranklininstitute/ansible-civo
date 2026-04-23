@@ -1,0 +1,131 @@
+.. meta::
+  :antsibull-docs: 2.24.0
+
+
+.. _plugins_in_civo.cloud:
+
+Civo.Cloud
+==========
+
+Collection version 0.0.3
+
+.. contents::
+   :local:
+   :depth: 1
+
+Description
+-----------
+
+Manage Civo cloud resources (instances, Kubernetes, networks, firewalls, volumes, load balancers, reserved IPs, databases and object stores) using the Civo CLI. EXPERIMENTAL — not yet suitable for production use.
+
+**Author:**
+
+* The Rosalind Franklin Institute
+
+**Supported ansible-core versions:**
+
+* 2.15.0 or newer
+
+.. ansible-links::
+
+  - title: "Issue Tracker"
+    url: "https://github.com/rosalindfranklininstitute/ansible-civo/issues"
+    external: true
+  - title: "Homepage"
+    url: "https://www.rfi.ac.uk"
+    external: true
+  - title: "Repository (Sources)"
+    url: "https://github.com/rosalindfranklininstitute/ansible-civo"
+    external: true
+
+
+
+
+.. toctree::
+    :maxdepth: 1
+
+.. _plugin_index_for_civo.cloud:
+
+Plugin Index
+------------
+
+These are the plugins in the civo.cloud collection:
+
+.. _module_plugins_in_civo.cloud:
+
+Modules
+~~~~~~~
+
+* :ansplugin:`database module <civo.cloud.database#module>` -- Manage Civo managed databases
+* :ansplugin:`database_info module <civo.cloud.database_info#module>` -- Gather information about Civo managed databases
+* :ansplugin:`diskimage_info module <civo.cloud.diskimage_info#module>` -- List available Civo disk images (VM templates)
+* :ansplugin:`firewall module <civo.cloud.firewall#module>` -- Manage Civo firewalls and firewall rules
+* :ansplugin:`firewall_info module <civo.cloud.firewall_info#module>` -- Gather information about Civo firewalls
+* :ansplugin:`instance module <civo.cloud.instance#module>` -- Manage Civo compute instances
+* :ansplugin:`instance_info module <civo.cloud.instance_info#module>` -- Gather information about Civo compute instances
+* :ansplugin:`kubernetes module <civo.cloud.kubernetes#module>` -- Manage Civo Kubernetes clusters
+* :ansplugin:`kubernetes_info module <civo.cloud.kubernetes_info#module>` -- Gather information about Civo Kubernetes clusters
+* :ansplugin:`kubernetes_node module <civo.cloud.kubernetes_node#module>` -- Recycle or delete a node in a Civo Kubernetes cluster
+* :ansplugin:`kubernetes_pool module <civo.cloud.kubernetes_pool#module>` -- Manage node pools in a Civo Kubernetes cluster
+* :ansplugin:`kubernetes_pool_info module <civo.cloud.kubernetes_pool_info#module>` -- Query node pools in a Civo Kubernetes cluster
+* :ansplugin:`kubernetes_version_info module <civo.cloud.kubernetes_version_info#module>` -- List available Civo Kubernetes versions
+* :ansplugin:`loadbalancer module <civo.cloud.loadbalancer#module>` -- Manage Civo load balancers
+* :ansplugin:`loadbalancer_info module <civo.cloud.loadbalancer_info#module>` -- Gather information about Civo load balancers
+* :ansplugin:`network module <civo.cloud.network#module>` -- Manage Civo private networks
+* :ansplugin:`network_info module <civo.cloud.network_info#module>` -- Gather information about Civo private networks
+* :ansplugin:`objectstore module <civo.cloud.objectstore#module>` -- Manage Civo S3\-compatible object stores
+* :ansplugin:`objectstore_info module <civo.cloud.objectstore_info#module>` -- Gather information about Civo object stores
+* :ansplugin:`quota_info module <civo.cloud.quota_info#module>` -- Return current Civo account quota and usage
+* :ansplugin:`region_info module <civo.cloud.region_info#module>` -- List available Civo regions
+* :ansplugin:`reserved_ip module <civo.cloud.reserved_ip#module>` -- Manage Civo reserved (static) public IP addresses
+* :ansplugin:`reserved_ip_info module <civo.cloud.reserved_ip_info#module>` -- Gather information about Civo reserved IP addresses
+* :ansplugin:`size_info module <civo.cloud.size_info#module>` -- List available Civo instance / Kubernetes / database sizes
+* :ansplugin:`snapshot module <civo.cloud.snapshot#module>` -- Manage Civo instance snapshots
+* :ansplugin:`snapshot_info module <civo.cloud.snapshot_info#module>` -- Gather information about Civo instance snapshots
+* :ansplugin:`sshkey module <civo.cloud.sshkey#module>` -- Manage Civo SSH keys
+* :ansplugin:`sshkey_info module <civo.cloud.sshkey_info#module>` -- List SSH keys stored in a Civo account
+* :ansplugin:`volume module <civo.cloud.volume#module>` -- Manage Civo block storage volumes
+* :ansplugin:`volume_info module <civo.cloud.volume_info#module>` -- Gather information about Civo block storage volumes
+* :ansplugin:`volumetype_info module <civo.cloud.volumetype_info#module>` -- List available Civo volume types
+
+.. toctree::
+    :maxdepth: 1
+    :hidden:
+
+    database_module
+    database_info_module
+    diskimage_info_module
+    firewall_module
+    firewall_info_module
+    instance_module
+    instance_info_module
+    kubernetes_module
+    kubernetes_info_module
+    kubernetes_node_module
+    kubernetes_pool_module
+    kubernetes_pool_info_module
+    kubernetes_version_info_module
+    loadbalancer_module
+    loadbalancer_info_module
+    network_module
+    network_info_module
+    objectstore_module
+    objectstore_info_module
+    quota_info_module
+    region_info_module
+    reserved_ip_module
+    reserved_ip_info_module
+    size_info_module
+    snapshot_module
+    snapshot_info_module
+    sshkey_module
+    sshkey_info_module
+    volume_module
+    volume_info_module
+    volumetype_info_module
+
+
+
+.. seealso::
+
+    List of :ref:`collections <list_of_collections>` with docs hosted here.
