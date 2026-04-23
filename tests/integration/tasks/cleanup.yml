@@ -9,14 +9,14 @@
     instance: "{{ test_prefix }}-vm"
     region: "{{ region }}"
     state: absent
-  ignore_errors: true
+  failed_when: false
 
 - name: "[snapshot] Destroy restored instance (if created)"
   civo.cloud.civo_instance:
     hostname: "{{ test_prefix }}-vm-restored"
     region: "{{ region }}"
     state: absent
-  ignore_errors: true
+  failed_when: false
 
 - name: "[kubernetes] Destroy cluster"
   civo.cloud.civo_kubernetes:
