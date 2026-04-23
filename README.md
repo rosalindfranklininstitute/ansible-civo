@@ -481,6 +481,6 @@ GitHub Actions runs on every push and pull request (`.github/workflows/ci.yml`):
 
 ## License
 
-[Apache 2.0](LICENSE)
+[GPL-3.0-or-later](LICENSE)
 
 Copyright 2026, The Rosalind Franklin Institute.

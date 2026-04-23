@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Copyright: (c) 2026, The Rosalind Franklin Institute
-# Apache License 2.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 
 DOCUMENTATION = r"""
@@ -19,7 +19,7 @@ description:
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
-  - The Rosalind Franklin Institute
+  - The Rosalind Franklin Institute (@rosalindfranklininstitute)
 options:
   name:
     description: Name of the Kubernetes cluster.
@@ -228,7 +228,7 @@ def _get_kubeconfig(module, cluster_name, api_key, region, binary):
     """Retrieve the raw kubeconfig YAML for a cluster."""
     env_update = {"CIVO_TOKEN": api_key}
     cmd = [binary, "kubernetes", "config", cluster_name, "--region", region, "-y"]
-    rc, stdout, _ = module.run_command(cmd, environ_update=env_update)
+    rc, stdout, _stderr = module.run_command(cmd, environ_update=env_update)
     if rc == 0:
         return stdout.strip()
     return ""
@@ -292,7 +292,7 @@ def main():
         name={"type": "str", "required": True},
         node_size={"type": "str", "default": "g4s.kube.medium"},
         node_count={"type": "int", "default": 3},
-        pool_id={"type": "str", "default": ""},
+        pool_id={"type": "str"},
         network={"type": "str", "default": "default"},
         firewall={"type": "str"},
         cni={"type": "str", "default": "flannel", "choices": ["flannel", "cilium"]},

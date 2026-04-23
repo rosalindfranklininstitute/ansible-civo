@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Copyright: (c) 2026, The Rosalind Franklin Institute
-# Apache License 2.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 
 DOCUMENTATION = r"""
@@ -15,7 +15,7 @@ description:
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
-  - The Rosalind Franklin Institute
+  - The Rosalind Franklin Institute (@rosalindfranklininstitute)
 options:
   name:
     description:
@@ -97,7 +97,7 @@ from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
 def _get_kubeconfig(module, cluster_name, api_key, region, binary):
     env_update = {"CIVO_TOKEN": api_key}
     cmd = [binary, "kubernetes", "config", cluster_name, "--region", region, "-y"]
-    rc, stdout, _ = module.run_command(cmd, environ_update=env_update)
+    rc, stdout, _stderr = module.run_command(cmd, environ_update=env_update)
     return stdout.strip() if rc == 0 else ""
 
 

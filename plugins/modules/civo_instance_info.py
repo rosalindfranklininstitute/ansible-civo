@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Copyright: (c) 2026, The Rosalind Franklin Institute
-# Apache License 2.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 
 DOCUMENTATION = r"""
@@ -14,7 +14,7 @@ description:
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
-  - The Rosalind Franklin Institute
+  - The Rosalind Franklin Institute (@rosalindfranklininstitute)
 options:
   hostname:
     description:

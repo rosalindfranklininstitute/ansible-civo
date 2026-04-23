@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Copyright: (c) 2026, The Rosalind Franklin Institute
-# Apache License 2.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 
 DOCUMENTATION = r"""
@@ -15,7 +15,7 @@ description:
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
-  - The Rosalind Franklin Institute
+  - The Rosalind Franklin Institute (@rosalindfranklininstitute)
 options:
   name:
     description: Name / label for the SSH key.
@@ -25,7 +25,7 @@ options:
     description:
       - Path to the SSH public key file on the control node.
       - Required when I(state=present) and the key does not yet exist.
-    type: str
+    type: path
   new_name:
     description:
       - Rename an existing SSH key to this value.
@@ -124,7 +124,7 @@ def main():
     argument_spec = common_argument_spec()
     argument_spec.update(
         name={"type": "str", "required": True},
-        public_key_file={"type": "str"},
+        public_key_file={"type": "path"},
         new_name={"type": "str"},
     )
 
@@ -158,7 +158,7 @@ def main():
     if existing is None:
         if not public_key_file:
             module.fail_json(msg="'public_key_file' is required when state=present and the key does not exist")
-        key_path = os.path.expanduser(public_key_file)
+        key_path = public_key_file
         if not os.path.isfile(key_path):
             module.fail_json(msg=f"public_key_file not found: {key_path}")
         if module.check_mode:

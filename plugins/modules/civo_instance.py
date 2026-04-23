@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Copyright: (c) 2026, The Rosalind Franklin Institute
-# Apache License 2.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 
 DOCUMENTATION = r"""
@@ -14,7 +14,7 @@ description:
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
-  - The Rosalind Franklin Institute
+  - The Rosalind Franklin Institute (@rosalindfranklininstitute)
 options:
   hostname:
     description: Hostname of the instance (used as the unique identifier).
@@ -309,7 +309,7 @@ def main():
         diskimage={"type": "str", "default": "ubuntu-noble"},
         network={"type": "str", "default": "default"},
         firewall={"type": "str"},
-        ssh_key={"type": "str"},
+        ssh_key={"type": "str", "no_log": False},
         initial_user={"type": "str"},
         public_ip={"type": "str", "default": "create", "choices": ["create", "none"]},
         tags={"type": "str"},

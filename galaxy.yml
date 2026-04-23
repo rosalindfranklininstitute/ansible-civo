@@ -9,7 +9,7 @@ description: >-
   volumes, load balancers, reserved IPs, databases and object stores) using
   the Civo CLI. EXPERIMENTAL — not yet suitable for production use.
 license:
-  - Apache-2.0
+  - GPL-3.0-or-later
 license_file: LICENSE
 tags:
   - civo

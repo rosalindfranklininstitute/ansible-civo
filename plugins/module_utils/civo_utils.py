@@ -1,5 +1,5 @@
 # Copyright: (c) 2026, The Rosalind Franklin Institute
-# Apache License 2.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 Shared utilities for the civo.cloud Ansible collection.
 

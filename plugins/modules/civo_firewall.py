@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Copyright: (c) 2026, The Rosalind Franklin Institute
-# Apache License 2.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 
 DOCUMENTATION = r"""
@@ -17,7 +17,7 @@ description:
   - Uses the C(civo) CLI binary on the control node.
 version_added: "0.0.1"
 author:
-  - The Rosalind Franklin Institute
+  - The Rosalind Franklin Institute (@rosalindfranklininstitute)
 options:
   name:
     description: Name of the firewall.
@@ -220,7 +220,7 @@ def _rule_matches(desired, existing_rule):
 
 def _ensure_rules(module, firewall_id, desired_rules, purge, api_key, region, binary, check_mode):
     """Reconcile firewall rules. Returns True if any change was made (or would be)."""
-    rc, existing_data, _ = run_civo_command(
+    rc, existing_data, _stderr = run_civo_command(
         module,
         ["firewall", "rule", "ls", firewall_id],
         api_key,
