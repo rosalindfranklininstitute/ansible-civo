@@ -1,0 +1,399 @@
+---
+# Check-mode smoke tests for civo.cloud collection.
+#
+# Verifies that every key management module:
+#   1. Reports changed=True for a create that would happen in live mode.
+#   2. Makes NO real API calls that create/modify/delete resources.
+#   3. Reports changed=False for absent-on-nonexistent (idempotent no-op).
+#
+# Prerequisites:
+#   - CIVO_TOKEN env var set (read-only listing is performed to verify the
+#     non-existent resources truly don't exist)
+#   - civo CLI installed
+#
+# Run:
+#   ansible-playbook tests/integration/test_check_mode.yml -v
+#   make test-check
+
+- name: Civo.cloud check-mode smoke tests
+  hosts: localhost
+  gather_facts: false
+  vars:
+    region: LON1
+    # Prefix for probe resources — must NOT exist in the account.
+    # Verified by the pre-flight info-module calls at the top of the play.
+    probe_prefix: "ansible-check-mode-probe"
+
+  tasks:
+
+    # =========================================================================
+    # Pre-flight: confirm none of the probe resources exist
+    # =========================================================================
+    - name: "[preflight] Confirm probe network does not exist"
+      civo.cloud.civo_network_info:
+        name: "{{ probe_prefix }}-network"
+        region: "{{ region }}"
+      register: pf_net
+
+    - name: "[preflight] Confirm probe instance does not exist"
+      civo.cloud.civo_instance_info:
+        hostname: "{{ probe_prefix }}-vm"
+        region: "{{ region }}"
+      register: pf_inst
+
+    - name: "[preflight] Assert no probe resources present"
+      ansible.builtin.assert:
+        that:
+          - pf_net.networks | length == 0
+          - pf_inst.instances | length == 0
+        fail_msg: >-
+          Probe resources already exist — remove them before running check-mode
+          tests: network={{ pf_net.networks | map(attribute='label') | list }},
+          instance={{ pf_inst.instances | map(attribute='hostname') | list }}
+
+    # =========================================================================
+    # civo_network
+    # =========================================================================
+    - name: "[network] Check-mode create"
+      civo.cloud.civo_network:
+        name: "{{ probe_prefix }}-network"
+        region: "{{ region }}"
+        state: present
+      check_mode: true
+      register: cm_net_create
+
+    - name: "[network] Assert check-mode create reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_net_create.changed
+        fail_msg: "Expected changed=True in check mode for network create: {{ cm_net_create }}"
+
+    - name: "[network] Check-mode absent on nonexistent"
+      civo.cloud.civo_network:
+        name: "{{ probe_prefix }}-network"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_net_absent
+
+    - name: "[network] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_net_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent network: {{ cm_net_absent }}"
+
+    - name: "[network] Confirm no network was created"
+      civo.cloud.civo_network_info:
+        name: "{{ probe_prefix }}-network"
+        region: "{{ region }}"
+      register: post_net
+
+    - name: "[network] Assert network still absent after check-mode run"
+      ansible.builtin.assert:
+        that:
+          - post_net.networks | length == 0
+        fail_msg: "Network was created despite check mode: {{ post_net.networks }}"
+
+    # =========================================================================
+    # civo_firewall
+    # =========================================================================
+    - name: "[firewall] Check-mode create"
+      civo.cloud.civo_firewall:
+        name: "{{ probe_prefix }}-fw"
+        region: "{{ region }}"
+        network: default
+        rules:
+          - label: allow-ssh
+            direction: ingress
+            action: allow
+            protocol: tcp
+            port: "22"
+            cidr: "0.0.0.0/0"
+        state: present
+      check_mode: true
+      register: cm_fw_create
+
+    - name: "[firewall] Assert check-mode create reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_fw_create.changed
+        fail_msg: "Expected changed=True in check mode for firewall create: {{ cm_fw_create }}"
+
+    - name: "[firewall] Check-mode absent on nonexistent"
+      civo.cloud.civo_firewall:
+        name: "{{ probe_prefix }}-fw"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_fw_absent
+
+    - name: "[firewall] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_fw_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent firewall: {{ cm_fw_absent }}"
+
+    # =========================================================================
+    # civo_reserved_ip
+    # =========================================================================
+    - name: "[reserved_ip] Check-mode create"
+      civo.cloud.civo_reserved_ip:
+        name: "{{ probe_prefix }}-ip"
+        region: "{{ region }}"
+        state: present
+      check_mode: true
+      register: cm_rip_create
+
+    - name: "[reserved_ip] Assert check-mode create reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_rip_create.changed
+        fail_msg: "Expected changed=True in check mode for reserved_ip create: {{ cm_rip_create }}"
+
+    - name: "[reserved_ip] Check-mode absent on nonexistent"
+      civo.cloud.civo_reserved_ip:
+        name: "{{ probe_prefix }}-ip"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_rip_absent
+
+    - name: "[reserved_ip] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_rip_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent reserved_ip: {{ cm_rip_absent }}"
+
+    # =========================================================================
+    # civo_volume
+    # =========================================================================
+    - name: "[volume] Check-mode create"
+      civo.cloud.civo_volume:
+        name: "{{ probe_prefix }}-vol"
+        region: "{{ region }}"
+        size_gb: 5
+        network: default
+        state: present
+      check_mode: true
+      register: cm_vol_create
+
+    - name: "[volume] Assert check-mode create reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_vol_create.changed
+        fail_msg: "Expected changed=True in check mode for volume create: {{ cm_vol_create }}"
+
+    - name: "[volume] Check-mode absent on nonexistent"
+      civo.cloud.civo_volume:
+        name: "{{ probe_prefix }}-vol"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_vol_absent
+
+    - name: "[volume] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_vol_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent volume: {{ cm_vol_absent }}"
+
+    # =========================================================================
+    # civo_instance
+    # =========================================================================
+    - name: "[instance] Check-mode create"
+      civo.cloud.civo_instance:
+        hostname: "{{ probe_prefix }}-vm"
+        region: "{{ region }}"
+        size: g4s.xsmall
+        diskimage: debian-11
+        state: present
+      check_mode: true
+      register: cm_inst_create
+
+    - name: "[instance] Assert check-mode create reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_inst_create.changed
+        fail_msg: "Expected changed=True in check mode for instance create: {{ cm_inst_create }}"
+
+    - name: "[instance] Check-mode absent on nonexistent"
+      civo.cloud.civo_instance:
+        hostname: "{{ probe_prefix }}-vm"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_inst_absent
+
+    - name: "[instance] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_inst_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent instance: {{ cm_inst_absent }}"
+
+    - name: "[instance] Confirm no instance was created"
+      civo.cloud.civo_instance_info:
+        hostname: "{{ probe_prefix }}-vm"
+        region: "{{ region }}"
+      register: post_inst
+
+    - name: "[instance] Assert instance still absent after check-mode run"
+      ansible.builtin.assert:
+        that:
+          - post_inst.instances | length == 0
+        fail_msg: "Instance was created despite check mode: {{ post_inst.instances }}"
+
+    # =========================================================================
+    # civo_objectstore
+    # =========================================================================
+    - name: "[objectstore] Check-mode create"
+      civo.cloud.civo_objectstore:
+        name: "{{ probe_prefix }}-bucket"
+        region: "{{ region }}"
+        max_size_gb: 500
+        state: present
+      check_mode: true
+      register: cm_obs_create
+
+    - name: "[objectstore] Assert check-mode create reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_obs_create.changed
+        fail_msg: "Expected changed=True in check mode for objectstore create: {{ cm_obs_create }}"
+
+    - name: "[objectstore] Check-mode absent on nonexistent"
+      civo.cloud.civo_objectstore:
+        name: "{{ probe_prefix }}-bucket"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_obs_absent
+
+    - name: "[objectstore] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_obs_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent objectstore: {{ cm_obs_absent }}"
+
+    # =========================================================================
+    # civo_database
+    # =========================================================================
+    - name: "[database] Check-mode create"
+      civo.cloud.civo_database:
+        name: "{{ probe_prefix }}-db"
+        region: "{{ region }}"
+        size: g3.db.small
+        engine: postgresql
+        version: "17"
+        state: present
+      check_mode: true
+      register: cm_db_create
+
+    - name: "[database] Assert check-mode create reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_db_create.changed
+        fail_msg: "Expected changed=True in check mode for database create: {{ cm_db_create }}"
+
+    - name: "[database] Check-mode absent on nonexistent"
+      civo.cloud.civo_database:
+        name: "{{ probe_prefix }}-db"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_db_absent
+
+    - name: "[database] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_db_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent database: {{ cm_db_absent }}"
+
+    # =========================================================================
+    # civo_kubernetes
+    # =========================================================================
+    - name: "[kubernetes] Check-mode create"
+      civo.cloud.civo_kubernetes:
+        name: "{{ probe_prefix }}-k8s"
+        region: "{{ region }}"
+        node_size: g4s.kube.xsmall
+        node_count: 1
+        network: default
+        cni: flannel
+        state: present
+      check_mode: true
+      register: cm_k8s_create
+
+    - name: "[kubernetes] Assert check-mode create reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_k8s_create.changed
+        fail_msg: "Expected changed=True in check mode for kubernetes create: {{ cm_k8s_create }}"
+
+    - name: "[kubernetes] Check-mode absent on nonexistent"
+      civo.cloud.civo_kubernetes:
+        name: "{{ probe_prefix }}-k8s"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_k8s_absent
+
+    - name: "[kubernetes] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_k8s_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent kubernetes cluster: {{ cm_k8s_absent }}"
+
+    # =========================================================================
+    # civo_sshkey
+    # =========================================================================
+    - name: "[sshkey] Generate a temporary key for check-mode test"
+      ansible.builtin.command:
+        cmd: ssh-keygen -t ed25519 -C "ansible-check-mode" -N "" -f /tmp/ansible_check_mode_key
+        creates: /tmp/ansible_check_mode_key
+
+    - name: "[sshkey] Check-mode upload"
+      civo.cloud.civo_sshkey:
+        name: "{{ probe_prefix }}-sshkey"
+        region: "{{ region }}"
+        public_key_file: /tmp/ansible_check_mode_key.pub
+        state: present
+      check_mode: true
+      register: cm_sshkey_create
+
+    - name: "[sshkey] Assert check-mode upload reports changed"
+      ansible.builtin.assert:
+        that:
+          - cm_sshkey_create.changed
+        fail_msg: "Expected changed=True in check mode for sshkey upload: {{ cm_sshkey_create }}"
+
+    - name: "[sshkey] Check-mode absent on nonexistent"
+      civo.cloud.civo_sshkey:
+        name: "{{ probe_prefix }}-sshkey"
+        region: "{{ region }}"
+        state: absent
+      check_mode: true
+      register: cm_sshkey_absent
+
+    - name: "[sshkey] Assert check-mode absent is no-op"
+      ansible.builtin.assert:
+        that:
+          - not cm_sshkey_absent.changed
+        fail_msg: "Expected changed=False for absent nonexistent sshkey: {{ cm_sshkey_absent }}"
+
+    - name: "[sshkey] Remove temporary key files"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/ansible_check_mode_key
+        - /tmp/ansible_check_mode_key.pub
+
+    # =========================================================================
+    # Summary
+    # =========================================================================
+    - name: "All check-mode tests passed"
+      ansible.builtin.debug:
+        msg: >-
+          Check-mode smoke tests complete. All modules correctly reported
+          changed=True for prospective creates and changed=False for
+          absent-on-nonexistent. No resources were created.

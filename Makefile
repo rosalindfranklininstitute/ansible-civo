@@ -1,4 +1,4 @@
-.PHONY: docs lint format sanity install-dev clean
+.PHONY: docs lint format sanity install-dev clean test-integration test-check
 
 # Install development dependencies
 install-dev:
@@ -28,6 +28,14 @@ ansible-lint:
 # Run ansible-test sanity (requires the collection to be installed)
 sanity:
 	ansible-test sanity --docker -v --color
+
+# Run full integration test suite (requires CIVO_TOKEN and civo CLI)
+test-integration:
+	ansible-playbook tests/integration/test_all.yml -v
+
+# Run check-mode smoke tests (no live resources created; still requires CIVO_TOKEN)
+test-check:
+	ansible-playbook tests/integration/test_check_mode.yml -v
 
 clean:
 	rm -rf docs/_build/ docs/collections/

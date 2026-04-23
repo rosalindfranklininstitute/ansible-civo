@@ -210,6 +210,18 @@ instance:
       description: Root disk size in gigabytes (returned as string by CLI).
       type: str
       sample: "25"
+    tags:
+      description: Space-separated string of tags attached to the instance.
+      type: str
+      sample: "web production"
+    ssh_key_ids:
+      description: Comma-separated list of SSH key UUIDs injected at creation.
+      type: str
+      sample: "a1b2c3d4-0000-0000-0000-000000000000"
+    script:
+      description: User-data / cloud-init script passed at creation (not echoed back by CLI).
+      type: str
+      sample: ""
 """
 
 import time

@@ -129,6 +129,17 @@ volume:
         name when the default network is used, or the UUID for custom networks.
       type: str
       sample: default
+    instance_id:
+      description: >-
+        Hostname (not UUID) of the instance the volume is attached to.
+        Empty string when the volume is not attached.
+        Note: the Civo CLI stores the instance hostname here, not its UUID.
+      type: str
+      sample: web-01.example.com
+    bootable:
+      description: Whether the volume is marked as bootable.
+      type: bool
+      sample: false
 """
 
 from ansible.module_utils.basic import AnsibleModule

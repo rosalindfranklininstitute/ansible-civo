@@ -195,6 +195,20 @@ cluster:
     kubeconfig:
       description: Raw kubeconfig YAML for the cluster (fetched separately via C(civo kubernetes config)).
       type: str
+    cluster_type:
+      description: Cluster engine type (always C(k3s) for Civo).
+      type: str
+      sample: "k3s"
+    conditions:
+      description: >-
+        Multi-line human-readable string describing current cluster conditions
+        (e.g. "Control Plane Accessible: True\\nAll Workers Up: True").
+      type: str
+      sample: "Control Plane Accessible: True\nAll Workers Up: True\nCluster On Desired Version: True\n"
+    pools:
+      description: Total number of node pools (returned as a string by the CLI).
+      type: str
+      sample: "1"
 """
 
 import time as _time
