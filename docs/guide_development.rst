@@ -104,8 +104,8 @@ Collection structure
    │   ├── module_utils/
    │   │   └── civo_utils.py         # Shared helpers: auth, CLI exec, JSON parsing, wait loops
    │   └── modules/
-   │       ├── civo_network.py       # CRUD modules (one per resource type)
-   │       ├── civo_network_info.py  # Info (read-only) modules
+   │       ├── network.py            # CRUD modules (one per resource type)
+   │       ├── network_info.py       # Info (read-only) modules
    │       └── ...
    ├── roles/
    │   └── civo/                     # Dispatcher role

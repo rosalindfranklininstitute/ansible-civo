@@ -184,7 +184,7 @@ Load balancers
 Load balancers are provisioned automatically by the Kubernetes
 cloud-controller-manager when a ``Service`` of type ``LoadBalancer`` is
 deployed.  The Civo CLI does not expose a ``create`` command for them, so
-``civo_loadbalancer`` can only query (``state=present``) or delete
+``civo.cloud.loadbalancer`` can only query (``state=present``) or delete
 (``state=absent``) existing load balancers.
 
 .. code-block:: yaml
