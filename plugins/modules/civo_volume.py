@@ -229,18 +229,29 @@ def main():
 
         current_instance_id = existing.get("instance_id", "")
         if current_instance_id:
-            # Volume is already attached — check whether it is attached to the
-            # requested instance.  The API stores the instance UUID; if the user
-            # passed a name we resolve it first so the comparison is UUID-to-UUID.
+            # The Civo CLI stores the hostname (not UUID) in instance_id after
+            # attach.  Handle both hostname and UUID comparisons so idempotency
+            # works regardless of how the caller identifies the instance.
             if is_uuid(instance):
-                desired_instance_id = instance
+                # Caller passed a UUID — resolve current hostname to UUID for
+                # comparison, or check if the stored value is already a UUID.
+                if current_instance_id == instance:
+                    module.exit_json(changed=changed, volume=existing, diff={"before": before, "after": existing})
+                inst_obj = find_resource_by_name(module, "instance", current_instance_id, api_key, region, binary)
+                current_uuid = inst_obj.get("id", "") if inst_obj else ""
+                if current_uuid == instance:
+                    module.exit_json(changed=changed, volume=existing, diff={"before": before, "after": existing})
             else:
+                # Caller passed a name — compare directly against stored hostname,
+                # then fall back to UUID comparison.
+                if current_instance_id == instance:
+                    module.exit_json(changed=changed, volume=existing, diff={"before": before, "after": existing})
                 inst_obj = find_resource_by_name(module, "instance", instance, api_key, region, binary)
                 if inst_obj is None:
                     module.fail_json(msg=f"Instance '{instance}' not found in region '{region}'")
-                desired_instance_id = inst_obj.get("id", "")
-            if desired_instance_id == current_instance_id:
-                module.exit_json(changed=changed, volume=existing, diff={"before": before, "after": existing})
+                desired_uuid = inst_obj.get("id", "")
+                if desired_uuid == current_instance_id:
+                    module.exit_json(changed=changed, volume=existing, diff={"before": before, "after": existing})
 
         if module.check_mode:
             module.exit_json(

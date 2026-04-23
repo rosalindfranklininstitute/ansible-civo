@@ -44,13 +44,20 @@
   tags: [volume]
 
 # Re-attach using the instance UUID — exercises the is_uuid() branch of the
-# attachment idempotency check (previously this always returned changed=False
-# regardless of which instance was requested).
+# attachment idempotency check.  The Civo CLI stores hostname (not UUID) in
+# instance_id, so we must look up the UUID via civo_instance_info.
+- name: "[volume] Look up instance UUID for UUID-based idempotency test"
+  civo.cloud.civo_instance_info:
+    hostname: "{{ test_prefix }}-vm"
+    region: "{{ region }}"
+  register: inst_uuid_lookup
+  tags: [volume]
+
 - name: "[volume] Idempotency of attach (by UUID)"
   civo.cloud.civo_volume:
     name: "{{ test_prefix }}-vol"
     region: "{{ region }}"
-    instance: "{{ vol_attach.volume.instance_id }}"
+    instance: "{{ inst_uuid_lookup.instances[0].id }}"
     state: attached
   register: vol_attach_uuid
   tags: [volume]

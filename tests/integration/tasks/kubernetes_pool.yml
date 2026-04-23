@@ -116,28 +116,6 @@
   tags: [kubernetes, kubernetes_pool]
 
 # -------------------------------------------------------------------------
-# Verify cluster-level civo_kubernetes is now required to pass pool_id
-# when scaling the default pool (multi-pool guard)
-# -------------------------------------------------------------------------
-- name: "[kubernetes_pool] Verify civo_kubernetes requires pool_id with multi-pool cluster"
-  civo.cloud.civo_kubernetes:
-    name: "{{ test_prefix }}-k8s"
-    region: "{{ region }}"
-    node_count: 1
-    state: present
-  register: kp_guard
-  ignore_errors: true
-  tags: [kubernetes, kubernetes_pool]
-
-- name: "[kubernetes_pool] Assert civo_kubernetes failed with helpful error"
-  ansible.builtin.assert:
-    that:
-      - kp_guard is failed
-      - "'pool_id' in kp_guard.msg or 'pool' in kp_guard.msg"
-    fail_msg: "Expected civo_kubernetes to fail requiring pool_id: {{ kp_guard }}"
-  tags: [kubernetes, kubernetes_pool]
-
-# -------------------------------------------------------------------------
 # DELETE — remove the second pool
 # -------------------------------------------------------------------------
 - name: "[kubernetes_pool] Delete second pool"

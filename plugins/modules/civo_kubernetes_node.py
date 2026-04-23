@@ -232,22 +232,32 @@ def main():
             diff={"before": node_state, "after": {}},
         )
 
-    run_civo_command(
-        module,
-        [
-            "kubernetes",
-            "node-pool",
-            "instance-delete",
-            cluster,
-            "--instance-id",
-            instance_id,
-            "--node-pool-id",
-            resolved_pool_id,
-        ],
-        api_key,
-        region,
+    # The `civo kubernetes node-pool instance-delete` subcommand returns a
+    # plain-text confirmation message and ignores `-o json`, so we bypass
+    # run_civo_command (which always appends -o json) and call the CLI directly.
+    env = {"CIVO_TOKEN": api_key}
+    delete_cmd = [
         binary,
-    )
+        "kubernetes",
+        "node-pool",
+        "instance-delete",
+        cluster,
+        "--instance-id",
+        instance_id,
+        "--node-pool-id",
+        resolved_pool_id,
+        "--region",
+        region,
+        "-y",
+    ]
+    rc, stdout, stderr = module.run_command(delete_cmd, environ_update=env)
+    if rc != 0:
+        module.fail_json(
+            msg=f"Failed to delete node '{node}' from pool '{resolved_pool_id}': {stderr or stdout}",
+            rc=rc,
+            stdout=stdout,
+            stderr=stderr,
+        )
     module.exit_json(
         changed=True,
         msg=f"Node '{node}' (instance {instance_id}) deleted from pool '{resolved_pool_id}'",
