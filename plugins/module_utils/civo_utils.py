@@ -1,5 +1,8 @@
 # Copyright: (c) 2026, The Rosalind Franklin Institute
+# GNU General Public License v3.0+ (see https://www.gnu.org/licenses/gpl-3.0.txt)
 # SPDX-License-Identifier: GPL-3.0-or-later
+
+
 """
 Shared utilities for the civo.cloud Ansible collection.
 

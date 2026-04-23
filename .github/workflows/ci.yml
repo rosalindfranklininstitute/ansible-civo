@@ -59,10 +59,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # stable-2.14 and stable-2.15 are EOL and do not support Python 3.12.
         # Test against currently-maintained releases only.
+        # stable-2.16 and earlier are not supported (require Python 2.7 compat).
         ansible:
-          - stable-2.16
           - stable-2.17
           - stable-2.18
           - devel
