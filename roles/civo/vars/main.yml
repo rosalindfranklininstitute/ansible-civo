@@ -1,0 +1,17 @@
+---
+# Maps each accepted civo_resource value (including aliases) to its task file
+civo_resource_task_files:
+  network: network.yml
+  firewall: firewall.yml
+  instance: instance.yml
+  kubernetes: kubernetes.yml
+  k8s: kubernetes.yml
+  volume: volume.yml
+  loadbalancer: loadbalancer.yml
+  load_balancer: loadbalancer.yml
+  reserved_ip: reserved_ip.yml
+  ip: reserved_ip.yml
+  database: database.yml
+  db: database.yml
+  objectstore: objectstore.yml
+  object_store: objectstore.yml

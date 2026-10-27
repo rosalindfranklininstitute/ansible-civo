@@ -18,42 +18,12 @@
     that:
       - civo_resource is defined
       - civo_name is defined
+      - civo_resource in civo_resource_task_files
     fail_msg: >-
       Both 'civo_resource' and 'civo_name' must be defined when using the
-      civo role dispatcher.
+      civo role dispatcher, and 'civo_resource' must be one of:
+      {{ civo_resource_task_files.keys() | sort | join(', ') }}.
+    quiet: true
 
-- name: Dispatch to network tasks
-  ansible.builtin.include_tasks: network.yml
-  when: civo_resource == 'network'
-
-- name: Dispatch to firewall tasks
-  ansible.builtin.include_tasks: firewall.yml
-  when: civo_resource == 'firewall'
-
-- name: Dispatch to instance tasks
-  ansible.builtin.include_tasks: instance.yml
-  when: civo_resource == 'instance'
-
-- name: Dispatch to Kubernetes tasks
-  ansible.builtin.include_tasks: kubernetes.yml
-  when: civo_resource in ['kubernetes', 'k8s']
-
-- name: Dispatch to volume tasks
-  ansible.builtin.include_tasks: volume.yml
-  when: civo_resource == 'volume'
-
-- name: Dispatch to load balancer tasks
-  ansible.builtin.include_tasks: loadbalancer.yml
-  when: civo_resource in ['loadbalancer', 'load_balancer']
-
-- name: Dispatch to reserved IP tasks
-  ansible.builtin.include_tasks: reserved_ip.yml
-  when: civo_resource in ['reserved_ip', 'ip']
-
-- name: Dispatch to database tasks
-  ansible.builtin.include_tasks: database.yml
-  when: civo_resource in ['database', 'db']
-
-- name: Dispatch to object store tasks
-  ansible.builtin.include_tasks: objectstore.yml
-  when: civo_resource in ['objectstore', 'object_store']
+- name: Manage Civo {{ civo_resource }}
+  ansible.builtin.include_tasks: "{{ civo_resource_task_files[civo_resource] }}"
