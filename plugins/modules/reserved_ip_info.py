@@ -103,10 +103,10 @@ def main():
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
     if name:
-        result = find_resource_by_name(module, "ip", name, api_key, region, binary)
+        result = find_resource_by_name(module, "vpc ip", name, api_key, region, binary)
         reserved_ips = [result] if result else []
     else:
-        _rc, data, _stderr = run_civo_command(module, ["ip", "ls"], api_key, region, binary, check_rc=False)
+        _rc, data, _stderr = run_civo_command(module, ["vpc", "ip", "ls"], api_key, region, binary, check_rc=False)
         reserved_ips = data if isinstance(data, list) else []
 
     module.exit_json(changed=False, reserved_ips=reserved_ips)

@@ -134,6 +134,8 @@ def run_civo_command(module, args, api_key, region, binary=None, check_rc=True):
 def find_resource_by_name(module, resource_type, name, api_key, region, binary=None):
     """Return the resource dict whose name matches *name*, or None.
 
+    *resource_type* may be a multi-word CLI subcommand such as ``"vpc ip"``.
+
     Unlike a naive ``None``-on-error approach, this function distinguishes
     between a genuine "not found" (empty list) and a CLI error so that real
     failures are surfaced rather than silently treated as absent resources.
@@ -145,7 +147,7 @@ def find_resource_by_name(module, resource_type, name, api_key, region, binary=N
     """
     rc, data, stderr = run_civo_command(
         module,
-        [resource_type, "ls"],
+        resource_type.split() + ["ls"],
         api_key,
         region,
         binary=binary,

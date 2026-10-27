@@ -107,6 +107,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
     common_argument_spec,
     find_resource_by_name,
+    is_uuid,
     run_civo_command,
 )
 
@@ -134,7 +135,7 @@ def main():
     if not api_key:
         module.fail_json(msg="api_key is required (pass api_key, set CIVO_TOKEN, or configure the civo CLI)")
 
-    existing = find_resource_by_name(module, "ip", name, api_key, region, binary)
+    existing = find_resource_by_name(module, "vpc ip", name, api_key, region, binary)
     before = existing or {}
 
     # ------------------------------------------------------------------ absent
@@ -145,7 +146,7 @@ def main():
             module.exit_json(
                 changed=True, msg=f"Would release reserved IP '{name}'", diff={"before": before, "after": {}}
             )
-        run_civo_command(module, ["ip", "delete", name], api_key, region, binary)
+        run_civo_command(module, ["vpc", "ip", "delete", name], api_key, region, binary)
         module.exit_json(changed=True, msg=f"Reserved IP '{name}' released", diff={"before": before, "after": {}})
 
     # Ensure reservation exists
@@ -155,8 +156,8 @@ def main():
             module.exit_json(
                 changed=True, msg=f"Would reserve IP '{name}'", diff={"before": {}, "after": {"name": name}}
             )
-        run_civo_command(module, ["ip", "reserve", "--name", name], api_key, region, binary)
-        existing = find_resource_by_name(module, "ip", name, api_key, region, binary) or {}
+        run_civo_command(module, ["vpc", "ip", "reserve", "--name", name], api_key, region, binary)
+        existing = find_resource_by_name(module, "vpc ip", name, api_key, region, binary) or {}
         created = True
 
     # ---------------------------------------------------------------- assigned
@@ -187,14 +188,20 @@ def main():
                 msg=f"Would assign IP '{name}' to '{instance}'",
                 diff={"before": before, "after": {**existing, "assigned_to": instance}},
             )
+        instance_id = instance
+        if not is_uuid(instance):
+            found = find_resource_by_name(module, "instance", instance, api_key, region, binary)
+            if found is None:
+                module.fail_json(msg=f"Instance '{instance}' not found")
+            instance_id = found["id"]
         run_civo_command(
             module,
-            ["ip", "assign", name, "--instance", instance],
+            ["vpc", "ip", "assign", name, "--resource-id", instance_id, "--resource-type", "instance"],
             api_key,
             region,
             binary,
         )
-        ip = find_resource_by_name(module, "ip", name, api_key, region, binary) or {}
+        ip = find_resource_by_name(module, "vpc ip", name, api_key, region, binary) or {}
         module.exit_json(changed=True, reserved_ip=ip, diff={"before": before, "after": ip})
 
     # --------------------------------------------------------------- unassigned
@@ -210,8 +217,8 @@ def main():
                 msg=f"Would unassign IP '{name}'",
                 diff={"before": before, "after": {**existing, "assigned_to": "No resource"}},
             )
-        run_civo_command(module, ["ip", "unassign", name], api_key, region, binary)
-        ip = find_resource_by_name(module, "ip", name, api_key, region, binary) or {}
+        run_civo_command(module, ["vpc", "ip", "unassign", name], api_key, region, binary)
+        ip = find_resource_by_name(module, "vpc ip", name, api_key, region, binary) or {}
         module.exit_json(changed=True, reserved_ip=ip, diff={"before": before, "after": ip})
 
     # ----------------------------------------------------------------- present
