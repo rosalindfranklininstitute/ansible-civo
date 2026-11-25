@@ -67,6 +67,15 @@ options:
     type: list
     elements: str
     default: []
+  remove_applications:
+    description:
+      - List of Civo default application names to leave out of a new cluster
+        (for example C(traefik2-nodeport)).
+      - Names are those shown by C(civo kubernetes applications ls).
+      - Ignored when the cluster already exists.
+    type: list
+    elements: str
+    default: []
   upgrade_version:
     description:
       - Target Kubernetes version string to upgrade an existing cluster to
@@ -300,6 +309,7 @@ def main():
         cni={"type": "str", "default": "flannel", "choices": ["flannel", "cilium"]},
         version={"type": "str", "default": ""},
         applications={"type": "list", "elements": "str", "default": []},
+        remove_applications={"type": "list", "elements": "str", "default": []},
         upgrade_version={"type": "str"},
         wait={"type": "bool", "default": True},
         timeout={"type": "int", "default": 600},
@@ -447,6 +457,8 @@ def main():
         create_args += ["--existing-firewall", firewall_id]
     if module.params.get("applications"):
         create_args += ["--applications", ",".join(module.params["applications"])]
+    if module.params.get("remove_applications"):
+        create_args += ["--remove-applications", ",".join(module.params["remove_applications"])]
 
     run_civo_command(module, create_args, api_key, region, binary)
 

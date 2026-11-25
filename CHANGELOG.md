@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changes
+
+- `kubernetes` accepts `remove_applications` to leave Civo default
+  applications, such as `traefik2-nodeport`, out of a new cluster.
+
 ## 0.0.6
 
 ### Fixes
