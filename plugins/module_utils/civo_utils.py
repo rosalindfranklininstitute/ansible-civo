@@ -190,6 +190,25 @@ def find_resource_by_name(module, resource_type, name, api_key, region, binary=N
     return matches[0] if matches else None
 
 
+def resolve_firewall_id(module, firewall, api_key, region, binary=None):
+    """Return the ID of the firewall given by *firewall* (a name or an ID).
+
+    Some CLI flags, such as ``civo kubernetes create --existing-firewall``,
+    accept only an ID. Fails if no firewall in the region matches.
+    """
+    match = find_resource_by_name(module, "firewall", firewall, api_key, region, binary=binary)
+    if match:
+        return match["id"]
+
+    _rc, data, _stderr = run_civo_command(module, ["firewall", "ls"], api_key, region, binary=binary)
+    items = data if isinstance(data, list) else data.get("items", [])
+    for item in items:
+        if item.get("id") == firewall:
+            return firewall
+
+    module.fail_json(msg=f"Firewall '{firewall}' not found in region {region}")
+
+
 # ---------------------------------------------------------------------------
 # Kubernetes node-pool helper
 # ---------------------------------------------------------------------------

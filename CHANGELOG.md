@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- `kubernetes` passes `--existing-firewall <id>` to `civo kubernetes create`
+  instead of the unsupported `--firewall`, resolving a firewall name to its
+  ID first.
+
 ## 0.0.5
 
 ### Fixes

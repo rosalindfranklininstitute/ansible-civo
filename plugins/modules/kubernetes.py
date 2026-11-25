@@ -220,6 +220,7 @@ from ansible_collections.civo.cloud.plugins.module_utils.civo_utils import (
     common_argument_spec,
     find_resource_by_name,
     list_node_pools,
+    resolve_firewall_id,
     run_civo_command,
     wait_for_active,
 )
@@ -442,7 +443,8 @@ def main():
     if module.params.get("version"):
         create_args += ["--version", module.params["version"]]
     if module.params.get("firewall"):
-        create_args += ["--firewall", module.params["firewall"]]
+        firewall_id = resolve_firewall_id(module, module.params["firewall"], api_key, region, binary)
+        create_args += ["--existing-firewall", firewall_id]
     if module.params.get("applications"):
         create_args += ["--applications", ",".join(module.params["applications"])]
 
