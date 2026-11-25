@@ -214,6 +214,27 @@ def resolve_firewall_id(module, firewall, api_key, region, binary=None):
 # ---------------------------------------------------------------------------
 
 
+def _node_pools_from_cluster(module, cluster_name, region, binary, env_update, node_pool_ls_error):
+    """Return the pools reported by ``civo kubernetes show``.
+
+    ``civo kubernetes node-pool ls`` fails with ``ZeroMatchesError`` on some
+    clusters that ``show`` reports correctly, so fall back to ``show``. Keys
+    are lowercase here (e.g. ``"id"``, ``"count"``).
+    """
+    cmd = [binary, "kubernetes", "show", cluster_name, "--region", region, "-o", "json"]
+    rc, stdout, _stderr = module.run_command(cmd, environ_update=env_update)
+    failure = f"Failed to list node pools for '{cluster_name}': {node_pool_ls_error}"
+    if rc != 0:
+        module.fail_json(msg=failure)
+    try:
+        pools = json.loads(stdout).get("pools")
+    except (ValueError, AttributeError):
+        module.fail_json(msg=failure)
+    if not isinstance(pools, list):
+        module.fail_json(msg=failure)
+    return pools
+
+
 def list_node_pools(module, cluster_name, api_key, region, binary=None):
     """Return the list of node pool dicts for *cluster_name*.
 
@@ -241,7 +262,7 @@ def list_node_pools(module, cluster_name, api_key, region, binary=None):
     ]
     rc, stdout, stderr = module.run_command(cmd, environ_update=env_update)
     if rc != 0:
-        module.fail_json(msg=f"Failed to list node pools for '{cluster_name}': {stderr}")
+        return _node_pools_from_cluster(module, cluster_name, region, binary, env_update, stderr)
 
     json_line = None
     for line in stdout.splitlines():

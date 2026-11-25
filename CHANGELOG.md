@@ -7,6 +7,9 @@
 - `kubernetes` passes `--existing-firewall <id>` to `civo kubernetes create`
   instead of the unsupported `--firewall`, resolving a firewall name to its
   ID first.
+- Node pool lookups fall back to `civo kubernetes show` when
+  `civo kubernetes node-pool ls` fails, so `kubernetes` is idempotent on
+  clusters where that command returns `ZeroMatchesError`.
 
 ## 0.0.5
 
